@@ -1,0 +1,10 @@
+{
+  "name": "fttr-city-realtime",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Realtime presence, chat, and server-authoritative virtual economy for FTTR CITY",
+  "main": "server.js",
+  "scripts": {"start": "node server.js", "check": "node --check server.js"},
+  "engines": {"node": ">=20"},
+  "dependencies": {"ws": "^8.18.0"}
+}

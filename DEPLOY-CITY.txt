@@ -1,0 +1,7 @@
+FTTR CITY deployment package — all files are in repository root.
+
+FRONTEND: Upload every file in this ZIP directly to a NEW GitHub repository dedicated to city.fucktherules.my.id. GitHub Pages -> main -> /(root). CNAME is already city.fucktherules.my.id.
+DNS: CNAME host city -> <your GitHub username>.github.io. Do not change apex or game records.
+BACKEND: GitHub Pages cannot run Node.js. Deploy server.js + package.json + Dockerfile as a Node 20 service with WebSocket support and a durable volume. Set DATA_DIR=/data and ALLOWED_ORIGINS=https://city.fucktherules.my.id. See ONLINE-BACKEND.md.
+STORE: The city links to the existing store at https://game.fucktherules.my.id. Existing checkout/payment/order files are not included or modified.
+IMPORTANT: Football state remains local per browser; shared authoritative league and production authentication require backend/database implementation before production.

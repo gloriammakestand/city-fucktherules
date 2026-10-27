@@ -1,0 +1,13 @@
+{
+  "name": "FUCK THE RULES — FTTR CITY",
+  "short_name": "FTTR CITY",
+  "description": "Explore the virtual football city of Fuck The Rules.",
+  "start_url": "./city.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f2efdf",
+  "theme_color": "#f2efdf",
+  "icons": [
+    {"src":"favicon.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}
