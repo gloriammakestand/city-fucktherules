@@ -5,3 +5,7 @@ DNS: CNAME host city -> <your GitHub username>.github.io. Do not change apex or 
 BACKEND: GitHub Pages cannot run Node.js. Deploy server.js + package.json + Dockerfile as a Node 20 service with WebSocket support and a durable volume. Set DATA_DIR=/data and ALLOWED_ORIGINS=https://city.fucktherules.my.id. See ONLINE-BACKEND.md.
 STORE: The city links to the existing store at https://game.fucktherules.my.id. Existing checkout/payment/order files are not included or modified.
 IMPORTANT: Football state remains local per browser; shared authoritative league and production authentication require backend/database implementation before production.
+
+
+LATEST GAMEPLAY UPDATE
+The latest city.html/city.js/city.css include pixel-style 2.5D rendering, camera zoom and drag-pan, follow-camera reset, voxel citizen, hunger/thirst/health/energy, food/drink/grocery services, hospital treatment, and 16 jobs with bot coverage when a role is vacant. Prototype shifts run for 12 seconds. The needs meter and visible bot roster are local-browser simulation; for shared global job vacancy state, authenticated player identities and durable needs, deploy the backend and add a shared database/roster service.

@@ -25,3 +25,7 @@ Deploy this project root as a Docker service on a Node-compatible host with WebS
 - Before public launch, add Firebase ID-token verification on the server, persistent transactional database (Firestore transactions/Postgres), bans/moderation tools, audit logging, abuse reporting, backups, monitoring, and per-account quotas. JSON-file persistence is suitable for a demo/single instance only; it is not safe for multiple replicas and does not provide database transactions.
 - The football engine in `football.js` is currently a client-side prototype. For competitive cross-device league state, move fixture generation, results, transfer windows and supporter actions to the server with a unique fixture ID and atomic transaction. Do not trust client-submitted scores.
 - The existing store, checkout, payment provider, order records, and store database are not used by this virtual economy. Virtual currency is non-cashable and has no real-money value.
+
+
+## Job catalogue update
+The `/api/action` job allow-list includes store, station, bus, stadium, photo, journalist, food, barista, doctor, medic, police, cleaner, mechanic, builder, security and gardener. Job rewards are server-validated and idempotent. The current browser UI uses a local BOT ON DUTY roster to illustrate vacant-role takeover; this roster is not yet a shared multiplayer claim system. Do not describe the bot roster or browser needs as globally synchronized until a durable authenticated job/needs API is added.

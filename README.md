@@ -19,3 +19,15 @@ GitHub Pages hanya menyajikan frontend. Untuk chat/kehadiran bersama, deploy `se
 
 ## Batasan prototipe
 Football simulator pada frontend masih menyimpan sebagian state per browser. Backend starter bukan pengganti autentikasi produksi atau database transaksional multi-instance. Sebelum peluncuran publik, tambahkan autentikasi terverifikasi, database durable/transaksional, moderasi, backup, monitoring, dan validasi keamanan.
+
+
+## Latest city gameplay update
+- Pixel/low-resolution 2.5D rendering for a retro game look.
+- Camera controls: mouse wheel / zoom buttons, touch pinch, drag-to-pan, and camera follow reset.
+- Blocky voxel citizen character model.
+- Citizen needs: hunger, thirst, health, and energy saved locally and gradually depleted during play.
+- Food, drinks, grocery items, hospital check-up, first aid, rest, and emergency treatment.
+- 16 job roles; vacant roles show BOT ON DUTY and return to bot coverage after a player shift.
+- Added hospital, café, mini market, garage, newsroom and industrial works buildings.
+
+Note: citizen needs are local-browser gameplay state in this prototype. Online economy rewards can use the Node.js backend; production-grade shared job roster and cross-device needs require authenticated persistent backend storage.
