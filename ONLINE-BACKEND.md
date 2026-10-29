@@ -29,3 +29,10 @@ Deploy this project root as a Docker service on a Node-compatible host with WebS
 
 ## Job catalogue update
 The `/api/action` job allow-list includes store, station, bus, stadium, photo, journalist, food, barista, doctor, medic, police, cleaner, mechanic, builder, security and gardener. Job rewards are server-validated and idempotent. The current browser UI uses a local BOT ON DUTY roster to illustrate vacant-role takeover; this roster is not yet a shared multiplayer claim system. Do not describe the bot roster or browser needs as globally synchronized until a durable authenticated job/needs API is added.
+
+## Konfigurasi v9 (otomatis, tanpa input pemain)
+- Alamat backend hanya ditulis di `config.js` (`window.FTTR_CITY_API`). Kosong = mode solo. Pemain tidak pernah mengisi URL.
+- Deploy `server.js` di hosting Node.js yang mendukung WebSocket (Cloud Run, Render, Railway, VPS, dsb.), set `ALLOWED_ORIGINS=https://city.fucktherules.my.id`, volume persisten di `DATA_DIR`, dan `ADMIN_TOKEN` (rahasia, hanya di server) untuk moderator.
+- Lalu isi `FTTR_CITY_API` di `config.js` dengan alamat HTTPS server, commit, selesai.
+- Stiker/graffiti: `/api/art` (gambar disimpan di `DATA_DIR/art`). Hapus karya (moderator): `POST /api/art/delete` dengan header `x-admin-token` dan body `{"id":"..."}`. Karya yang dilaporkan 3 pemain berbeda otomatis disembunyikan.
+- Identitas saat ini = guest id perangkat (belum ada login akun). Cukup untuk presence, chat, dan karya, tetapi belum aman untuk ekonomi bernilai nyata.
