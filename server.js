@@ -19,7 +19,7 @@ function save(){ const snapshot=JSON.stringify(state); saveChain=saveChain.then(
 const clients = new Map(); const rate = new Map();
 const now = () => Date.now(); const safeName = s => String(s||'Visitor').replace(/[<>\u0000-\u001f]/g,'').trim().slice(0,24)||'Visitor';
 const safeText = s => String(s||'').replace(/[<>\u0000-\u001f]/g,'').trim().slice(0,280);
-function allowed(req){ const o=req.headers.origin; return !o || ORIGINS.has(o); }
+function allowed(req){ const o=req.headers.origin; if(!o||ORIGINS.has(o))return true;try{return new URL(o).host===req.headers.host;}catch{return false;} }
 function send(res,code,obj){res.writeHead(code,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','access-control-allow-origin':'*','access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'content-type,x-admin-token'});res.end(JSON.stringify(obj));}
 function broadcast(room,payload,except){const raw=JSON.stringify(payload);for(const [ws,c] of clients){if(ws!==except&&c.room===room&&ws.readyState===WebSocket.OPEN)ws.send(raw);}}
 function onlineList(room){return [...clients.values()].filter(c=>c.room===room).map(c=>({id:c.id,name:c.name,x:c.x,z:c.z,district:c.district,avatar:c.avatar}));}
@@ -52,6 +52,15 @@ function handleArt(req,res,url){
    if(p==='/api/art/like'){if(!a.likes.includes(gid))a.likes.push(gid);save();return send(res,200,{likes:a.likes.length});}
    if(!a.reports.includes(gid))a.reports.push(gid);if(a.reports.length>=3){a.status='hidden';}state.reports.push({id:crypto.randomUUID(),art:a.id,by:gid,at:new Date().toISOString()});save();return send(res,200,{ok:true});});return true;}
  return false;}
+const PUBLIC_FILES=new Set(['index.html','city.html','city.css','ui-game.css','city.js','ui-game.js','art.js','online.js','football.js','config.js','sw.js','manifest.webmanifest','logo.png','favicon.png','mural.png','qris.jpg']);
+const STATIC_TYPE={html:'text/html; charset=utf-8',css:'text/css; charset=utf-8',js:'text/javascript; charset=utf-8',webmanifest:'application/manifest+json',png:'image/png',jpg:'image/jpeg'};
+function serveStatic(req,res,pathname){
+ if(req.method!=='GET'&&req.method!=='HEAD')return false;
+ let name;try{name=decodeURIComponent(pathname==='/'?'index.html':pathname.slice(1));}catch{return false;}
+ if(!PUBLIC_FILES.has(name))return false;
+ const file=path.join(__dirname,name),type=STATIC_TYPE[name.split('.').pop()]||'application/octet-stream';
+ fs.readFile(file,(e,data)=>{if(e)return send(res,404,{error:'not_found'});res.writeHead(200,{'content-type':type,'cache-control':name.endsWith('.html')?'no-cache':'public, max-age=300','x-content-type-options':'nosniff'});res.end(req.method==='HEAD'?undefined:data);});return true;
+}
 const server=http.createServer((req,res)=>{
  if(req.method==='OPTIONS'){res.writeHead(204,{'access-control-allow-origin':'*','access-control-allow-methods':'GET,POST,OPTIONS','access-control-allow-headers':'content-type,x-admin-token'});return res.end();}
  if(!allowed(req))return send(res,403,{error:'origin_not_allowed'});
@@ -68,6 +77,7 @@ const server=http.createServer((req,res)=>{
   }catch(e){return send(res,400,{error:'invalid_json'});}});return;
  }
  if(url.pathname.startsWith('/api/art')&&handleArt(req,res,url))return;
+ if(serveStatic(req,res,url.pathname))return;
  return send(res,404,{error:'not_found'});
 });
 const wss=new WebSocketServer({server,path:'/ws',maxPayload:4096});

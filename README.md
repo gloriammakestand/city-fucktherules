@@ -21,22 +21,19 @@ GitHub Pages hanya menyajikan frontend. Untuk chat/kehadiran bersama, deploy `se
 Football simulator pada frontend masih menyimpan sebagian state per browser. Backend starter bukan pengganti autentikasi produksi atau database transaksional multi-instance. Sebelum peluncuran publik, tambahkan autentikasi terverifikasi, database durable/transaksional, moderasi, backup, monitoring, dan validasi keamanan.
 
 
-## Latest city gameplay update
-- Stylized urban 2.5D/isometric city rendering with varied building facades, road markings, sidewalks, green spaces, shops, football venues, and street-art surfaces. The intended direction is colorful city-builder density with FTTR football/street-culture identity, not pixel art.
-- Camera controls: mouse wheel / zoom buttons, touch pinch, drag-to-pan, and camera follow reset. Tap-to-move is the primary mobile control; the optional joystick is hidden by default on touch devices and can be enabled using the JOYSTICK toggle.
-- Stylized citizen character with gait animation driven by actual movement, plus a pulsing 3D ground marker at the tapped destination.
-- Citizen needs: hunger, thirst, health, and energy saved locally and gradually depleted during play.
-- Food, drinks, grocery items, hospital check-up, first aid, rest, and emergency treatment.
-- 16 job roles; vacant roles show BOT ON DUTY and return to bot coverage after a player shift.
-- Added hospital, café, mini market, garage, newsroom and industrial works buildings.
+## V13 — UI, mobile, dan visual kota
+- HUD desktop ditata ulang dengan panel status yang ringkas, hierarki informasi yang konsisten, dan kontrol utama yang tidak saling menutupi.
+- Layout mobile dibuat khusus untuk layar sempit: status horizontal, wallet ringkas, joystick, kamera, dan quickbar dengan target sentuh besar.
+- Phone menjadi layar penuh di ponsel; peta, chat, kartu bangunan, serta dialog dibuat responsif.
+- Kamera awal diperluas, warna dan pencahayaan diseimbangkan, serta variasi gedung, plaza, kios, bangku, lampu lalu lintas, manhole, perahu, dan pejalan kaki ditambahkan.
+- Pinch zoom, swipe kamera, tap-to-move, dan joystick dipisahkan agar tidak memicu interaksi yang salah.
+- `server.js` juga dapat menyajikan frontend pada origin yang sama. Konfigurasi same-origin terhubung otomatis; GitHub Pages tetap memakai endpoint produksi di `config.js`.
 
-Note: citizen needs are local-browser gameplay state in this prototype. Online economy rewards can use the Node.js backend; production-grade shared job roster and cross-device needs require authenticated persistent backend storage.
+## Pengujian V13
+- Syntax seluruh file JavaScript diperiksa.
+- Browser test pada 375×812, 390×844, 768×1024, 1024×768, dan 1440×900 tanpa horizontal overflow.
+- Map, chat online otomatis, phone, travel, football, jobs, status makanan, masuk/keluar FTTR Store, dan kontrol kamera diklik dan diverifikasi.
+- Pinch, swipe, joystick, tap-to-move, serta pengiriman posisi WebSocket diuji pada konteks mobile.
+- Tidak ada console error atau response 404 pada alur uji final.
 
-
-## UI / controls update
-- Responsive touch-first HUD for compact Android screens and landscape phones.
-- Rebalanced top bar, needs indicators, camera controls, quickbar, location card, and chat panel to reduce overlap.
-- Optional mobile joystick toggle; tap-to-move remains the default.
-- Destination marker now pulses and expands on the ground when tapping walkable terrain or selecting a destination.
-- Walking animation phase advances only while the character is actually moving, preventing the idle walk-cycle bug.
-- Multiplayer is still solo mode until the owner deploys the Node backend and sets its real HTTPS URL once in `config.js`.
+Catatan: pengujian dilakukan di browser Chromium, bukan perangkat Android fisik. Citizen needs tetap tersimpan lokal. Football simulator pada frontend masih menyimpan sebagian state per browser. Backend starter bukan pengganti autentikasi produksi atau database transaksional multi-instance.

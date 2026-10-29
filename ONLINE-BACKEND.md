@@ -13,7 +13,7 @@ Health: `http://localhost:8787/health`
 WebSocket: `ws://localhost:8787/ws`  
 REST: `/api/world`, `/api/leaderboard`, `/api/action`
 
-After deploying the backend, set `window.FTTR_CITY_API` once in root-level `config.js` to the real HTTPS URL supplied by your hosting provider. Do not put a guessed URL in production. Players do not enter a server URL and there is no developer endpoint form in the player UI. Set `ALLOWED_ORIGINS` to the exact deployed frontend origin(s). Do not put secrets in frontend files.
+Set `FTTR_CITY_API` in the browser to your backend URL (for example `https://city-api.example.com`) before deployment, or enter the URL in the Online panel. Set `ALLOWED_ORIGINS` to the exact deployed frontend origin(s). Do not put secrets in frontend files.
 
 ## Deploy
 
@@ -30,7 +30,7 @@ Deploy this project root as a Docker service on a Node-compatible host with WebS
 ## Job catalogue update
 The `/api/action` job allow-list includes store, station, bus, stadium, photo, journalist, food, barista, doctor, medic, police, cleaner, mechanic, builder, security and gardener. Job rewards are server-validated and idempotent. The current browser UI uses a local BOT ON DUTY roster to illustrate vacant-role takeover; this roster is not yet a shared multiplayer claim system. Do not describe the bot roster or browser needs as globally synchronized until a durable authenticated job/needs API is added.
 
-## Konfigurasi v13 (otomatis, tanpa input pemain)
+## Konfigurasi v9 (otomatis, tanpa input pemain)
 - Alamat backend hanya ditulis di `config.js` (`window.FTTR_CITY_API`). Kosong = mode solo. Pemain tidak pernah mengisi URL.
 - Deploy `server.js` di hosting Node.js yang mendukung WebSocket (Cloud Run, Render, Railway, VPS, dsb.), set `ALLOWED_ORIGINS=https://city.fucktherules.my.id`, volume persisten di `DATA_DIR`, dan `ADMIN_TOKEN` (rahasia, hanya di server) untuk moderator.
 - Lalu isi `FTTR_CITY_API` di `config.js` dengan alamat HTTPS server, commit, selesai.
