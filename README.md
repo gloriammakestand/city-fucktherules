@@ -5,8 +5,7 @@ Paket frontend kota virtual dan starter backend online. Semua file diletakkan la
 ## File utama
 - `index.html` — halaman utama kota
 - `city.html` — alternatif halaman kota
-- `city.css`, `ui-game.css`, `ui-game.js` — antarmuka (HUD, kartu, HP virtual); `ui-game.css` adalah satu-satunya sumber gaya HUD
-- `city.js`, `city-world.js`, `football.js`, `online.js`, `art.js` — logika game; `city-world.js` berisi pantai/laut, menara kota, taman, dan penggabungan geometri
+- `city.css`, `city.js`, `football.js`, `online.js` — antarmuka dan logika game
 - `logo.png`, `favicon.png`, `mural.png`, `qris.jpg` — aset gambar, semuanya di root
 - `server.js`, `package.json`, `Dockerfile`, `.env.example` — starter backend Node.js/WebSocket
 - `ONLINE-BACKEND.md` — petunjuk backend
@@ -32,11 +31,3 @@ Football simulator pada frontend masih menyimpan sebagian state per browser. Bac
 - Added hospital, café, mini market, garage, newsroom and industrial works buildings.
 
 Note: citizen needs are local-browser gameplay state in this prototype. Online economy rewards can use the Node.js backend; production-grade shared job roster and cross-device needs require authenticated persistent backend storage.
-
-## Pembaruan tampilan v13
-- **HUD baru** untuk HP dan desktop. Di HP, saldo dan status lapar/haus/energi selalu tampil; kesehatan/mood dibuka lewat panah, sedangkan menu (Peta, Travel, Bola, Kerja, HP) dan kontrol kamera dibuka lewat tombol menu di kanan bawah. Di desktop semuanya tampil permanen.
-- **Kota lebih hidup**: pantai dan laut animasi di sisi selatan, pier yang bisa dijalani, bianglala, mercusuar, Sky Tower di plaza pantai, kios, payung, palem, perahu dan kapal. Menara kota bervariasi (kaca, kapur, bata, silinder, bertingkat) dan kolam taman dengan bebek. Rumput bertekstur, palet warna lebih cerah, kanal mengalir ke laut dan hanya bisa diseberangi lewat jembatan.
-- **Semi-pixel tajam**: dunia dirender di resolusi rendah lalu dibesarkan tanpa blur. Tombol di panel kamera berpindah antara semi-pixel dan HD halus (pilihan tersimpan).
-- **Lebih ringan**: ribuan mesh statis digabung per bahan dan area, sehingga jumlah draw call turun drastis di ponsel Android.
-- Penanda panah kuning di atas karakter tetap terlihat saat karakter berada di balik gedung tinggi.
-- Nama default pemain kini `WARGA_xxxx` (bukan nama tetap yang sama untuk semua orang).
