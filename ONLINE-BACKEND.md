@@ -13,7 +13,7 @@ Health: `http://localhost:8787/health`
 WebSocket: `ws://localhost:8787/ws`  
 REST: `/api/world`, `/api/leaderboard`, `/api/action`
 
-Set `FTTR_CITY_API` in the browser to your backend URL (for example `https://city-api.example.com`) before deployment, or enter the URL in the Online panel. Set `ALLOWED_ORIGINS` to the exact deployed frontend origin(s). Do not put secrets in frontend files.
+Set `FTTR_CITY_API` in the browser to your backend URL (for example `https://city-api.example.com`) in `config.js` before deployment (`window.FTTR_CITY_API`). The in-game Online panel connects automatically and no longer asks players for a URL. Set `ALLOWED_ORIGINS` to the exact deployed frontend origin(s). Do not put secrets in frontend files.
 
 ## Deploy
 

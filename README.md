@@ -5,7 +5,8 @@ Paket frontend kota virtual dan starter backend online. Semua file diletakkan la
 ## File utama
 - `index.html` — halaman utama kota
 - `city.html` — alternatif halaman kota
-- `city.css`, `city.js`, `football.js`, `online.js` — antarmuka dan logika game
+- `city.css`, `ui-game.css`, `ui-game.js` — antarmuka (HUD, kartu, HP virtual); `ui-game.css` adalah satu-satunya sumber gaya HUD
+- `city.js`, `city-world.js`, `football.js`, `online.js`, `art.js` — logika game; `city-world.js` berisi pantai/laut, menara kota, taman, dan penggabungan geometri
 - `logo.png`, `favicon.png`, `mural.png`, `qris.jpg` — aset gambar, semuanya di root
 - `server.js`, `package.json`, `Dockerfile`, `.env.example` — starter backend Node.js/WebSocket
 - `ONLINE-BACKEND.md` — petunjuk backend
@@ -31,3 +32,18 @@ Football simulator pada frontend masih menyimpan sebagian state per browser. Bac
 - Added hospital, café, mini market, garage, newsroom and industrial works buildings.
 
 Note: citizen needs are local-browser gameplay state in this prototype. Online economy rewards can use the Node.js backend; production-grade shared job roster and cross-device needs require authenticated persistent backend storage.
+
+## Pembaruan tampilan v13
+- **HUD baru** untuk HP dan desktop. Di HP, saldo dan status lapar/haus/energi selalu tampil; kesehatan/mood dibuka lewat panah, sedangkan menu (Peta, Travel, Bola, Kerja, HP) dan kontrol kamera dibuka lewat tombol menu di kanan bawah. Di desktop semuanya tampil permanen.
+- **Kota lebih hidup**: pantai dan laut animasi di sisi selatan, pier yang bisa dijalani, bianglala, mercusuar, Sky Tower di plaza pantai, kios, payung, palem, perahu dan kapal. Menara kota bervariasi (kaca, kapur, bata, silinder, bertingkat) dan kolam taman dengan bebek. Rumput bertekstur, palet warna lebih cerah, kanal mengalir ke laut dan hanya bisa diseberangi lewat jembatan.
+- **Semi-pixel tajam**: dunia dirender di resolusi rendah lalu dibesarkan tanpa blur. Tombol di panel kamera berpindah antara semi-pixel dan HD halus (pilihan tersimpan).
+- **Lebih ringan**: ribuan mesh statis digabung per bahan dan area, sehingga jumlah draw call turun drastis di ponsel Android.
+- Penanda panah kuning di atas karakter tetap terlihat saat karakter berada di balik gedung tinggi.
+- Nama default pemain kini `WARGA_xxxx` (bukan nama tetap yang sama untuk semua orang).
+
+## Pembaruan v14
+- **Kota terasa lebih besar**: bangunan dan landmark diperbesar ±25%, karakter dikecilkan ke 70% dan kamera default diperbesar 1,3× (di dalam gedung skala tetap). Kamera dibuat lebih tegak (sudut ±52°) supaya gedung tidak menutupi jalan di belakangnya.
+- **Tata letak rapi**: bangunan berderet menghadap jalan, baik di jalan barat-timur maupun utara-selatan. Sisi yang menghadap kamera (selatan/timur jalan) hanya diisi bangunan rendah. Tinggi menara dibatasi otomatis oleh jarak ke jalan di belakangnya (lihat `make()` di `fillCity`). Bagian dalam blok diisi pohon, bukan bangunan acak.
+- **Animasi jalan sungguhan**: semua warga (pemain, pejalan kaki, NPC, pemain online) memakai rig berporos pinggul dan bahu: kaki dan tangan berayun berlawanan, badan naik-turun dan condong, dan ada bayangan di tanah. Penyebab "ngambang" di versi lama: sepatu melayang 0,11 di atas tanah dan badan hanya naik-turun tanpa langkah. Mobil juga diperbesar, punya roda, dan menapak.
+- **Penanda tap**: riak putih saat layar disentuh, lalu cincin emas berdenyut dan panah di titik tujuan sampai karakter tiba. Penanda hilang otomatis bila karakter tidak bisa maju (mis. titik berada di dalam bangunan).
+- Konstanta yang bisa disetel di atas `city.js`: `CITIZEN_S` (ukuran karakter), `BASE_ZOOM` (zoom awal), `CAM_OFF` (sudut kamera).

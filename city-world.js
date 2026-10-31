@@ -88,7 +88,7 @@ export function createWorld(C){
 
  /* ---------- mercusuar ---------- */
  function lighthouse(x,z){
-  const g=new T.Group();g.position.set(x,0,z);G().add(g);
+  const g=new T.Group();g.position.set(x,0,z);g.scale.setScalar(.8);G().add(g);
   cy(g,2.5,2.9,.9,'#8f9aa3',0,.4,0,10);
   const seg=['#e8f0f6','#e5483b','#e8f0f6','#e5483b'];let y=.85;
   seg.forEach((c,i)=>{const r1=1.15-i*.09,r2=r1-.09;cy(g,r2,r1,2.1,c,0,y+1.05,0,12);y+=2.1;});
@@ -100,7 +100,7 @@ export function createWorld(C){
 
  /* ---------- Sky Tower FTTR di plaza pantai ---------- */
  function skyTower(x,z){
-  const g=new T.Group();g.position.set(x,0,z);G().add(g);
+  const g=new T.Group();g.position.set(x,0,z);g.scale.setScalar(.75);G().add(g);
   cy(g,5.4,5.6,.14,'#efe6d2',0,.1,0,28);cy(g,3.4,3.6,.18,'#d7ff3f',0,.13,0,28);cy(g,3.0,3.2,.2,'#f4f1e6',0,.14,0,28);
   cy(g,.55,.9,11,'#e9eef3',0,5.6,0,10);
   cy(g,.95,.95,.35,'#d7ff3f',0,2.2,0,10);
@@ -223,7 +223,7 @@ export function createWorld(C){
 
  function tower(o){
   const w=o.w,d=o.d,fl=o.fl,key=o.style||'glassBlue',S=styleMats(key),st=STY[key],r=RND((o.seed||1)*17+3);
-  const g=new T.Group();g.position.set(o.x,0,o.z);if(o.face==='N')g.rotation.y=Math.PI;G().add(g);
+  const g=new T.Group();g.position.set(o.x,0,o.z);g.rotation.y=C.faceRot(o.face);G().add(g);
   const pod=1.3,H=fl*FH,round=(o.kind==='office'&&fl>=9&&(o.seed||0)%4===1);
   // podium / lobi
   bx(g,w+.5,pod,d+.5,mat('pod-'+key,'#2a3b4d'),0,pod/2+.05,0);
