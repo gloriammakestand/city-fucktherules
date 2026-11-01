@@ -10,25 +10,29 @@ export function createJobs(C){
 
  /* template: delivery (antar ke rumah) · patrol (cek titik) · transport (jemput→antar) · spots (tugas di beberapa titik) · shift (bekerja di satu tempat) */
  const DEFS=[
-  {id:'courier',icon:'📦',name:'Kurir Paket',reward:260,tpl:'delivery',veh:'motor',depot:'jobcentre',skill:'Logistik',desc:'Ambil motor di Job Centre, ambil paket, lalu antar ke rumah-rumah warga.'},
-  {id:'food',icon:'🍜',name:'Kurir Makanan',reward:200,tpl:'delivery',veh:'motor',depot:'cafe',skill:'Kuliner',desc:'Ambil motor dan pesanan di Corner Kitchen, antar selagi masih hangat.'},
-  {id:'store',icon:'🛍️',name:'Kurir FTTR Store',reward:230,tpl:'delivery',veh:'motor',depot:'fttr',skill:'Retail',desc:'Antar paket merchandise dari FTTR Store ke para supporter.'},
-  {id:'police',icon:'🚓',name:'Polisi Patroli',reward:280,tpl:'patrol',veh:'patrol',depot:'police',skill:'Layanan publik',desc:'Ambil mobil patroli, cek titik-titik kota, dan tangani laporan warga.'},
-  {id:'security',icon:'🛡️',name:'Keamanan Stadion',reward:200,tpl:'spots',depot:'stadium',skill:'Keamanan',desc:'Berjalan keliling area stadion dan periksa tiket di tiap pos.'},
-  {id:'medic',icon:'🚑',name:'Paramedis Ambulans',reward:290,tpl:'transport',veh:'ambulance',depot:'hospital',skill:'Medis',desc:'Ambil ambulans, jemput pasien di rumah warga, bawa ke City Hospital.'},
-  {id:'bus',icon:'🚌',name:'Sopir Bus Kota',reward:240,tpl:'transport',veh:'bus',depot:'station',skill:'Transportasi',desc:'Ambil bus, naikkan penumpang di halte, dan antar ke stasiun.'},
-  {id:'cleaner',icon:'🧹',name:'Petugas Kebersihan',reward:160,tpl:'spots',depot:'plaza',skill:'Layanan kota',desc:'Bersihkan sampah di jalanan dan plaza kota.'},
-  {id:'gardener',icon:'🌳',name:'Tukang Taman',reward:150,tpl:'spots',depot:'plaza',skill:'Ruang hijau',desc:'Rawat tanaman di taman, kolam, dan plaza.'},
-  {id:'mechanic',icon:'🔧',name:'Montir Keliling',reward:215,tpl:'spots',depot:'garage',skill:'Bengkel',desc:'Datangi mobil mogok di jalan dan perbaiki di tempat.'},
-  {id:'builder',icon:'🧱',name:'Pekerja Konstruksi',reward:210,tpl:'spots',depot:'works',skill:'Konstruksi',desc:'Periksa dan rawat titik-titik proyek kota.'},
-  {id:'journalist',icon:'📰',name:'Jurnalis Kota',reward:220,tpl:'spots',depot:'press',skill:'Media',desc:'Kunjungi tempat-tempat kota untuk wawancara dan laporan.'},
-  {id:'photo',icon:'📸',name:'Fotografer Matchday',reward:230,tpl:'spots',depot:'stadium',skill:'Media',desc:'Ambil foto di stadion dan titik supporter.'},
-  {id:'doctor',icon:'🩺',name:'Perawat Rumah Sakit',reward:250,tpl:'shift',depot:'hospital',skill:'Medis',desc:'Pergi ke City Hospital dan bantu pasien selama satu shift.'},
-  {id:'barista',icon:'☕',name:'Barista',reward:165,tpl:'shift',depot:'cafe2',skill:'Kuliner',desc:'Buat minuman dan layani antrean di kafe.'},
-  {id:'station',icon:'🚉',name:'Petugas Stasiun',reward:170,tpl:'shift',depot:'station',skill:'Transportasi',desc:'Bantu penumpang dan jaga jadwal di Central Station.'},
-  {id:'stadium',icon:'🏟️',name:'Kru Stadion',reward:220,tpl:'shift',depot:'stadium',skill:'Olahraga',desc:'Siapkan lapangan dan operasional matchday.'}
+  {id:'courier',icon:'📦',name:'Kurir Paket',reward:260,tpl:'delivery',veh:'motor',office:'jobcentre',item:'tas kurir',held:'bag',skill:'Logistik',desc:'Ambil motor dan tas kurir di Job Centre, ambil paket, lalu antar ke rumah-rumah warga.'},
+  {id:'food',icon:'🍜',name:'Kurir Makanan',reward:200,tpl:'delivery',veh:'motor',office:'cafe',item:'tas makanan',held:'bag',skill:'Kuliner',desc:'Ambil motor dan pesanan di Corner Kitchen, antar selagi masih hangat.'},
+  {id:'store',icon:'🛍️',name:'Kurir FTTR Store',reward:230,tpl:'delivery',veh:'motor',office:'fttr',item:'kardus merchandise',held:'bag',skill:'Retail',desc:'Antar paket merchandise dari FTTR Store ke para supporter.'},
+  {id:'police',icon:'🚓',name:'Polisi Patroli',reward:280,tpl:'patrol',veh:'patrol',office:'police',item:'radio & lencana',held:'radio',skill:'Layanan publik',desc:'Ambil radio dan mobil patroli di City Police, cek pos-pos kota, tangani laporan warga.'},
+  {id:'security',icon:'🛡️',name:'Keamanan Stadion',reward:200,tpl:'spots',office:'stadium-maguwo',item:'senter & rompi',held:'torch',skill:'Keamanan',desc:'Ambil senter di Stadion Maguwo, lalu periksa tiket di pos-pos stadion.'},
+  {id:'medic',icon:'🚑',name:'Paramedis Ambulans',reward:290,tpl:'transport',veh:'ambulance',office:'office-medic',item:'tas P3K',held:'kit',skill:'Medis',desc:'Ambil tas P3K dan ambulans di Pos Ambulans 118, jemput pasien, bawa ke City Hospital.'},
+  {id:'bus',icon:'🚌',name:'Sopir Bus Kota',reward:240,tpl:'transport',veh:'bus',office:'office-bus',item:'mesin tiket',held:'clip',skill:'Transportasi',desc:'Ambil mesin tiket dan bus di PO Bus Kota, naikkan penumpang di halte, antar ke stasiun.'},
+  {id:'cleaner',icon:'🧹',name:'Petugas Kebersihan',reward:160,tpl:'spots',office:'office-cleaner',item:'sapu & kantong sampah',held:'broom',skill:'Layanan kota',desc:'Ambil sapu di Dinas Kebersihan, lalu bersihkan sampah di jalanan dan plaza.'},
+  {id:'gardener',icon:'🌳',name:'Tukang Taman',reward:150,tpl:'spots',office:'office-garden',item:'penyiram tanaman',held:'can',skill:'Ruang hijau',desc:'Ambil penyiram di Dinas Pertamanan, lalu rawat tanaman di taman dan plaza.'},
+  {id:'mechanic',icon:'🔧',name:'Montir Keliling',reward:215,tpl:'spots',office:'garage',item:'kotak perkakas',held:'toolbox',skill:'Bengkel',desc:'Ambil kotak perkakas di Garage, lalu perbaiki mobil mogok di jalan.'},
+  {id:'builder',icon:'🧱',name:'Pekerja Konstruksi',reward:210,tpl:'spots',office:'works',item:'palu & helm proyek',held:'hammer',skill:'Konstruksi',desc:'Ambil palu dan helm di Works Depot, lalu periksa titik-titik proyek kota.'},
+  {id:'journalist',icon:'📰',name:'Jurnalis Kota',reward:220,tpl:'spots',office:'press',item:'kamera & buku catatan',held:'camera',skill:'Media',desc:'Ambil kamera di City Press Office, lalu wawancara dan laporan di tempat-tempat kota.'},
+  {id:'photo',icon:'📸',name:'Fotografer Matchday',reward:230,tpl:'spots',office:'office-photo',item:'kamera DSLR',held:'camera',skill:'Media',desc:'Pinjam kamera di Studio Foto, lalu ambil foto di stadion dan titik supporter.'},
+  {id:'doctor',icon:'🩺',name:'Perawat Rumah Sakit',reward:250,tpl:'shift',office:'hospital',item:'stetoskop',held:'kit',skill:'Medis',desc:'Ambil stetoskop di City Hospital dan bantu pasien selama satu shift.'},
+  {id:'barista',icon:'☕',name:'Barista',reward:165,tpl:'shift',office:'cafe2',item:'celemek & nampan',held:'tray',skill:'Kuliner',desc:'Ambil celemek di kafe, buat minuman dan layani antrean.'},
+  {id:'station',icon:'🚉',name:'Petugas Stasiun',reward:170,tpl:'shift',office:'station',item:'peluit & papan jadwal',held:'clip',skill:'Transportasi',desc:'Ambil papan jadwal di Central Station, bantu penumpang dan jaga jadwal.'},
+  {id:'stadium',icon:'🏟️',name:'Kru Stadion',reward:220,tpl:'shift',office:'stadium',item:'rompi kru',held:'vest',skill:'Olahraga',desc:'Ambil rompi di GBK dan siapkan operasional matchday.'},
+  {id:'farmer',icon:'🌾',name:'Petani Traktor',reward:240,tpl:'farm',veh:'tractor',office:'barn',item:'topi jerami',held:'hat',skill:'Pertanian',desc:'Ambil topi dan traktor di Lumbung Tani, panen ladang gandum dan jagung, setor ke Pasar Tani.'},
+  {id:'rancher',icon:'🐄',name:'Peternak Sapi & Ayam',reward:220,tpl:'ranch',office:'dairy',item:'ember pakan',held:'bucket',skill:'Peternakan',desc:'Ambil ember pakan di Peternakan Sapi, beri makan hewan, kumpulkan susu dan telur.'},
+  {id:'shepherd',icon:'🐑',name:'Penggembala Domba',reward:200,tpl:'sheep',office:'sheepfold',item:'tongkat gembala',held:'staff',skill:'Peternakan',desc:'Ambil tongkat di Kandang Domba, giring domba keliling padang rumput.'},
+  {id:'farmtruck',icon:'🚚',name:'Sopir Truk Hasil Tani',reward:270,tpl:'truck',veh:'truck',office:'farmstall',item:'kunci truk & peti',held:'clip',skill:'Logistik',desc:'Ambil truk di Pasar Tani, muat hasil kebun, antar ke pasar dan kafe di kota.'}
  ];
- const VEH_LABEL={motor:'🏍️ Motor',patrol:'🚓 Mobil patroli',ambulance:'🚑 Ambulans',bus:'🚌 Bus'};
+ const VEH_LABEL={motor:'🏍️ Motor',patrol:'🚓 Mobil patroli',ambulance:'🚑 Ambulans',bus:'🚌 Bus',tractor:'🚜 Traktor',truck:'🚚 Truk'};
  const COL={pick:'#4aa3e0',drop:'#7be05a',check:'#ff6a3d',hold:'#ffcf3f',back:'#b78cff'};
 
  let M=null,beacon=null,props=null,hudT=0;
@@ -60,33 +64,49 @@ export function createJobs(C){
 
  /* ---- generator langkah misi ---- */
  function build(def){
-  const S=[],dep=depotPos(def.depot);let w=0;const add=(s)=>{s.w=s.w??1;w+=s.pay?0:s.w;S.push(s);return s;};
-  const mount=()=>{if(def.veh)add({k:'mount',veh:def.veh,x:dep.x,z:dep.z,r:2.6,label:`Ambil ${VEH_LABEL[def.veh].replace(/^\S+\s/,'').toLowerCase()} di ${nameOf(def.depot)}`,tag:'pick',w:0,pay:0});};
-  const back=()=>{if(def.veh)add({k:'dismount',x:dep.x,z:dep.z,r:2.8,label:`Kembalikan kendaraan ke ${nameOf(def.depot)}`,tag:'back',w:1});};
+  const S=[],off=front(placeById(def.office)||placeById('fttr')),offName=nameOf(def.office),F=C.farm?C.farm():null;let w=0;
+  const add=(s)=>{s.w=s.w??1;w+=s.pay===0?0:s.w;S.push(s);return s;};
+  /* WAJIB: ambil properti/perlengkapan di kantor dulu. Jika ada kendaraan, ambil bersama kendaraannya. */
+  const equip=()=>{if(def.veh)add({k:'mount',veh:def.veh,x:off.x,z:off.z,r:2.8,label:`Ambil ${VEH_LABEL[def.veh].replace(/^\S+\s/,'').toLowerCase()} & ${def.item} di ${offName}`,tag:'pick',w:0,pay:0,equip:def.held});else add({k:'equip',x:off.x,z:off.z,r:2.8,sec:1.6,label:`Ambil ${def.item} di ${offName}`,tag:'pick',w:.8,equip:def.held});};
+  const back=()=>{if(def.veh)add({k:'dismount',x:off.x,z:off.z,r:3,label:`Kembalikan kendaraan ke ${offName}`,tag:'back',w:1});};
+  equip();
   if(def.tpl==='delivery'){
-   mount();add({k:'hold',x:dep.x,z:dep.z,r:2.8,sec:1.6,label:`Ambil paket di ${nameOf(def.depot)}`,tag:'pick',w:1});
-   houses(4,dep).forEach((h,i)=>add({k:'goto',x:h.x,z:h.z,r:2.2,label:`Antar paket ${i+1} ke rumah warga`,tag:'drop',w:2.2,item:'paket'}));back();
+   add({k:'hold',x:off.x,z:off.z,r:2.8,sec:1.6,label:`Ambil paket di ${offName}`,tag:'pick',w:1});
+   houses(4,off).forEach((h,i)=>add({k:'goto',x:h.x,z:h.z,r:2.2,label:`Antar paket ${i+1} ke rumah warga`,tag:'drop',w:2.2}));back();
   }else if(def.tpl==='patrol'){
-   mount();cornerPts(5).forEach((p,i)=>add({k:'hold',x:p.x,z:p.z,r:3.2,sec:1.8,label:`Pos patroli ${i+1}: periksa area`,tag:'check',w:1.4}));
-   const h=houses(1,dep)[0];if(h)add({k:'hold',x:h.x,z:h.z,r:2.8,sec:3.5,label:'Laporan warga: tangani keributan',tag:'hold',w:2.4});back();
+   cornerPts(5).forEach((p,i)=>add({k:'hold',x:p.x,z:p.z,r:3.2,sec:1.8,label:`Pos patroli ${i+1}: periksa area`,tag:'check',w:1.4}));
+   const h=houses(1,off)[0];if(h)add({k:'hold',x:h.x,z:h.z,r:2.8,sec:3.5,label:'Laporan warga: tangani keributan',tag:'hold',w:2.4});back();
   }else if(def.tpl==='transport'){
-   mount();
-   if(def.veh==='ambulance'){const hos=front(placeById('hospital'));houses(2,dep).forEach((h,i)=>{add({k:'hold',x:h.x,z:h.z,r:3,sec:2,label:`Jemput pasien ${i+1}`,tag:'pick',w:1.6,item:'pasien'});add({k:'hold',x:hos.x,z:hos.z,r:3.2,sec:1.6,label:'Antar pasien ke City Hospital',tag:'drop',w:1.6});});}
-   else{const st=front(placeById('station'));const stops=[placeById('busstop'),placeById('cafe'),placeById('pub'),placeById('market')].filter(Boolean);stops.slice(0,3).forEach((p,i)=>{const f=front(p);add({k:'hold',x:f.x,z:f.z+(p.id==='busstop'?.6:0),r:3.2,sec:2,label:`Naikkan penumpang di halte ${i+1}`,tag:'pick',w:1.4});});add({k:'hold',x:st.x,z:st.z,r:3.2,sec:1.8,label:'Turunkan penumpang di Central Station',tag:'drop',w:1.8});}
+   if(def.veh==='ambulance'){const hos=front(placeById('hospital'));houses(2,off).forEach((h,i)=>{add({k:'hold',x:h.x,z:h.z,r:3,sec:2,label:`Jemput pasien ${i+1}`,tag:'pick',w:1.6});add({k:'hold',x:hos.x,z:hos.z,r:3.2,sec:1.6,label:'Antar pasien ke City Hospital',tag:'drop',w:1.6});});}
+   else{const st=front(placeById('station'));[placeById('busstop'),placeById('cafe'),placeById('pub'),placeById('market')].filter(Boolean).slice(0,3).forEach((p,i)=>{const f=front(p);add({k:'hold',x:f.x,z:f.z+(p.id==='busstop'?.6:0),r:3.2,sec:2,label:`Naikkan penumpang di halte ${i+1}`,tag:'pick',w:1.4});});add({k:'hold',x:st.x,z:st.z,r:3.2,sec:1.8,label:'Turunkan penumpang di Central Station',tag:'drop',w:1.8});}
    back();
   }else if(def.tpl==='spots'){
    let pts=[],lab='',sec=2.2,tag='hold';
-   if(def.id==='cleaner'){pts=streetPts(4,[-58,58]).concat(ring(-12,-36.5,5.5,2));lab='Bersihkan sampah';tag='hold';}
+   if(def.id==='cleaner'){pts=streetPts(4,[-58,58]).concat(ring(-12,-36.5,5.5,2));lab='Bersihkan sampah';}
    else if(def.id==='gardener'){pts=[[-36,12],[-30,6],[36,12],[42,6],[-12,-40.5],[-16,-33]].map(([x,z])=>({x,z})).filter(p=>okPt(p.x,p.z,.5)).slice(0,5);lab='Rawat tanaman';}
    else if(def.id==='mechanic'){pts=streetPts(3,[20,60]);lab='Perbaiki mobil mogok';sec=3.2;}
    else if(def.id==='builder'){pts=streetPts(3,[-58,-10]).concat(streetPts(1,[30,64]));lab='Periksa titik proyek';sec=3;}
    else if(def.id==='journalist'){pts=['market','cafe','station','hospital','police'].map(id=>front(placeById(id))).filter(Boolean).slice(0,4);lab='Wawancara & laporan';sec=2.8;tag='check';}
    else if(def.id==='photo'){pts=['stadium','stadium-ot','stadium-maguwo','station'].map(id=>front(placeById(id))).filter(Boolean);lab='Ambil foto matchday';tag='check';}
-   else if(def.id==='security'){pts=['stadium','stadium-ot','stadium-maguwo'].map(id=>{const f=front(placeById(id));return f;}).concat([{x:84,z:-3.4},{x:132,z:-3.4}]).filter(Boolean).slice(0,5);lab='Periksa tiket di pos';tag='check';}
+   else if(def.id==='security'){pts=['stadium','stadium-ot','stadium-maguwo'].map(id=>front(placeById(id))).concat([{x:84,z:-3.4},{x:132,z:-3.4}]).filter(Boolean).slice(0,5);lab='Periksa tiket di pos';tag='check';}
    pts.forEach((p,i)=>add({k:'hold',x:p.x,z:p.z,r:2.8,sec,label:`${lab} (${i+1}/${pts.length})`,tag,w:1.5,prop:def.id}));
+  }else if(def.tpl==='farm'&&F){
+   const fp=shuffle(F.wheat).slice(0,2).map(p=>({...p,c:'gandum'})).concat(shuffle(F.corn).slice(0,2).map(p=>({...p,c:'jagung'})));
+   fp.forEach((p,i)=>add({k:'hold',x:p.x,z:p.z,r:3.2,sec:2.4,label:`Panen ${p.c} (${i+1}/${fp.length})`,tag:'hold',w:1.6}));
+   add({k:'hold',x:F.stall.x,z:F.stall.z,r:3.4,sec:1.6,label:'Serahkan hasil panen di Pasar Tani',tag:'drop',w:1.6});back();
+  }else if(def.tpl==='ranch'&&F){
+   F.ranch.slice(0,2).forEach((p,i)=>add({k:'hold',x:p.x,z:p.z,r:3,sec:2.2,label:`Beri pakan sapi (${i+1}/2)`,tag:'hold',w:1.4}));
+   add({k:'hold',x:F.ranch[2].x,z:F.ranch[2].z,r:3,sec:2.2,label:'Perah susu sapi',tag:'hold',w:1.6});
+   add({k:'hold',x:F.coop.x,z:F.coop.z,r:2.8,sec:2,label:'Kumpulkan telur ayam',tag:'hold',w:1.4});
+   add({k:'hold',x:F.stall.x,z:F.stall.z,r:3.4,sec:1.6,label:'Antar susu & telur ke Pasar Tani',tag:'drop',w:1.6});
+  }else if(def.tpl==='sheep'&&F){
+   shuffle(F.sheep).slice(0,4).forEach((p,i)=>add({k:'hold',x:p.x,z:p.z,r:3.2,sec:2.4,label:`Giring domba (${i+1}/4)`,tag:'hold',w:1.5}));
+   add({k:'hold',x:off.x,z:off.z,r:3,sec:1.4,label:'Kembali ke kandang & hitung domba',tag:'back',w:1});
+  }else if(def.tpl==='truck'&&F){
+   add({k:'hold',x:F.stall.x,z:F.stall.z+2.4,r:3.4,sec:1.8,label:'Muat peti hasil tani di Pasar Tani',tag:'pick',w:1});
+   ['market','cafe','pub','northside-market','eastbank-market'].map(id=>placeById(id)).filter(Boolean).slice(0,3).forEach((p,i)=>{const f=front(p);add({k:'hold',x:f.x,z:f.z+1,r:3.4,sec:1.8,label:`Antar peti ke ${p.name} (${i+1}/3)`,tag:'drop',w:2});});back();
   }else{ // shift
-   const f=front(placeById(def.depot)||placeById('fttr'));add({k:'goto',x:f.x,z:f.z,r:2.6,label:`Pergi ke ${nameOf(def.depot)}`,tag:'pick',w:.8});
-   add({k:'hold',x:f.x,z:f.z,r:3.6,sec:10,label:'Bekerja… tetap di dekat lokasi',tag:'hold',w:3});
+   add({k:'hold',x:off.x,z:off.z,r:3.6,sec:10,label:'Bekerja… tetap di dekat lokasi',tag:'hold',w:3});
   }
   return S;
  }
@@ -105,7 +125,7 @@ export function createJobs(C){
  function clearProps(){if(props){C.scene.remove(props);props=null;}}
  function spawnProps(){
   clearProps();props=new T.Group();C.scene.add(props);
-  const dep=depotPos(M.def.depot);
+  const dep=front(placeById(M.def.office)||placeById('fttr'));
   if(M.def.veh){const m=C.makeVehicleModel(M.def.veh);m.g.position.set(dep.x,0,dep.z);m.g.rotation.y=-Math.PI/2*0;props.add(m.g);M.depotVeh=m.g;}
   M.steps.forEach(s=>{
    if(!s.prop)return;const g=new T.Group();g.position.set(s.x,0,s.z);props.add(g);s.propG=g;
@@ -147,12 +167,12 @@ export function createJobs(C){
  }
  function goStep(i){M.i=i;M.h=0;const s=M.steps[i];if(!s)return;if(!beacon)return;beacon.visible=true;paint(beacon,COL[s.tag]||'#ffcf3f');hudUpdate(true);}
  function nextStep(){
-  const s=M.steps[M.i];M.earned+=s.pay||0;stepComplete(M.i);
-  if(s.pay>0)C.toast(`${s.label.split(':')[0].replace(/^Antar /,'✔ Terkirim: ')} · +₡${s.pay}`.slice(0,60));
+  const s=M.steps[M.i];if(s.equip)C.setHeld(s.equip);M.earned+=s.pay||0;stepComplete(M.i);
+  if(s.k==='equip'||s.k==='mount')C.toast(`Siap bekerja: ${M.def.item}`);else if(s.pay>0)C.toast(`${s.label.split(':')[0].replace(/^Antar /,'✔ Terkirim: ')} · +₡${s.pay}`.slice(0,60));
   if(M.i+1>=M.steps.length){finish();return;}goStep(M.i+1);
  }
  async function finish(){
-  const m=M;M=null;if(beacon)beacon.visible=false;clearProps();C.setRide(null);hudShow(false);
+  const m=M;M=null;if(beacon)beacon.visible=false;clearProps();C.setRide(null);C.setHeld(null);hudShow(false);
   const secs=(performance.now()-m.t0)/1000,fast=secs<(m.def.tpl==='shift'?9e9:60+m.steps.length*22)?Math.round(m.base*.1):0;
   const lvBonus=Math.round(m.def.reward*(mult(m.def.id)-1)),bonus=Math.min(150,lvBonus+fast);
   const wasLvl=lvl(m.def.id);prog[m.def.id]={done:(prog[m.def.id]?.done||0)+1,earned:(prog[m.def.id]?.earned||0)+m.earned};save();
@@ -165,7 +185,7 @@ export function createJobs(C){
   C.rerender();
  }
  function cancel(){
-  if(!M)return;M=null;if(beacon)beacon.visible=false;clearProps();C.setRide(null);hudShow(false);C.toast('Misi dibatalkan');C.rerender();
+  if(!M)return;M=null;if(beacon)beacon.visible=false;clearProps();C.setRide(null);C.setHeld(null);hudShow(false);C.toast('Misi dibatalkan');C.rerender();
  }
  function update(dt){
   if(beacon&&beacon.visible){const u=beacon.userData,s=M?.steps[M.i];if(s){u.t+=dt;beacon.position.set(s.x,0,s.z);const k=(u.t%1.2)/1.2;u.pulse.scale.setScalar(1+k*1.6);u.pulse.material.opacity=.7*(1-k);u.arrow.position.y=9+Math.sin(u.t*4)*.4;u.col.material.opacity=.22+Math.sin(u.t*3)*.06;}}
@@ -174,16 +194,17 @@ export function createJobs(C){
   if(s.k==='mount'){if(d<s.r){if(M.depotVeh){props.remove(M.depotVeh);M.depotVeh=null;}C.setRide(s.veh);nextStep();}}
   else if(s.k==='dismount'){if(d<s.r){C.setRide(null);nextStep();}}
   else if(s.k==='goto'){if(d<s.r)nextStep();}
-  else if(s.k==='hold'){if(d<s.r){M.h+=dt;if(M.h>=s.sec)nextStep();}else M.h=Math.max(0,M.h-dt*1.5);}
+  else if(s.k==='hold'||s.k==='equip'){if(d<s.r){M.h+=dt;if(M.h>=s.sec)nextStep();}else M.h=Math.max(0,M.h-dt*1.5);}
   hudT+=dt;if(hudT>.12){hudT=0;hudUpdate();}
  }
 
  /* ---- UI aplikasi phone ---- */
  function renderApp(){
   const rows=DEFS.map(d=>{const l=lvl(d.id),done=prog[d.id]?.done||0,run=M?.def.id===d.id,pay=Math.round(d.reward),bonus=Math.min(150,Math.round(d.reward*(mult(d.id)-1)));
-   return `<article class="job-card"><div class="job-card-top"><span class="job-emoji">${d.icon}</span><div><b>${d.name}<span class="bot-badge">Lv ${l}</span></b><p>${d.desc}<br>${d.veh?VEH_LABEL[d.veh]+' · ':''}${d.skill} · ${done}× selesai</p></div></div><button data-action="${run?'mission-cancel':'mission:'+d.id}" ${M&&!run?'disabled':''}>${run?'BATALKAN MISI':'MULAI MISI'} · ₡${pay}${bonus?` +${bonus}`:''}</button></article>`;}).join('');
-  return `<div class="phone-widget"><small>PEKERJAAN KOTA</small><h3>Pilih misi, dapat gaji.</h3><p>Ambil kendaraan atau alat kerja, ikuti penanda di peta, selesaikan semua langkah, lalu terima gaji. Level naik tiap 3 misi dan menambah bonus. Pekerjaan terbuka untuk semua warga, tidak ada batas pemain.</p></div>${M?`<div class="message"><b>Misi berjalan:</b> ${M.def.name} · langkah ${M.i+1}/${M.steps.length}</div>`:''}<div class="service-list">${rows}</div><p class="fineprint">Upah masuk ke saldo virtual. Saat terhubung ke server, gaji dicatat server dan bonus level dibatasi.</p>`;
+   return `<article class="job-card"><div class="job-card-top"><span class="job-emoji">${d.icon}</span><div><b>${d.name}<span class="bot-badge">Lv ${l}</span></b><p>${d.desc}<br><b>Kantor:</b> ${nameOf(d.office)} · ${d.veh?VEH_LABEL[d.veh]+' · ':''}${d.skill} · ${done}× selesai</p></div></div><button data-action="${run?'mission-cancel':'mission:'+d.id}" ${M&&!run?'disabled':''}>${run?'BATALKAN MISI':'MULAI MISI'} · ₡${pay}${bonus?` +${bonus}`:''}</button></article>`;}).join('');
+  return `<div class="phone-widget"><small>PEKERJAAN KOTA</small><h3>Pilih misi, dapat gaji.</h3><p>Setiap pekerjaan punya kantor sendiri: ambil perlengkapan dan kendaraan di sana dulu, lalu ikuti penanda, selesaikan semua langkah, lalu terima gaji. Level naik tiap 3 misi dan menambah bonus. Pekerjaan terbuka untuk semua warga, tidak ada batas pemain.</p></div>${M?`<div class="message"><b>Misi berjalan:</b> ${M.def.name} · langkah ${M.i+1}/${M.steps.length}</div>`:''}<div class="service-list">${rows}</div><p class="fineprint">Upah masuk ke saldo virtual. Saat terhubung ke server, gaji dicatat server dan bonus level dibatasi.</p>`;
  }
+ const byOffice=id=>DEFS.find(d=>d.office===id);
  function actionFor(placeId){const m={jobcentre:'courier',police:'police',garage:'mechanic',works:'builder',press:'journalist',cafe:'food',fttr:'store',station:'bus',hospital:'medic',stadium:'stadium','stadium-ot':'stadium','stadium-maguwo':'security'};return m[placeId];}
- return {start,cancel,update,renderApp,state:()=>M,active:()=>!!M,defs:DEFS,actionFor,prog,def:id=>DEFS.find(d=>d.id===id)};
+ return {start,cancel,update,renderApp,byOffice,state:()=>M,active:()=>!!M,defs:DEFS,actionFor,prog,def:id=>DEFS.find(d=>d.id===id)};
 }

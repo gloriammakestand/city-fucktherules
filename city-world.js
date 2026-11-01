@@ -23,7 +23,7 @@ export function createWorld(C){
   const c=cv(64,64,(x,w,h)=>{x.fillStyle='#72cc47';x.fillRect(0,0,w,h);const r=RND(11);
    for(let i=0;i<150;i++){const v=r();x.fillStyle=v<.5?'#7ad84e':v<.8?'#66bd3e':'#8be25a';x.fillRect(Math.floor(r()*32)*2,Math.floor(r()*32)*2,2,2);}
    for(let i=0;i<9;i++){x.fillStyle=['#ffe14a','#ff7aa8','#ffffff'][i%3];x.fillRect(Math.floor(r()*32)*2,Math.floor(r()*32)*2,2,2);}});
-  return new T.MeshStandardMaterial({map:tex(c,[35,19],true),roughness:1});
+  return new T.MeshStandardMaterial({map:tex(c,[35,34],true),roughness:1});
  }
 
  /* ---------- air (satu tekstur, digeser tiap frame) ---------- */
@@ -49,7 +49,7 @@ export function createWorld(C){
   shapeMesh(rectShape(-450,450,-450,450),waterMat,-.12);                        // laut di bawah pulau
   const sand=flat('sand','#f6dc9a'),wet=flat('wet','#e6c680'),foam=mat('foam','#effcff',{roughness:.6,transparent:true,opacity:.85,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3});
   // tepi pulau (barat, timur, utara)
-  shapeMesh(rectShape(XL,XL+6,-75,SAND_Z),sand,-.05);shapeMesh(rectShape(XR-6,XR,-75,SAND_Z),sand,-.05);shapeMesh(rectShape(XL,XR,-75,-69),sand,-.05);
+  shapeMesh(rectShape(XL,XL+6,-195,SAND_Z),sand,-.05);shapeMesh(rectShape(XR-6,XR,-195,SAND_Z),sand,-.05);shapeMesh(rectShape(XL,XR,-195,-189),sand,-.05);
   // air pantai selatan (di atas rumput), pasir bergelombang, pasir basah, buih
   shapeMesh(band(-450,450,x=>shoreZ(x)-1.6,()=>450),waterMat,.02);
   shapeMesh(band(XL,XR,()=>SAND_Z,x=>shoreZ(x)),sand,.03);
