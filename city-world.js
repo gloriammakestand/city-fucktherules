@@ -3,7 +3,7 @@
    Dipanggil dari city.js lewat createWorld(ctx). Tidak mengubah logika game. */
 export function createWorld(C){
  const T=C.THREE,G=()=>C.group(),RND=C.RND;
- const COAST_Z=56,SAND_Z=58.2,PIER_X=22,XL=-75,XR=205,XM=(XL+XR)/2,XW=XR-XL;
+ const COAST_Z=56,SAND_Z=58.2,PIER_X=22,XL=-75,XR=215,XM=(XL+XR)/2,XW=XR-XL;
  const shoreZ=x=>64+Math.sin(x*.11)*1.3+Math.sin(x*.047+1)*1.7;
  const coastLimit=x=>Math.abs(x-PIER_X)<1.7?79:shoreZ(x)-.9;
  const reserved=[];            // persegi yang tidak boleh diisi bangunan acak: [x1,x2,z1,z2]
@@ -23,7 +23,7 @@ export function createWorld(C){
   const c=cv(64,64,(x,w,h)=>{x.fillStyle='#72cc47';x.fillRect(0,0,w,h);const r=RND(11);
    for(let i=0;i<150;i++){const v=r();x.fillStyle=v<.5?'#7ad84e':v<.8?'#66bd3e':'#8be25a';x.fillRect(Math.floor(r()*32)*2,Math.floor(r()*32)*2,2,2);}
    for(let i=0;i<9;i++){x.fillStyle=['#ffe14a','#ff7aa8','#ffffff'][i%3];x.fillRect(Math.floor(r()*32)*2,Math.floor(r()*32)*2,2,2);}});
-  return new T.MeshStandardMaterial({map:tex(c,[35,34],true),roughness:1});
+  return new T.MeshStandardMaterial({map:tex(c,[36,34],true),roughness:1});
  }
 
  /* ---------- air (satu tekstur, digeser tiap frame) ---------- */
@@ -42,7 +42,7 @@ export function createWorld(C){
  function ellipse(cx,cz,rx,rz,n){const s=new T.Shape();for(let i=0;i<=n;i++){const a=i/n*Math.PI*2,px=cx+Math.cos(a)*rx*(1+Math.sin(a*3)*.06),pz=cz+Math.sin(a)*rz*(1+Math.cos(a*2)*.07);if(i===0)s.moveTo(px,-pz);else s.lineTo(px,-pz);}return s;}
 
  /* ---------- kanal kota (air sungguhan, mengalir ke laut) ---------- */
- function canal(){shapeMesh(rectShape(-220,60,27.8,32.2),waterMat,.012);shapeMesh(ellipse(62,30,6.4,5,28),flat('pond-edge','#e3d6b0'),.011);shapeMesh(ellipse(62,30,5.6,4.2,28),waterMat,.013);}
+ function canal(){const xs=[];for(let x=-220;x<=60.01;x+=3)xs.push(x);const cs=new T.Shape();cs.moveTo(xs[0],-27.8);xs.forEach(x=>cs.lineTo(x,-27.8));for(let i=xs.length-1;i>=0;i--)cs.lineTo(xs[i],-32.2);cs.closePath();shapeMesh(cs,waterMat,.012);shapeMesh(ellipse(62,30,6.4,5,28),flat('pond-edge','#e3d6b0'),.011);shapeMesh(ellipse(62,30,5.6,4.2,28),waterMat,.013);}
 
  /* ---------- pulau: laut luas, tepi pasir, pantai selatan ---------- */
  function island(){
@@ -128,7 +128,7 @@ export function createWorld(C){
 
  /* ---------- kios pantai ---------- */
  function huts(){
-  const defs=[[-54,'KIOS','#ff7a59'],[-14,'SURF','#2fb4e6'],[10,'ICE','#ffcf3f'],[40,'DRINK','#7be05a'],[-26,'RENT','#b78cff'],[84,'SATE','#e5483b'],[108,'ES TEH','#3aa6e6'],[132,'JAGUNG','#ffcf3f'],[158,'BAKSO','#7be05a'],[182,'KOPI','#b78cff']];
+  const defs=[[-54,'KIOS','#ff7a59'],[-14,'SURF','#2fb4e6'],[10,'ICE','#ffcf3f'],[40,'DRINK','#7be05a'],[-28.8,'RENT','#b78cff'],[84,'SATE','#e5483b'],[104,'ES TEH','#3aa6e6'],[134,'JAGUNG','#ffcf3f'],[170,'BAKSO','#7be05a'],[190,'KOPI','#b78cff']];
   defs.forEach(([x,t,c],i)=>{const g=new T.Group();g.position.set(x,0,59.6);G().add(g);
    bx(g,3,2.1,2.4,'#fff6df',0,1.15,0);bx(g,3.3,.14,2.8,'#d8c9a6',0,.1,0);
    C.gable(g,3,2.4,1.1,c,2.2);bx(g,2.6,.12,.7,mat('aw'+i,c),0,1.55,1.5);
@@ -140,7 +140,7 @@ export function createWorld(C){
  /* ---------- payung, kursi pantai, batu ---------- */
  function beachProps(){
   const r=RND(31),cols=['#ff5d6c','#ffcf3f','#2fb4e6','#7be05a','#ff9a3d','#b78cff'];
-  const cone=new T.ConeGeometry(1.05,.5,8),keep=x=>!(Math.abs(x-PIER_X)<4||Math.abs(x)<7||Math.abs(x+34)<6.5||(x>47&&x<60)||[-54,-14,10,40,-26,84,108,132,158,182].some(h=>Math.abs(x-h)<3));
+  const cone=new T.ConeGeometry(1.05,.5,8),keep=x=>!(Math.abs(x-PIER_X)<4||Math.abs(x)<7||Math.abs(x+39)<6.5||(x>47&&x<60)||[-54,-14,10,40,-28.8,84,104,134,170,190].some(h=>Math.abs(x-h)<3));
   let n=0;for(let t=0;t<400&&n<62;t++){const x=-62+r()*252;if(!keep(x))continue;const z=61+r()*Math.max(.5,shoreZ(x)-65.2);if(z>shoreZ(x)-2.2)continue;n++;
    cy(G(),.03,.03,2,'#f2f2ee',x,1,z,5);const u=new T.Mesh(cone,mat('umb'+(n%6),cols[n%6]));u.position.set(x,2.1,z);put(u);
    const rot=r()*Math.PI;[-.9,.9].forEach(s=>{const b=new T.Mesh(new T.BoxGeometry(.5,.12,1.3),mat('bed'+(n%2),n%2?'#ffffff':'#ffe9a8'));b.position.set(x+Math.cos(rot)*s,.18,z+Math.sin(rot)*s*.7);b.rotation.y=rot;put(b);});}
@@ -178,7 +178,7 @@ export function createWorld(C){
  }
 
  function buildCoast(){
-  island();pier();huts();beachProps();skyTower(0,60.6);ferris(-34,60.6);lighthouse(54,60.6);
+  island();pier();huts();beachProps();skyTower(0,60.6);ferris(-39,60.6);lighthouse(54,60.6);
   const r=RND(77);
   for(let x=-62,i=0;x<=196;x+=4.1,i++){if(C.VR.some(v=>Math.abs(x-v)<3.6)||Math.abs(x)<6.5)continue;palm(x+r()*1.2,COAST_Z-.6+(i%2)*.5,.9+r()*.5,i);}
   for(let i=0;i<20;i++){const x=-60+i*14+r()*4;if(Math.abs(x-PIER_X)<5||Math.abs(x)<8)continue;palm(x,SAND_Z+.9+r()*.6,1,i+3);}
@@ -295,7 +295,7 @@ export function createWorld(C){
  /* ---------- rel berkelok & kereta yang mengikuti lengkungan ---------- */
  const railState={};
  function buildRail(st){
-  const ZC=st.z,AMP=2.0,LEN=8.5,X0=-72,X1=70,pts=[],f=x=>({x,z:ZC+AMP*Math.sin((x-st.x)/LEN)*(Math.abs(x-st.x)<2?Math.abs(x-st.x)/2:1)});
+  const ZC=st.z,AMP=2.0,LEN=8.5,X0=-72,X1=70,pts=[],WP=C.warp||((x,z)=>({x,z})),STW=WP(st.x,st.z),f=x=>{const g={x,z:ZC+AMP*Math.sin((x-st.x)/LEN)*(Math.abs(x-st.x)<2?Math.abs(x-st.x)/2:1)};return WP(g.x,g.z);};
   for(let x=X0;x<=X1+.01;x+=1.2)pts.push(f(x));
   const seg=[0];for(let i=1;i<pts.length;i++)seg.push(seg[i-1]+Math.hypot(pts[i].x-pts[i-1].x,pts[i].z-pts[i-1].z));
   const L=seg[seg.length-1];
@@ -303,13 +303,13 @@ export function createWorld(C){
   const ribbon=(off,half,y,col)=>{const pos=[],nor=[],uv=[],idx=[];pts.forEach((p,i)=>{const q=sample(seg[i]),nx=-Math.sin(q.ang),nz=Math.cos(q.ang);[1,-1].forEach(sd=>{pos.push(p.x+nx*(off+sd*half),y,p.z+nz*(off+sd*half));nor.push(0,1,0);uv.push(0,0);});});
    for(let i=0;i<pts.length-1;i++){const a=i*2,b=a+1,c=a+2,d=a+3;idx.push(a,c,b,b,c,d);}
    const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(new Float32Array(pos),3));g.setAttribute('normal',new T.BufferAttribute(new Float32Array(nor),3));g.setAttribute('uv',new T.BufferAttribute(new Float32Array(uv),2));g.setIndex(idx);
-   const m=new T.Mesh(g,new T.MeshStandardMaterial({color:col,roughness:1,side:T.DoubleSide}));m.receiveShadow=true;m.userData.noMerge=true;G().add(m);return m;};
+   const m=new T.Mesh(g,new T.MeshStandardMaterial({color:col,roughness:1,side:T.DoubleSide}));m.receiveShadow=true;m.userData.noMerge=true;m.userData.warped=true;G().add(m);return m;};
   ribbon(0,1.05,.05,'#a89a7e');ribbon(.55,.06,.075,'#2b2e29');ribbon(-.55,.06,.075,'#2b2e29');
-  for(let s=0.6;s<L;s+=1.1){const q=sample(s),m=new T.Mesh(new T.BoxGeometry(.22,.06,1.9),mat('sleeper','#6b5239'));m.position.set(q.x,.06,q.z);m.rotation.y=-q.ang;put(m,G(),{cast:false});}
+  {const sl=[];for(let s=0.6;s<L;s+=1.1){const q=sample(s);sl.push([q.x,.06,q.z,1,1,1,-q.ang]);}const im=new T.InstancedMesh(new T.BoxGeometry(.22,.06,1.9),mat('sleeper','#6b5239'),sl.length),dm=new T.Object3D();sl.forEach((p,i)=>{dm.position.set(p[0],p[1],p[2]);dm.rotation.set(0,p[6],0);dm.updateMatrix();im.setMatrixAt(i,dm.matrix);});im.instanceMatrix.needsUpdate=true;im.receiveShadow=true;im.userData.warped=true;G().add(im);}
   // kereta 3 gerbong
   const cols=['#d7ff3f','#171914','#d7ff3f'],carsT=[];
   cols.forEach((c,i)=>{const g=new T.Group();g.userData.noMerge=true;G().add(g);bx(g,2.6,1,.95,c,0,.8,0);bx(g,2.2,.3,.97,'#9fc4cf',0,1.05,0).castShadow=false;bx(g,2.4,.12,.8,'#2a2d28',0,1.35,0);carsT.push(g);});
-  let sSt=0;for(let i=1;i<pts.length;i++){if(pts[i].x>=st.x){sSt=seg[i];break;}}
+  let sSt=0;for(let i=1;i<pts.length;i++){if(pts[i].x>=STW.x){sSt=seg[i];break;}}
   Object.assign(railState,{L,sample,carsT,sSt,s:sSt-40,dir:1,speed:0,state:'run',t:0,done:false});
   const place=()=>{carsT.forEach((g,i)=>{const q=sample(railState.s-railState.dir*i*2.9);g.position.set(q.x,.1,q.z);g.rotation.y=-q.ang;});};place();railState.place=place;
  }
@@ -341,7 +341,7 @@ export function createWorld(C){
   t.repeat.set(1,1);const m=new T.Mesh(new T.PlaneGeometry(w,d),new T.MeshStandardMaterial({map:t,roughness:1}));m.rotation.x=-Math.PI/2;m.position.y=y;m.receiveShadow=true;m.userData.noMerge=true;g.add(m);return m;
  }
  function flood(g,x,z,h){cy(g,.16,.22,h,'#8d98a3',x,h/2,z,6);const hd=bx(g,1.8,.9,.4,mat('flood','#fffbe0',{emissive:'#fff2a8',emissiveIntensity:.7}),x,h+.2,z);hd.rotation.y=Math.atan2(x,z)+Math.PI;}
- function gate(g,x,z,w,col,text,bg,fg){bx(g,w,4.2,3,col,x,2.1,z);bx(g,w+.8,.4,3.6,'#2a2d28',x,4.4,z);bx(g,w*.4,3,.12,mat('gate-glass','#9fd6ee',{emissive:'#5fb3d9',emissiveIntensity:.25}),x,1.6,z+1.55);C.sign(g,text,x,5.6,z+1.6,w*.9,1.4,bg,fg);}
+ function gate(g,x,z,w,col,text,bg,fg){bx(g,w,4.2,3,col,x,2.1,z);bx(g,w+.8,.4,3.6,'#2a2d28',x,4.4,z);bx(g,w*.4,3,.12,mat('gate-glass','#9fd6ee',{emissive:'#5fb3d9',emissiveIntensity:.25}),x,1.6,z+1.55);}
  function stand(g,cx,cz,w,d,dir,cols,hs,step){ // tangga tribun bertingkat menjauhi lapangan; dir=[dx,dz]
   hs.forEach((h,k)=>{const off=k*step+step/2,x=cx+dir[0]*off,z=cz+dir[1]*off,sw=dir[0]!==0;bx(g,sw?step:w,h,sw?w:step,cols[k%cols.length],x,h/2,z);});
  }

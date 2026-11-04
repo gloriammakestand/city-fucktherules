@@ -60,3 +60,11 @@ Note: citizen needs are local-browser gameplay state in this prototype. Online e
 - **Kantor berbeda tiap pekerjaan**: tiap pekerjaan punya kantor sendiri (lihat `office` di `DEFS`, `city-jobs.js`), misalnya Dinas Kebersihan, Dinas Pertamanan, Pos Ambulans 118, PO Bus Kota, Studio Foto, Lumbung Tani, dan seterusnya. Kantor baru dibuat di slot rumah deret (`OFF` di `houses()`).
 - **Properti wajib**: langkah pertama setiap misi adalah mengambil perlengkapan di kantor (kamera untuk wartawan, sapu untuk kebersihan, radio untuk polisi, topi untuk petani, dan seterusnya). Propertinya tampak di tangan karakter selama misi.
 - **Zoom-out lebih lebar**: zoom minimum diturunkan sehingga separuh kota (atau hampir seluruh kota utama di layar landscape) bisa terlihat.
+
+## Pembaruan v17
+- **Jalan tidak lagi kotak-kotak**: kota dibangun di ruang grid lalu dilengkungkan oleh medan halus di `city-warp.js` (`warp()`), sehingga jalan, blok, trotoar, sungai, rel, dan bangunan ikut melengkung secara konsisten. Jalan juga dipotong per ruas (`H_ROADS`/`V_ROADS` di `city.js`) dan ada tiga bundaran. Wilayah tani hanya melengkung ringan (22%) supaya ladang tetap rapi. Pantai dan tepi peta tidak ikut melengkung.
+- **Tiga stadion di tiga sudut kota** (barat laut: Old Trafford, timur laut: GBK, tenggara: Stadion Maguwo), tanpa tulisan nama di bangunannya. Tersedia di menu Travel.
+- **Tidak ada objek di atas jalan**: semua penempatan (bangunan, place, pohon, mobil parkir) memakai `roadDist()`/`rectOnRoad()` yang mengenal potongan jalan dan bundaran. Hasil akhirnya diperiksa otomatis di ruang grid: 0 pelanggaran dari 236 objek.
+- Baris bangunan kedua di blok besar (timur) supaya kota padat. Bangunan menghadap jalan mengikuti tikungan. Collision memakai kotak berotasi (`rot`) dan titik depan place berasal dari `fx/fz`.
+- Mobil dan pejalan kaki mengikuti jalan yang melengkung (posisi grid dipetakan lewat `warp()` tiap frame).
+- Tuas stabil: tinggi menara dibatasi dengan memindai jalan di belakang bangunan (`behindMax`).
