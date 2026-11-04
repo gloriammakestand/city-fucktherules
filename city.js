@@ -34,9 +34,9 @@ const ART_RES=[...ART_SURF.poles.map(p=>[p[0]-.8,p[0]+.8,p[1]-.8,p[1]+.8]),...AR
 const EAST_X=206,NORTH_Z=-190;
 /* Jaringan jalan (ruang grid; setelah selesai dibangun seluruh kota dilengkungkan oleh city-warp.js).
    Potongan jalan tidak lagi melintasi seluruh peta: tiga sudut kota dikosongkan untuk stadion. */
-const H_ROADS=[{z:-44,x1:-24,x2:156},{z:-22,x1:-66,x2:72},{z:0,x1:-66,x2:196},{z:22,x1:-66,x2:72},{z:44,x1:-66,x2:196},{z:-88,x1:-66,x2:66},{z:-132,x1:-66,x2:66},{z:-176,x1:-66,x2:66}];
-const V_ROADS=[{x:-48,z1:-22,z2:55.6},{x:-48,z1:-190,z2:-72},{x:-24,z1:-66,z2:55.6},{x:0,z1:-190,z2:55.6},{x:24,z1:-66,z2:55.6},{x:48,z1:-190,z2:55.6},{x:72,z1:-66,z2:55.6},{x:114,z1:-66,z2:55.6},{x:156,z1:-66,z2:55.6}];
-const RBS=[{x:72,z:0,r:8},{x:114,z:0,r:8},{x:156,z:0,r:8}];
+const H_ROADS=[{z:-44,x1:-24,x2:156},{z:-22,x1:-70.5,x2:72},{z:0,x1:-66,x2:206},{z:22,x1:-48,x2:108},{z:44,x1:-48,x2:206},{z:-88,x1:-66,x2:66},{z:-132,x1:-66,x2:66},{z:-176,x1:-66,x2:66},{z:-69.5,x1:-70.5,x2:-24},{z:-66,x1:156,x2:206},{z:-21,x1:156,x2:206},{z:-22,x1:76,x2:132}];
+const V_ROADS=[{x:-48,z1:-22,z2:55.6},{x:-48,z1:-190,z2:-69.5},{x:-70.5,z1:-69.5,z2:-22},{x:-24,z1:-69.5,z2:55.6},{x:0,z1:-190,z2:55.6},{x:24,z1:-22,z2:55.6},{x:48,z1:-190,z2:55.6},{x:76,z1:-66,z2:55.6},{x:108,z1:-66,z2:55.6},{x:132,z1:-44,z2:0},{x:132,z1:0,z2:55.6},{x:156,z1:-66,z2:55.6},{x:206,z1:-66,z2:55.6}];
+const RBS=[{x:76,z:0,r:8},{x:108,z:0,r:8},{x:156,z:0,r:8}];
 const HR=[-44,-22,0,22,44],VR=[-48,-24,0,24,48];
 /* potongan jalan setelah bundaran memotong: jalan berakhir di cincin */
 const PH=[],PV=[];
@@ -259,10 +259,10 @@ function scenery(){
  WLD.buildRail({x:14.5,z:-14.8});box(cityGroup,9,.25,1.7,'#cfcbbb',14.5,.12,-13.1);
 }
 function bigStadiums(){
- const reg=(id,kind,x,z,o)=>{const r=WLD.buildStadium(kind,x,z);const hit=new THREE.Mesh(new THREE.BoxGeometry(r.w,r.H+1,r.d),new THREE.MeshBasicMaterial({transparent:true,opacity:.001,depthWrite:false}));hit.position.set(x,r.H/2,z);hit.userData.placeId=id;cityGroup.add(hit);pickables.push(hit);places.push({id,...o,x,z,w:r.w,d:r.d,hours:'MATCHDAY · 24 JAM',kind:'building',group:null,hit,rot0:0});};
- reg('stadium-ot','ot',-46,-50.5,{name:'OLD TRAFFORD',type:'FOOTBALL STADIUM',desc:'Stadion klasik empat tribun dengan atap kantilever dan kursi merah, di sudut barat laut kota. Panggung derby dan malam Eropa para supporter.',glyph:'OLD TRAFFORD',tag:'MATCHDAY'});
- reg('stadium','gbk',180,-42,{name:'GELORA BUNG KARNO (GBK)',type:'FOOTBALL STADIUM',desc:'Stadion utama kota bergaya oval dengan atap cincin ikonik, di sudut timur laut. Tempat final liga, konser besar, dan perayaan juara.',glyph:'GBK',tag:'MAIN STADIUM'});
- reg('stadium-maguwo','maguwo',181,25,{name:'STADION MAGUWO',type:'FOOTBALL STADIUM',desc:'Stadion modern beratap gelombang di sudut tenggara kota. Tribun hijau, suara supporter paling vokal, dan matchday ramah keluarga.',glyph:'MAGUWO',tag:'MATCHDAY'});
+ const reg=(id,kind,x,z,o)=>{const r=WLD.buildStadium(kind,x,z);WLD.reserved.push([x-21,x+21,z-18.5,z+18.5]);const hit=new THREE.Mesh(new THREE.BoxGeometry(r.w,r.H+1,r.d),new THREE.MeshBasicMaterial({transparent:true,opacity:.001,depthWrite:false}));hit.position.set(x,r.H/2,z);hit.userData.placeId=id;cityGroup.add(hit);pickables.push(hit);places.push({id,...o,x,z,w:r.w,d:r.d,hours:'MATCHDAY · 24 JAM',kind:'building',group:null,hit,rot0:0});};
+ reg('stadium-ot','ot',-48,-47.5,{name:'OLD TRAFFORD',type:'FOOTBALL STADIUM',desc:'Stadion klasik empat tribun dengan atap kantilever dan kursi merah, di sudut barat laut kota. Panggung derby dan malam Eropa para supporter.',glyph:'OLD TRAFFORD',tag:'MATCHDAY'});
+ reg('stadium','gbk',181,-42,{name:'GELORA BUNG KARNO (GBK)',type:'FOOTBALL STADIUM',desc:'Stadion utama kota bergaya oval dengan atap cincin ikonik, di sudut timur laut. Tempat final liga, konser besar, dan perayaan juara.',glyph:'GBK',tag:'MAIN STADIUM'});
+ reg('stadium-maguwo','maguwo',181,23.5,{name:'STADION MAGUWO',type:'FOOTBALL STADIUM',desc:'Stadion modern beratap gelombang di sudut tenggara kota. Tribun hijau, suara supporter paling vokal, dan matchday ramah keluarga.',glyph:'MAGUWO',tag:'MATCHDAY'});
 }
 
 /* ===== LENGKUNGKAN KOTA: grid → dunia ===== */
@@ -320,11 +320,6 @@ function createCity(){
   addPlace({id:'hq',name:'FTTR HEADQUARTERS',type:'BRAND OFFICE',desc:'Kantor pusat FUCK THE RULES: media, kreatif, dan nantinya AI Agent dengan login staf.',glyph:'FTTR HQ',tag:'HEADQUARTERS',x:-8,z:-14,w:5,d:4,color:'#d4d0c2'});
   addPlace({id:'jobcentre',name:'CITY JOB CENTRE',type:'EMPLOYMENT',desc:'Pusat lowongan kota. Lihat pekerjaan, ambil shift, dan gantikan bot yang sedang bertugas.',glyph:'JOB CENTRE',tag:'JOBS',x:8,z:-14,w:4.6,d:3.5,color:'#c1c9bb'});
   addPlace({id:'residential',name:'RESIDENTIAL BLOCK',type:'HOUSING',desc:'Kamar sewa dan apartemen untuk tidur, memulihkan energi, dan memperbaiki mood.',glyph:'HOUSING',tag:'RENT · SLEEP',x:3,z:15,w:6,d:4,color:'#cbb8a2'});
-  addPlace({id:'training',name:'NORTHSIDE TRAINING GROUND',type:'CLUB FACILITY',desc:'Lapangan latihan dan akademi klub di Northside.',glyph:'TRAINING',tag:'CLUB',x:-27,z:19,w:7,d:5,color:'#b9c4ae',kind:'stadium'});
-  addPlace({id:'northside-fc',name:'NORTHSIDE FC — NORTH END',type:'NORTHSIDE FOOTBALL CLUB',desc:'Kandang Northside FC. Tradisi supporter, matchday, mural, dan rivalitas lokal.',glyph:'NORTHSIDE FC',tag:'HOME GROUND',x:-27,z:-17,w:8,d:6,color:'#aeb8a6',kind:'stadium'});
-  addPlace({id:'northside-athletic',name:'NORTHSIDE ATHLETIC — ATHLETIC PARK',type:'NORTHSIDE FOOTBALL CLUB',desc:'Kandang Northside Athletic. Klub dengan identitas berbeda dan derby satu distrik.',glyph:'ATHLETIC',tag:'HOME GROUND',x:-27,z:-5,w:7,d:5.5,color:'#c4b7a3',kind:'stadium'});
-  addPlace({id:'eastbank-united',name:'EASTBANK UNITED — CANAL GROUND',type:'EASTBANK FOOTBALL CLUB',desc:'Kandang Eastbank United di tepi kanal dan kawasan industri.',glyph:'EASTBANK UTD',tag:'HOME GROUND',x:27,z:-17,w:8,d:6,color:'#b3b7ad',kind:'stadium'});
-  addPlace({id:'eastbank-rovers',name:'EASTBANK ROVERS — RIVERSIDE',type:'EASTBANK FOOTBALL CLUB',desc:'Kandang Eastbank Rovers. Rival sekota dengan kultur supporter yang kuat.',glyph:'EASTBANK ROVERS',tag:'HOME GROUND',x:27,z:-5,w:7,d:5.5,color:'#c4b9a7',kind:'stadium'});
   addPlace({id:'northside-market',name:'NORTHSIDE HIGH STREET',type:'SHOPPING DISTRICT',desc:'Jalan komersial Northside: kios, tempat makan, dan titik kumpul supporter.',glyph:'NORTHSIDE',tag:'DISTRICT',x:-27,z:8,w:6,d:4,color:'#c2b6a2'});
   addPlace({id:'eastbank-market',name:'EASTBANK CANAL MARKET',type:'INDUSTRIAL MARKET',desc:'Pasar kanal Eastbank di antara gudang bata, jembatan, dan kawasan kerja.',glyph:'EASTBANK',tag:'DISTRICT',x:27,z:8,w:6,d:4,color:'#aeb9b1'});
  houses();fillCity();scenery();
