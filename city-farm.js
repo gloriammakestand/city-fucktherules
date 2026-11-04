@@ -90,7 +90,7 @@ export function createFarm(C){
   if(kind==='horse'){bx(g,bd*.5,.8,.3,'#7a4a2e',0,by+.5,bw/2-.1);bx(g,.12,.7,.3,'#2a2d28',0,by+.4,-bw/2);}
   const front=bx(g,bd*.95,legH,.22,kind==='sheep'?'#3a332e':'#5a4a42',0,legH/2,bw*.32),back=bx(g,bd*.95,legH,.22,kind==='sheep'?'#3a332e':'#5a4a42',0,legH/2,-bw*.32);
   u.front=front;u.back=back;g.userData=Object.assign(g.userData,u);g.userData.noMerge=true;
-  g.position.set(home[0]+Math.random()*(home[1]-home[0]),0,home[2]+Math.random()*(home[3]-home[2]));anim.animals.push(g);return g;
+  u.gx=home[0]+Math.random()*(home[1]-home[0]);u.gz=home[2]+Math.random()*(home[3]-home[2]);g.position.set(u.gx,0,u.gz);anim.animals.push(g);return g;
  }
  function herd(kind,n,home){for(let i=0;i<n;i++)animal(kind,home);}
 
@@ -152,11 +152,11 @@ export function createFarm(C){
   anim.blades.forEach(b=>{b.rotation.z+=dt*.8;});
   anim.animals.forEach(g=>{const u=g.userData;
    if(!u.t){u.wait-=dt;if(u.wait<=0){u.t={x:u.home[0]+Math.random()*(u.home[1]-u.home[0]),z:u.home[2]+Math.random()*(u.home[3]-u.home[2])};}u.front.rotation.x=u.back.rotation.x=0;return;}
-   const dx=u.t.x-g.position.x,dz=u.t.z-g.position.z,d=Math.hypot(dx,dz);
+   const dx=u.t.x-u.gx,dz=u.t.z-u.gz,d=Math.hypot(dx,dz);
    if(d<.25){u.t=null;u.wait=1+Math.random()*4;return;}
-   const st=Math.min(d,u.speed*dt);g.position.x+=dx/d*st;g.position.z+=dz/d*st;g.rotation.y=Math.atan2(dx,dz);u.ph+=dt*u.speed*7;
+   const st=Math.min(d,u.speed*dt);u.gx+=dx/d*st;u.gz+=dz/d*st;const wp=C.warp(u.gx,u.gz);g.position.set(wp.x,0,wp.z);g.rotation.y=Math.atan2(dx,dz)+C.warpRot(u.gx,u.gz);u.ph+=dt*u.speed*7;
    const s=Math.sin(u.ph)*.5;u.front.rotation.x=s;u.back.rotation.x=-s;});
-  const tr=anim.tractor;if(tr){const p=tr.path,a=p[Math.floor(tr.t)%p.length],b=p[(Math.floor(tr.t)+1)%p.length],k=tr.t%1,v=2.2;const L=Math.hypot(b[0]-a[0],b[1]-a[1])||1;tr.t+=dt*v/L;const x=a[0]+(b[0]-a[0])*k,z=a[1]+(b[1]-a[1])*k;tr.g.position.set(x,0,z);tr.g.rotation.y=Math.atan2(b[0]-a[0],b[1]-a[1]);tr.wheels.forEach(w=>{w.rotation.x+=dt*v*2.5;});}
+  const tr=anim.tractor;if(tr){const p=tr.path,a=p[Math.floor(tr.t)%p.length],b=p[(Math.floor(tr.t)+1)%p.length],k=tr.t%1,v=2.2;const L=Math.hypot(b[0]-a[0],b[1]-a[1])||1;tr.t+=dt*v/L;const x=a[0]+(b[0]-a[0])*k,z=a[1]+(b[1]-a[1])*k;const wq=C.warp(x,z);tr.g.position.set(wq.x,0,wq.z);tr.g.rotation.y=Math.atan2(b[0]-a[0],b[1]-a[1])+C.warpRot(x,z);tr.wheels.forEach(w=>{w.rotation.x+=dt*v*2.5;});}
  }
  return {build,update,points:pts,tractorModel};
 }

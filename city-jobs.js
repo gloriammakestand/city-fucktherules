@@ -39,8 +39,8 @@ export function createJobs(C){
  const rnd=a=>a[Math.floor(Math.random()*a.length)];
  const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
  const placeById=id=>C.places().find(p=>p.id===id);
- const front=p=>p?{x:p.x,z:p.z+p.d/2+1.5}:{x:-12,z:-33};
- const depotPos=id=>id==='plaza'?{x:-12,z:-33}:front(placeById(id));
+ const front=p=>p?{x:p.fx??p.x,z:p.fz??(p.z+p.d/2+1.5)}:C.warp(-12,-33);
+ const depotPos=id=>id==='plaza'?C.warp(-12,-33):front(placeById(id));
  const nameOf=id=>placeById(id)?.name||'tujuan';
 
  /* ---- pemilihan titik ---- */
@@ -50,17 +50,9 @@ export function createJobs(C){
   for(const h of all){if(out.every(o=>Math.hypot(o.x-h.x,o.z-h.z)>16)&&Math.hypot(h.x-from.x,h.z-from.z)>10&&h.x<75){out.push(h);if(out.length>=n)break;}}
   return out;
  }
- function streetPts(n,xr){
-  const out=[];for(let t=0;t<400&&out.length<n;t++){
-   const hr=rnd(C.HR);const x=(xr?xr[0]+Math.random()*(xr[1]-xr[0]):-58+Math.random()*116),z=hr+(Math.random()<.5?-3.4:3.4);
-   if(C.VRALL.some(v=>Math.abs(x-v)<6))continue;if(!okPt(x,z,.5)||out.some(o=>Math.hypot(o.x-x,o.z-z)<14))continue;out.push({x,z});}
-  return out;
- }
- function cornerPts(n){
-  const out=[];const all=[];C.VR.forEach(v=>C.HR.forEach(h=>[[3.9,3.9],[-3.9,-3.9],[3.9,-3.9],[-3.9,3.9]].forEach(([a,b])=>all.push({x:v+a,z:h+b}))));
-  shuffle(all).forEach(p=>{if(out.length<n&&okPt(p.x,p.z,.5)&&p.z<48&&Math.abs(p.z-30)>5&&out.every(o=>Math.hypot(o.x-p.x,o.z-p.z)>26))out.push(p);});return out;
- }
- const ring=(cx,cz,r,n)=>Array.from({length:n},(_,i)=>({x:cx+Math.cos(i/n*6.28+.6)*r,z:cz+Math.sin(i/n*6.28+.6)*r})).filter(p=>okPt(p.x,p.z,.5));
+ const streetPts=(n,xr)=>C.streetPts(n,xr);
+ const cornerPts=n=>C.corners(n);
+ const ring=(cx,cz,r,n)=>Array.from({length:n},(_,i)=>C.warp(cx+Math.cos(i/n*6.28+.6)*r,cz+Math.sin(i/n*6.28+.6)*r)).filter(p=>okPt(p.x,p.z,.5));
 
  /* ---- generator langkah misi ---- */
  function build(def){
@@ -83,12 +75,12 @@ export function createJobs(C){
   }else if(def.tpl==='spots'){
    let pts=[],lab='',sec=2.2,tag='hold';
    if(def.id==='cleaner'){pts=streetPts(4,[-58,58]).concat(ring(-12,-36.5,5.5,2));lab='Bersihkan sampah';}
-   else if(def.id==='gardener'){pts=[[-36,12],[-30,6],[36,12],[42,6],[-12,-40.5],[-16,-33]].map(([x,z])=>({x,z})).filter(p=>okPt(p.x,p.z,.5)).slice(0,5);lab='Rawat tanaman';}
+   else if(def.id==='gardener'){pts=[[-36,12],[-30,6],[36,12],[42,6],[-12,-40.5],[-16,-33]].map(([x,z])=>C.warp(x,z)).filter(p=>okPt(p.x,p.z,.5)).slice(0,5);lab='Rawat tanaman';}
    else if(def.id==='mechanic'){pts=streetPts(3,[20,60]);lab='Perbaiki mobil mogok';sec=3.2;}
    else if(def.id==='builder'){pts=streetPts(3,[-58,-10]).concat(streetPts(1,[30,64]));lab='Periksa titik proyek';sec=3;}
    else if(def.id==='journalist'){pts=['market','cafe','station','hospital','police'].map(id=>front(placeById(id))).filter(Boolean).slice(0,4);lab='Wawancara & laporan';sec=2.8;tag='check';}
    else if(def.id==='photo'){pts=['stadium','stadium-ot','stadium-maguwo','station'].map(id=>front(placeById(id))).filter(Boolean);lab='Ambil foto matchday';tag='check';}
-   else if(def.id==='security'){pts=['stadium','stadium-ot','stadium-maguwo'].map(id=>front(placeById(id))).concat([{x:84,z:-3.4},{x:132,z:-3.4}]).filter(Boolean).slice(0,5);lab='Periksa tiket di pos';tag='check';}
+   else if(def.id==='security'){pts=['stadium','stadium-ot','stadium-maguwo'].map(id=>front(placeById(id))).filter(Boolean);lab='Periksa tiket di pos';tag='check';}
    pts.forEach((p,i)=>add({k:'hold',x:p.x,z:p.z,r:2.8,sec,label:`${lab} (${i+1}/${pts.length})`,tag,w:1.5,prop:def.id}));
   }else if(def.tpl==='farm'&&F){
    const fp=shuffle(F.wheat).slice(0,2).map(p=>({...p,c:'gandum'})).concat(shuffle(F.corn).slice(0,2).map(p=>({...p,c:'jagung'})));
