@@ -69,7 +69,6 @@ Note: citizen needs are local-browser gameplay state in this prototype. Online e
 - Mobil dan pejalan kaki mengikuti jalan yang melengkung (posisi grid dipetakan lewat `warp()` tiap frame).
 - Tuas stabil: tinggi menara dibatasi dengan memindai jalan di belakang bangunan (`behindMax`).
 
-## V19 — kota tidak simetris
-- Pulau organik (pantai tak beraturan, bukan persegi), 4 kabupaten di sudut (Barat Laut, Timur Laut, Barat, Tenggara) dengan jalan tanah berkelok, hutan.
-- Warp kota diaktifkan & diperkuat: jalan melengkung, jarak antarjalan tidak seragam.
-- Sungai memanjang ke pantai barat, danau tengah diperbesar.
+## V20 — kota tidak simetris
+- Jaringan jalan dipangkas: perempatan jauh berkurang (sisa T-junction, tikungan, jalan buntu), blok berukuran beda-beda. Lengkung gelombang dihapus, hanya kemiringan halus.
+- Pulau organik, 4 kabupaten di sudut, hutan, sungai ke pantai barat, danau tengah lebih besar.

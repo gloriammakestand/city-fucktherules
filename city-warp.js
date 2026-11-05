@@ -3,7 +3,7 @@
    Di tepi kotak kota efeknya memudar jadi nol, wilayah tani (z < -95) hanya sedikit melengkung. Murni matematika. */
 const sm=t=>t<=0?0:t>=1?1:t*t*(3-2*t);
 export const WARP_BOX={x1:-66,x2:196,z1:-190,z2:56,fade:34};
-export const WARP_AMP={A1:10,A2:3,S1:3.4,B1:8,B2:2.6,S2:2.6};
+export const WARP_AMP={A1:3.2,A2:.8,S1:0,B1:2.6,B2:.8,S2:0};
 const ampScale=z=>.22+.78*sm((z+95)/30);
 export function env(x,z){const b=WARP_BOX,F=b.fade;return sm((x-b.x1)/F)*sm((b.x2-x)/F)*sm((z-b.z1)/F)*sm((b.z2-z)/F)*ampScale(z);}
 export function warp(x,z){
