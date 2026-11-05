@@ -2,15 +2,15 @@
    Jaringan jalan dibangun dari diagram Voronoi: persimpangan hampir selalu T/Y, jalan membelok, ada jalan buntu,
    ukuran blok beragam. Sungai membelah pusat kota; jalan menyeberang lewat jembatan. Bangunan diletakkan MENGHADAP
    jalan baru (bukan jalur grid lama). Semua koordinat sudah di ruang dunia (tidak ada warp lagi). */
-export const DOM={x1:-64,x2:204,z1:-66,z2:55.4};
-export const RAIL={z:-14.8,x1:-72,x2:70,hz:3.8};
+export const DOM={x1:-112,x2:258,z1:-66,z2:55.4};
+export const RAIL={z:-14.8,x1:-110,x2:104,hz:3.8};
 export const RIVER_HW=3.4,HW=3;
 export const LAKE={x:132,z:-19,rx:15,rz:9.5};
-const RIVER_CP=[[132,-17],[112,-9],[92,0],[72,8],[52,12],[32,9],[12,11],[-6,16],[-24,13],[-42,17],[-60,23],[-80,19],[-104,27],[-128,29],[-152,24]];
+const RIVER_CP=[[256,-10],[228,-6],[200,-12],[172,-8],[150,-14],[132,-17],[112,-9],[92,0],[72,8],[52,12],[32,9],[12,11],[-6,16],[-24,13],[-42,17],[-60,23],[-80,19],[-104,27],[-128,29],[-152,24]];
 /* persegi yang tidak boleh dilewati jalan/bangunan: [x1,x2,z1,z2] */
 export const STADIUM_RECTS=[[-69,-27,-66,-29],[160,202,-60.5,-23.5],[160,202,5,42]];
 export const SITES={plaza:{x:-12,z:-36.5,r:[-19,-5,-40.4,-32.6]},court:{x:22,z:-28,r:[17.6,26.4,-30.8,-25.2]},
-  ponds:[{x:-38,z:36,rx:4.4,rz:2.4},{x:50,z:34,rx:4.8,rz:2.5},{x:144,z:22,rx:8,rz:5}]};
+  ponds:[{x:-38,z:36,rx:4.4,rz:2.4},{x:50,z:34,rx:4.8,rz:2.5},{x:144,z:22,rx:8,rz:5},{x:-88,z:-36,rx:4.6,rz:2.6},{x:226,z:-42,rx:5,rz:3},{x:234,z:30,rx:5.5,rz:3}]};
 const pondRect=p=>[p.x-p.rx-5,p.x+p.rx+5,p.z-p.rz-5,p.z+p.rz+5];
 const FARM_EDGES=[[48,-176,48,-66],[48,-88,66,-88],[-66,-132,0,-132],[-48,-176,66,-176],[-48,-176,-48,-132],[0,-190,0,-176],[0,-132,0,-88]];
 const ART_OLD={poles:[[-13.5,-3.3,'pole-01'],[10.5,-3.3,'pole-02'],[-30,-3.3,'pole-03'],[30,-3.3,'pole-04'],[-4.8,18.7,'pole-05'],[-42,18.7,'pole-06'],[42,18.7,'pole-07']],boards:[[-8,-17.4,'board-01']],walls:[[-34,-17.5,'wall-01'],[34,-17.5,'wall-02'],[-34,10.6,'wall-03'],[34,10.6,'wall-04'],[-15.5,10.8,'wall-05']]};

@@ -32,7 +32,7 @@ function textTexture(text, bg='#171914', fg='#d7ff3f', width=512, height=128) {
 function sign(parent,text,x,y,z,w=3.5,h=.7,bg='#171914',fg='#d7ff3f') { const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),textTexture(text,bg,fg));m.position.set(x,y,z);parent.add(m);return m; }
 const EAST_X=206,NORTH_Z=-190;
 /* V21: jaringan jalan organik dari city-layout.js (ruang dunia, tanpa warp). */
-const LAYC=buildLayout({seed:21,rmin:14,rvar:12});
+const LAYC=buildLayout({seed:21,rmin:14,rvar:12,maxLots:1700});
 const dSeg=(px,pz,ax,az,bx,bz)=>{const dx=bx-ax,dz=bz-az,t=Math.max(0,Math.min(1,((px-ax)*dx+(pz-az)*dz)/(dx*dx+dz*dz||1)));return Math.hypot(px-(ax+dx*t),pz-(az+dz*t));};
 const RBS=LAYC.rbs;
 const roadDist=(x,z,skip)=>LAYC.roadDist(x,z,skip);
@@ -230,9 +230,9 @@ function scenery(){
  const onRoad=(x,z)=>roadDist(x,z)<4.8||nearRing(x,z,1);
  const ok=(x,z)=>!onRoad(x,z)&&free(x,z)&&z<53&&LAYC.riverDist(x,z)>RIVER_HW+1.4&&!LAYC.lakeIn(x,z,2.5)&&!NOTREE.some(r=>x>r[0]-1&&x<r[1]+1&&z>r[2]-1&&z<r[3]+1);
  const addTree=(x,z)=>{const s=.85+rnd()*.6;tr.push([x,.6*s,z,s,1.2*s,s]);(rnd()>.5?cr:cr2).push([x,1.9*s,z,1.1*s,1.15*s,1.1*s,rnd()*3]);};
- for(let i=0,c=0;i<9000&&c<520;i++){const x=-62+rnd()*266,z=-64+rnd()*116;if(ok(x,z)){addTree(x,z);c++;}}
+ for(let i=0,c=0;i<14000&&c<760;i++){const x=-110+rnd()*366,z=-64+rnd()*116;if(ok(x,z)){addTree(x,z);c++;}}
  /* pohon di tepi sungai */
- LAYC.rpts.forEach((p,i)=>{if(i%3)return;[-1,1].forEach(sd=>{const x=p.x-p.tz*sd*(RIVER_HW+2.6),z=p.z+p.tx*sd*(RIVER_HW+2.6);if(x>-62&&x<204&&ok(x,z))addTree(x,z);});});
+ LAYC.rpts.forEach((p,i)=>{if(i%3)return;[-1,1].forEach(sd=>{const x=p.x-p.tz*sd*(RIVER_HW+2.6),z=p.z+p.tx*sd*(RIVER_HW+2.6);if(x>-112&&x<258&&ok(x,z))addTree(x,z);});});
  inst(new THREE.CylinderGeometry(.12,.18,1,6),'#6b5239',tr,true);inst(new THREE.IcosahedronGeometry(1,1),'#4fb84a',cr,true);inst(new THREE.IcosahedronGeometry(1,1),'#3ea146',cr2,true);
  // plaza air mancur
  const fx=SITES.plaza.x,fz=SITES.plaza.z;box(cityGroup,13,.06,6.5,'#c9c4b0',fx,.04,fz-.3,{shadow:false});cylinder(cityGroup,1.9,2,.4,'#bfbcae',fx,.3,fz,20);cylinder(cityGroup,1.55,1.55,.42,'#3aa6e6',fx,.3,fz,20);cylinder(cityGroup,.2,.25,1.2,'#bfbcae',fx,.9,fz,10);cylinder(cityGroup,.7,.1,.2,'#bfbcae',fx,1.5,fz,12);
@@ -283,7 +283,7 @@ function planLayout(){
  OFFICES.forEach(o=>list.push({id:o.id,w:q(4.4),d:q(3.4),tx:o.tx,tz:o.tz,base:4.6}));
  LAYC.placeNamed(list);
  list.forEach(it=>{const p=LAYC.named[it.id];if(p){const L=LAY[it.id]||(LAY[it.id]={});L.x=p.x;L.z=p.z;L.rot=p.rot;delete L.row;}});
- LAYC.frontage(4.6);LAYC.frontage(10.9);LAYC.infill();LAYC.infill(4.4,.1,6.4,34);
+ LAYC.frontage(4.6);LAYC.frontage(10.9);LAYC.infill();LAYC.infill(4.4,.1,6.4,34);LAYC.infill(3.4,.04,5.4,40);
 }
 function createCity(){
  planLayout();

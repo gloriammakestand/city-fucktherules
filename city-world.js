@@ -228,52 +228,79 @@ export function createWorld(C){
   const m=new T.Mesh(g,flat('trail-'+col,col));m.receiveShadow=true;m.userData.noMerge=true;G().add(m);
   return P;
  }
+ const V=(n,x,z,s,to,o={})=>({n,x,z,s,to,v:1,cnt:13,rad:21,fld:8,nb:1,...o});
  const HAM=[
-  {n:'KAB. BARAT LAUT',x:-100,z:-212,to:[[-66,-176]],s:3},
-  {n:'KAB. TIMUR LAUT',x:240,z:-210,to:[[232,-140],[214,-70]],s:7},
-  {n:'KAB. BARAT',x:-104,z:-8,to:[[-72,-22]],s:11},
-  {n:'KAB. TENGGARA',x:246,z:22,to:[[212,2]],s:15}
+  {n:'KAB. BARAT LAUT',x:-100,z:-212,to:[[-96,-190],[-95,-168]],s:3,v:1,cnt:14,rad:21,fld:8,nb:1},
+  {n:'KAB. TIMUR LAUT',x:240,z:-210,to:[[212,-208],[178,-205]],s:7,v:1,cnt:14,rad:21,fld:8,nb:1},
+  {n:'KAB. BARAT',x:-100,z:-124,to:[[-96,-92],[-78,-66]],s:11,v:1,cnt:14,rad:21,fld:8},
+  {n:'KAB. TIMUR',x:240,z:-124,to:[[232,-92],[214,-66]],s:15,v:1,cnt:14,rad:21,fld:8},
+  V('DESA SUKAMAJU',-95,-165,21,[[-98,-146],[-100,-130]]),
+  V('DESA TANJUNG',-30,-226,22,[[-66,-218],[-92,-212]]),
+  V('DESA LERENG',42,-228,23,[[8,-234],[-26,-228]]),
+  V('DESA SERUNI',112,-216,24,[[76,-224],[46,-228]]),
+  V('DESA KALI BIRU',176,-204,25,[[146,-212],[116,-216]]),
+  V('DESA MUARA',238,-166,26,[[240,-186],[240,-206]],{rad:19}),
+  V('DESA PADANG',100,-150,27,[[124,-136],[148,-120]]),
+  V('DESA RAWA',150,-112,28,[[150,-90],[152,-66]],{rad:18}),
+  V('DESA BUKIT',112,-92,29,[[130,-78],[150,-66]],{rad:17,cnt:11}),
+  V('DESA HILIR',-34,-196+4,30,[[-54,-190],[-96,-168]],{rad:15,cnt:9,fld:5})
  ];
+ [[152,-168,16,9],[-62,-206,13,7.5],[196,-92,12,7]].forEach(p=>reserved.push([p[0]-p[2]-6,p[0]+p[2]+6,p[1]-p[3]-6,p[1]+p[3]+6]));
+ const FIELDS=[],inFarm=(x,z)=>x>-76&&x<74&&z>-198&&z<-64;
+ const resvAt=(x,z,m=0)=>reserved.some(r=>x>r[0]-m&&x<r[1]+m&&z>r[2]-m&&z<r[3]+m);
  function hamlet(h){
   const r=RND(h.s*31+5),W=['#ffd98a','#ff9f8a','#8fd3f4','#fff0a8','#ff8f7a','#a6e58a','#c4b0ff','#ffbf5e'],RC=['#e5483b','#d9582f','#2a8bd8','#f2a824','#8a5a36'],placed=[];
+  if(h.v){W.splice(0,8,'#d9c9a3','#c2a77a','#e0d2b4','#a98b63','#d2bf95','#b79a6c','#e6dcc2','#9c8460');RC.splice(0,5,'#3b3b45','#4a3a33','#2f3a44','#5a4638','#3a2f2b');}
   const plaza=cy(G(),5.2,5.2,.1,'#e3d6b0',h.x,.06,h.z,18);
   // tiang papan nama kabupaten
   cy(G(),.12,.14,3.2,'#6e4d2e',h.x,1.6,h.z,6);C.sign(G(),h.n,h.x,3.5,h.z+.2,5.4,.9,'#12304f','#d7ff3f');
   C.solids.push({x:h.x,z:h.z,w:1,d:1});
-  for(let t=0;t<260&&placed.length<11;t++){
-   const a=r()*Math.PI*2,d=7+Math.sqrt(r())*17,x=h.x+Math.cos(a)*d,z=h.z+Math.sin(a)*d,w=2.4+r()*1.5,dd=2.4+r()*1.2;
-   if(!inPoly(SANDIN,x,z))continue;if(C.layout.riverDist(x,z)<8||C.layout.lakeIn(x,z,6))continue;if(placed.some(q=>Math.hypot(q[0]-x,q[1]-z)<5.4))continue;
+  for(let t=0;t<420&&placed.length<(h.cnt||11);t++){
+   const a=r()*Math.PI*2,d=7+Math.sqrt(r())*(h.rad||17),x=h.x+Math.cos(a)*d,z=h.z+Math.sin(a)*d,w=2.4+r()*1.5,dd=2.4+r()*1.2;
+   if(!inPoly(SANDIN,x,z))continue;if(C.layout.riverDist(x,z)<8||C.layout.lakeIn(x,z,6))continue;if(placed.some(q=>Math.hypot(q[0]-x,q[1]-z)<(h.v?5:5.4))||resvAt(x,z,2)||inFarm(x,z))continue;
    if(z>SAND_Z-8&&z>shoreZ(x)-9)continue;
    if(h.z>0&&Math.abs(z-30)<8&&x<70)continue;
    placed.push([x,z]);
    const g=new T.Group();g.position.set(x,0,z);g.rotation.y=(r()-.5)*1.4+(r()<.5?0:Math.PI/2);G().add(g);
-   const hh=1.5+r()*.8;bx(g,w,hh,dd,mat('hw'+(placed.length%8),W[(placed.length+h.s)%8]),0,hh/2+.1,0);
+   const hh=(h.v?1.7:1.5)+r()*.8;bx(g,w,hh,dd,mat('hw'+(placed.length%8),W[(placed.length+h.s)%8]),0,hh/2+.1,0);
    C.gable(g,w,dd,.9+r()*.5,RC[(placed.length+h.s)%5],hh+.1);
    bx(g,.7,1.1,.06,'#5a3b2a',0,.65,dd/2+.02);
    C.solids.push({x,z,w:Math.max(w,dd)+.8,d:Math.max(w,dd)+.8});
    if(r()<.5){const pc=new T.Mesh(new T.IcosahedronGeometry(.8,0),mat('hw-bush','#4fb84a'));pc.position.set(x+w/2+.7,.6,z+dd/2);put(pc);}
   }
-  const to=h.to.map(p=>p.slice());if(h.s!==3){const b=C.boundary&&C.boundary(to[to.length-1][0],to[to.length-1][1]);if(b)to[to.length-1]=b;}const tp=[[h.x,h.z]].concat(to);return trail(tp,1.5,'#d9c79a');
+  if(h.v)fields(h,r,placed);
+  const to=h.to.map(p=>p.slice());if(h.s!==3&&!h.nb){const b=C.boundary&&C.boundary(to[to.length-1][0],to[to.length-1][1]);if(b)to[to.length-1]=b;}const tp=[[h.x,h.z]].concat(to);return trail(tp,1.5,'#d9c79a');
+ }
+
+ function fields(h,r,placed){const cols=['#8fbf4a','#c9b84e','#6fae4a','#a67c52','#b6cf5a'];let k=0;
+  for(let t=0;t<200&&k<(h.fld||7);t++){const a=r()*6.283,d=14+r()*((h.rad||17)+6),x=h.x+Math.cos(a)*d,z=h.z+Math.sin(a)*d,w=7+r()*6,dd=4+r()*4;
+   if(!inPoly(SANDIN,x,z)||C.layout.riverDist(x,z)<9||C.layout.lakeIn(x,z,8)||resvAt(x,z,w*.5)||inFarm(x,z))continue;
+   if(placed.some(q=>Math.hypot(q[0]-x,q[1]-z)<w*.6+3.5)||FIELDS.some(q=>Math.hypot(q[0]-x,q[1]-z)<w))continue;
+   if(HAM.some(o=>o!==h&&Math.hypot(o.x-x,o.z-z)<(o.rad||17)+8))continue;
+   const g=new T.Group();g.position.set(x,0,z);g.rotation.y=r()*3;G().add(g);
+   const col=cols[Math.floor(r()*5)];bx(g,w,.05,dd,mat('fd-'+col,col),0,.05,0,{shadow:false});
+   for(let i=-Math.floor(dd/2)+1;i<dd/2;i+=1.6)bx(g,w-.4,.07,.3,mat('fd2','#4f7f33'),0,.07,i,{shadow:false});
+   FIELDS.push([x,z]);k++;}
  }
  function forest(){
   const r=RND(909),trails=[];HAM.forEach(h=>trails.push(...(h._trail||[])));
   const crown=[mat('fo-a','#3ea146'),mat('fo-b','#4fb84a'),mat('fo-c','#2f8a3c')],trunk=mat('fo-t','#6e4d2e');
   const geoC=new T.IcosahedronGeometry(1.5,0),geoP=new T.ConeGeometry(1.4,3.6,6);
-  let n=0;for(let t=0;t<1600&&n<300;t++){
+  let n=0;for(let t=0;t<6000&&n<1000;t++){
    const x=-150+r()*440,z=-266+r()*270;
-   if(x>-74&&x<216&&z>-196)continue;                       // bagian dalam kota: sudah diisi
+   if(inFarm(x,z)||(x>-118&&x<262&&z>-70))continue;                       // bagian dalam kota: sudah diisi
    if(!inPoly(SANDIN,x,z))continue;
-   if(HAM.some(h=>Math.hypot(h.x-x,h.z-z)<27))continue;
+   if(HAM.some(h=>Math.hypot(h.x-x,h.z-z)<(h.rad||17)+8)||FIELDS.some(q=>Math.hypot(q[0]-x,q[1]-z)<7)||resvAt(x,z,3))continue;
    if(trails.some(p=>Math.hypot(p[0]-x,p[1]-z)<4.5))continue;
    if(C.layout.riverDist(x,z)<7||C.layout.lakeIn(x,z,5))continue;
-   n++;const s=.8+r()*.8,pine=r()<.35;
+   n++;const s=.8+r()*.9,pine=r()<(z<-70?.72:.35);
    cy(G(),.12*s,.2*s,1.6*s,trunk,x,.8*s,z,5);
    const c=new T.Mesh(pine?geoP:geoC,crown[n%3]);c.position.set(x,pine?3.2*s:2.4*s,z);c.scale.setScalar(s);put(c);
   }
  }
  function buildDistricts(){HAM.forEach(h=>{h._trail=hamlet(h);});forest();}
 
- function buildParks(){C.SITES.ponds.forEach(p=>pond(p.x,p.z,p.rx,p.rz));}
+ function buildParks(){C.SITES.ponds.forEach(p=>pond(p.x,p.z,p.rx,p.rz));[[152,-168,16,9],[-62,-206,13,7.5],[196,-92,12,7]].forEach(p=>pond(p[0],p[1],p[2],p[3]));}
 
  /* ---------- menara kota (tekstur ubin berulang, tinggi bebas) ---------- */
  const STY={

@@ -79,3 +79,10 @@ Note: citizen needs are local-browser gameplay state in this prototype. Online e
 - Sungai berkelok membelah pusat kota dari danau di timur ke pantai barat, dengan jembatan di tempat jalan menyeberang.
 - Warp lama dimatikan (`city-warp.js` kini identitas). Mobil dan pejalan kaki mengikuti jalan baru. Tembok seni, rel, plaza, kolam, dan lapangan dipindah ke lokasi yang cocok.
 - Jalan di wilayah tani (utara) tetap lurus dan tersambung ke kota.
+
+## V22 — kota diperluas
+- Wilayah kota melebar ke barat (x -112) dan timur (x 258); jaringan jalan Voronoi ikut meluas otomatis.
+- Sungai kini juga mengalir ke timur dari danau; rel diperpanjang; 3 kolam baru; kabupaten Barat & Timur dipindah ke utara-sisi.
+
+## V23 — padat + pedesaan
+- Kota dipadatkan (infill tambahan, batas lot 1700). Wilayah utara diisi 14 desa (rumah atap gelap, ladang berpetak, jalan tanah antar-desa), hutan pinus lebat, 3 danau.
