@@ -86,3 +86,6 @@ Note: citizen needs are local-browser gameplay state in this prototype. Online e
 
 ## V23 — padat + pedesaan
 - Kota dipadatkan (infill tambahan, batas lot 1700). Wilayah utara diisi 14 desa (rumah atap gelap, ladang berpetak, jalan tanah antar-desa), hutan pinus lebat, 3 danau.
+
+## V24
+- Jalan tanah dihitung dulu; rumah, ladang, balai & warung menghindarinya. Dermaga + perahu di 3 danau utara. Pagar dan hewan (sapi/domba) bergerak di ladang. Tiap desa punya Balai Desa (kerja bakti, istirahat) dan Warung (makan/minum). Auto-lite: bila FPS rendah, bayangan dimatikan dan resolusi turun.

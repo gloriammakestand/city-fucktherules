@@ -1,4 +1,4 @@
-const CACHE='fttr-city-shell-v23';
+const CACHE='fttr-city-shell-v24';
 const SHELL=['./city.html','./city.css','./city.js','./city-world.js','./city-jobs.js','./city-farm.js','./city-warp.js','./city-layout.js','./football.js','./online.js','./config.js','./art.js','./ui-game.css','./ui-game.js','./manifest.webmanifest','./logo.png','./favicon.png'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
