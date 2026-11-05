@@ -89,3 +89,6 @@ Note: citizen needs are local-browser gameplay state in this prototype. Online e
 
 ## V24
 - Jalan tanah dihitung dulu; rumah, ladang, balai & warung menghindarinya. Dermaga + perahu di 3 danau utara. Pagar dan hewan (sapi/domba) bergerak di ladang. Tiap desa punya Balai Desa (kerja bakti, istirahat) dan Warung (makan/minum). Auto-lite: bila FPS rendah, bayangan dimatikan dan resolusi turun.
+
+## V25
+- Memperbaiki V24 (perubahan city.js belum ikut tersimpan). Interior Warung & Balai Desa, dermaga: mancing & berlayar, hewan bisa disentuh (suara + mood), penjaga performa bertingkat, batas tap-move diperluas, distrik 'Pedesaan'.

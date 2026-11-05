@@ -309,6 +309,7 @@ export function createWorld(C){
   for(let i=0;i<n;i++){const g=new T.Group();g.userData.noMerge=true;G().add(g);
    if(cow){const c=r()<.5?'#f2efe6':'#6b4a33';bx(g,1.3,.7,.6,c,0,.65,0);bx(g,.5,.45,.45,c,.8,.8,0);bx(g,.12,.4,.12,'#2a2d28',-.45,.2,.2);bx(g,.12,.4,.12,'#2a2d28',.45,.2,-.2);bx(g,.4,.25,.3,'#2a2d28',-.2,.8,0);}
    else{bx(g,.9,.55,.5,'#f4f1e8',0,.55,0);bx(g,.35,.35,.35,'#3a342e',.55,.65,0);bx(g,.1,.3,.1,'#3a342e',-.3,.15,.15);bx(g,.1,.3,.1,'#3a342e',.3,.15,-.15);}
+   const ht=new T.Mesh(new T.BoxGeometry(cow?1.9:1.4,1.3,1.3),new T.MeshBasicMaterial({transparent:true,opacity:.001,depthWrite:false}));ht.position.y=.65;ht.userData.animal={kind:cow?'cow':'sheep',cd:0};g.add(ht);if(C.addPick)C.addPick(ht);
    g.position.set(x,0,z);ANIM_AN.push({g,cx:x+(r()-.5)*w*.4,cz:z+(r()-.5)*dd*.4,rx:w*.3,rz:dd*.28,ph:r()*6.28,sp:.15+r()*.15});}
  }
  function forest(){
@@ -332,7 +333,8 @@ export function createWorld(C){
  function buildParks(){C.SITES.ponds.forEach(p=>pond(p.x,p.z,p.rx,p.rz));[[152,-168,16,9],[-62,-206,13,7.5],[196,-92,12,7]].forEach((p,i)=>{pond(p[0],p[1],p[2],p[3]);dock(p[0],p[1],p[2],p[3],i);});}
  function dock(cx,cz,rx,rz,i){const x0=cx+rx-3.6;bx(G(),5.4,.16,1.5,'#a67c52',x0+.9,.11,cz+rz*.15);[-1,1].forEach(a=>[0,2.4,4.8].forEach(k=>bx(G(),.16,.7,.16,'#6e4d2e',x0-1.5+k,.12,cz+rz*.15+a*.7)));
   sail(cx-rx*.35,cz-rz*.25,.95,'#ffffff',1.1+i);sail(cx+rx*.05,cz+rz*.4,.8,i%2?'#e5483b':'#2a8bd8',2.3+i);
-  const d=new T.Group();d.position.set(x0-2.2,.1,cz+rz*.15+1.5);d.userData.noMerge=true;G().add(d);bx(d,2.2,.3,.9,'#7a5a3a',0,.12,0);bx(d,.12,.8,.12,'#6e4d2e',0,.55,0);anim.boats.push({g:d,y:.1,ph:i*1.7,sp:.9});}
+  const d=new T.Group();d.position.set(x0-2.2,.1,cz+rz*.15+1.5);d.userData.noMerge=true;G().add(d);bx(d,2.2,.3,.9,'#7a5a3a',0,.12,0);bx(d,.12,.8,.12,'#6e4d2e',0,.55,0);anim.boats.push({g:d,y:.1,ph:i*1.7,sp:.9});
+  const dg=new T.Group();dg.position.set(x0+.9,0,cz+rz*.15);G().add(dg);C.regPlace&&C.regPlace({id:'dock-'+i,name:'DERMAGA '+['TELAGA TIMUR','TELAGA BARAT','TELAGA SELATAN'][i],type:'DERMAGA',desc:'Dermaga kayu di tepi danau.',glyph:'DERMAGA',tag:'DANAU',x:x0+.9,z:cz+rz*.15,w:6,d:2.6,H:1.2,group:dg});}
 
  /* ---------- menara kota (tekstur ubin berulang, tinggi bebas) ---------- */
  const STY={
