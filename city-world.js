@@ -449,7 +449,7 @@ export function createWorld(C){
   const route=[[-178,-166],[-150,-198],[-112,-218],[-78,-184],[-70,-118],[-72,-62],[-72,ZC],[-48,ZC-.35],[-20,ZC+.15],[st.x,ZC],[28,ZC-.25],[52,ZC+.35],[70,ZC],[88,-39],[112,-72],[148,-105],[192,-132],[242,-150],[292,-143],[334,-108],[358,-55],[360,5],[332,48],[286,66],[238,52],[202,20],[166,-18],[130,-60],[92,-105],[54,-146],[12,-180],[-32,-212],[-78,-226],[-126,-207],[-166,-176],[-205,-142]];
   const cat=(a,b,c,d,t)=>.5*((2*b)+(-a+c)*t+(2*a-5*b+4*c-d)*t*t+(-a+3*b-3*c+d)*t*t*t);
   for(let i=0;i<route.length-1;i++){const a=route[Math.max(0,i-1)],b=route[i],c=route[i+1],d=route[Math.min(route.length-1,i+2)],steps=Math.max(3,Math.ceil(Math.hypot(c[0]-b[0],c[1]-b[1])/2.2));for(let k=0;k<steps;k++){const t=k/steps;pts.push(WP(cat(a[0],b[0],c[0],d[0],t),cat(a[1],b[1],c[1],d[1],t)));}}
-  pts.push(WP(route[-1][0],route[-1][1]));
+  pts.push(WP(route[route.length - 1][0],route[route.length - 1][1]));
   const seg=[0];for(let i=1;i<pts.length;i++)seg.push(seg[i-1]+Math.hypot(pts[i].x-pts[i-1].x,pts[i].z-pts[i-1].z));
   const L=seg[seg.length-1];
   const sample=s=>{s=Math.max(0,Math.min(L,s));let i=1;while(i<seg.length-1&&seg[i]<s)i++;const a=pts[i-1],b=pts[i],k=(s-seg[i-1])/Math.max(1e-6,seg[i]-seg[i-1]);return {x:a.x+(b.x-a.x)*k,z:a.z+(b.z-a.z)*k,ang:Math.atan2(b.z-a.z,b.x-a.x)};};
