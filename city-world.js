@@ -19,12 +19,32 @@ export function createWorld(C){
  const strut=(p,x1,y1,x2,y2,z,r,col)=>{const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy),m=new T.Mesh(new T.CylinderGeometry(r,r,L,6),typeof col==='string'?mat(col,col):col);m.position.set((x1+x2)/2,(y1+y2)/2,z);m.rotation.z=Math.atan2(-dx,dy);return put(m,p);};
 
  /* ---------- rumput bertekstur (tidak flat) ---------- */
- function grassMat(){
+ function grassMat(rep){
   const c=cv(64,64,(x,w,h)=>{x.fillStyle='#72cc47';x.fillRect(0,0,w,h);const r=RND(11);
    for(let i=0;i<150;i++){const v=r();x.fillStyle=v<.5?'#7ad84e':v<.8?'#66bd3e':'#8be25a';x.fillRect(Math.floor(r()*32)*2,Math.floor(r()*32)*2,2,2);}
    for(let i=0;i<9;i++){x.fillStyle=['#ffe14a','#ff7aa8','#ffffff'][i%3];x.fillRect(Math.floor(r()*32)*2,Math.floor(r()*32)*2,2,2);}});
-  return new T.MeshStandardMaterial({map:tex(c,[36,34],true),roughness:1});
+  return new T.MeshStandardMaterial({map:tex(c,rep||[36,34],true),roughness:1});
  }
+
+
+ /* ---------- PULAU ORGANIK (v19): garis pantai tak beraturan, teluk & tanjung; kota ada di tengah, kabupaten di sudut ---------- */
+ const XL2=-142,XR2=282;
+ const LAND=(()=>{
+  const c=[[-120,-236],[-92,-254],[-58,-244],[-24,-264],[14,-247],[52,-259],[92,-243],[128,-263],[168,-246],[204,-262],[238,-249],[262,-226],[276,-196],[262,-162],[284,-126],[266,-92],[286,-56],[270,-20],[288,14],[272,46]];
+  for(let x=276;x>=-136;x-=34)c.push([x,shoreZ(x)+3.5]);
+  [[-144,64],[-130,36],[-150,2],[-132,-34],[-152,-70],[-134,-106],[-154,-140],[-130,-176],[-148,-206]].forEach(p=>c.push(p));
+  const n=c.length,out=[];
+  for(let i=0;i<n;i++){const p0=c[(i-1+n)%n],p1=c[i],p2=c[(i+1)%n],p3=c[(i+2)%n];
+   for(let k=0;k<7;k++){const t=k/7,t2=t*t,t3=t2*t,f=(a,b,cc,d)=>.5*((2*b)+(-a+cc)*t+(2*a-5*b+4*cc-d)*t2+(-a+3*b-3*cc+d)*t3);out.push([f(p0[0],p1[0],p2[0],p3[0]),f(p0[1],p1[1],p2[1],p3[1])]);}}
+  return out;})();
+ const area=P=>{let a=0;for(let i=0;i<P.length;i++){const p=P[i],q=P[(i+1)%P.length];a+=p[0]*q[1]-q[0]*p[1];}return a/2;};
+ const insetPoly=(P,w)=>{const n=P.length,sg=area(P)>0?1:-1;return P.map((p,i)=>{const a=P[(i-1+n)%n],b=P[(i+1)%n],tx=b[0]-a[0],tz=b[1]-a[1],L=Math.hypot(tx,tz)||1;return [p[0]+sg*tz/L*w,p[1]-sg*tx/L*w];});};
+ const inPoly=(P,x,z)=>{let o=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const a=P[i],b=P[j];if((a[1]>z)!==(b[1]>z)&&x<(b[0]-a[0])*(z-a[1])/(b[1]-a[1])+a[0])o=!o;}return o;};
+ const shrink=(w)=>{const A=insetPoly(LAND,w),B=insetPoly(LAND,-w);return Math.abs(area(A))<Math.abs(area(B))?A:B;};
+ const WALK=shrink(2.5),SANDIN=shrink(7);
+ const inLand=(x,z)=>(x>-70&&x<212&&z>-192)?true:inPoly(WALK,x,z);
+ const polyShape=(P,hole)=>{const s=new T.Shape();P.forEach((p,i)=>i?s.lineTo(p[0],-p[1]):s.moveTo(p[0],-p[1]));s.closePath();if(hole){const h=new T.Path();hole.forEach((p,i)=>i?h.lineTo(p[0],-p[1]):h.moveTo(p[0],-p[1]));h.closePath();s.holes.push(h);}return s;};
+ function makeGround(){const m=shapeMesh(polyShape(LAND),grassMat([.125,.125]),-.08);m.userData.noWarp=true;return m;}
 
  /* ---------- air (satu tekstur, digeser tiap frame) ---------- */
  const waterTex=tex(cv(128,128,(x,w,h)=>{x.fillStyle='#2fb4e6';x.fillRect(0,0,w,h);const r=RND(5);
@@ -42,19 +62,19 @@ export function createWorld(C){
  function ellipse(cx,cz,rx,rz,n){const s=new T.Shape();for(let i=0;i<=n;i++){const a=i/n*Math.PI*2,px=cx+Math.cos(a)*rx*(1+Math.sin(a*3)*.06),pz=cz+Math.sin(a)*rz*(1+Math.cos(a*2)*.07);if(i===0)s.moveTo(px,-pz);else s.lineTo(px,-pz);}return s;}
 
  /* ---------- kanal kota (air sungguhan, mengalir ke laut) ---------- */
- function canal(){const xs=[];for(let x=-220;x<=60.01;x+=3)xs.push(x);const cs=new T.Shape();cs.moveTo(xs[0],-27.8);xs.forEach(x=>cs.lineTo(x,-27.8));for(let i=xs.length-1;i>=0;i--)cs.lineTo(xs[i],-32.2);cs.closePath();shapeMesh(cs,waterMat,.012);shapeMesh(ellipse(62,30,6.4,5,28),flat('pond-edge','#e3d6b0'),.011);shapeMesh(ellipse(62,30,5.6,4.2,28),waterMat,.013);}
+ function canal(){const xs=[];for(let x=-156;x<=60.01;x+=3)xs.push(x);const cs=new T.Shape();cs.moveTo(xs[0],-27.8);xs.forEach(x=>cs.lineTo(x,-27.8));for(let i=xs.length-1;i>=0;i--)cs.lineTo(xs[i],-32.2);cs.closePath();shapeMesh(cs,waterMat,.012);shapeMesh(ellipse(62,30,11.4,7.2,40),flat('pond-edge','#e3d6b0'),.011);shapeMesh(ellipse(62,30,10.3,6.2,40),waterMat,.013);reserved.push([49,76,21,39.5]);}
 
  /* ---------- pulau: laut luas, tepi pasir, pantai selatan ---------- */
  function island(){
   shapeMesh(rectShape(-450,450,-450,450),waterMat,-.12);                        // laut di bawah pulau
   const sand=flat('sand','#f6dc9a'),wet=flat('wet','#e6c680'),foam=mat('foam','#effcff',{roughness:.6,transparent:true,opacity:.85,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3});
   // tepi pulau (barat, timur, utara)
-  shapeMesh(rectShape(XL,XL+6,-195,SAND_Z),sand,-.05);shapeMesh(rectShape(XR-6,XR,-195,SAND_Z),sand,-.05);shapeMesh(rectShape(XL,XR,-195,-189),sand,-.05);
+  shapeMesh(polyShape(LAND,SANDIN),sand,-.05);
   // air pantai selatan (di atas rumput), pasir bergelombang, pasir basah, buih
   shapeMesh(band(-450,450,x=>shoreZ(x)-1.6,()=>450),waterMat,.02);
-  shapeMesh(band(XL,XR,()=>SAND_Z,x=>shoreZ(x)),sand,.03);
-  shapeMesh(band(XL,XR,x=>shoreZ(x)-1.1,x=>shoreZ(x)),wet,.034);
-  shapeMesh(band(XL,XR,x=>shoreZ(x),x=>shoreZ(x)+.7+Math.sin(x*.9)*.35),foam,.028);
+  shapeMesh(band(XL2,XR2,()=>SAND_Z,x=>shoreZ(x)),sand,.03);
+  shapeMesh(band(XL2,XR2,x=>shoreZ(x)-1.1,x=>shoreZ(x)),wet,.034);
+  shapeMesh(band(XL2,XR2,x=>shoreZ(x),x=>shoreZ(x)+.7+Math.sin(x*.9)*.35),foam,.028);
   // promenade batu + curb
   bx(G(),XW,.1,2.4,'#ebe1ca',XM,.05,COAST_Z+1.2);bx(G(),XW,.16,.3,'#bfb49a',XM,.08,COAST_Z-.05);bx(G(),XW,.12,.25,'#cfc4a8',XM,.07,SAND_Z+.1);
   // ujung jalan utara-selatan berhenti di promenade: bollard
@@ -178,14 +198,74 @@ export function createWorld(C){
  }
 
  function buildCoast(){
-  island();pier();huts();beachProps();skyTower(0,60.6);ferris(-39,60.6);lighthouse(54,60.6);
+  island();buildDistricts();pier();huts();beachProps();skyTower(0,60.6);ferris(-39,60.6);lighthouse(54,60.6);
   const r=RND(77);
-  for(let x=-62,i=0;x<=196;x+=4.1,i++){if(C.VR.some(v=>Math.abs(x-v)<3.6)||Math.abs(x)<6.5)continue;palm(x+r()*1.2,COAST_Z-.6+(i%2)*.5,.9+r()*.5,i);}
-  for(let i=0;i<20;i++){const x=-60+i*14+r()*4;if(Math.abs(x-PIER_X)<5||Math.abs(x)<8)continue;palm(x,SAND_Z+.9+r()*.6,1,i+3);}
+  for(let x=-135,i=0;x<=272;x+=4.1,i++){if(C.VR.some(v=>Math.abs(x-v)<3.6)||Math.abs(x)<6.5)continue;palm(x+r()*1.2,COAST_Z-.6+(i%2)*.5,.9+r()*.5,i);}
+  for(let i=0;i<30;i++){const x=-130+i*14+r()*4;if(Math.abs(x-PIER_X)<5||Math.abs(x)<8)continue;palm(x,SAND_Z+.9+r()*.6,1,i+3);}
   sail(-12,71,1,'#ff6a3d',.4);sail(-44,76,1.1,'#2a74c8',1.2);sail(4,82,1,'#ffcf3f',2.4);sail(38,73,1.2,'#e5483b',.9);sail(62,80,1,'#7be05a',1.7);sail(-62,70,.9,'#b78cff',.2);
   ferry(88,1,1.3,-60);ferry(96,-1,1,150);ferry(104,1,1.1,60);sail(100,72,1.1,'#ff6a3d',.6);sail(150,78,1,'#2a74c8',1.4);sail(190,70,1.2,'#ffcf3f',2.1);
   reserved.push([XL,XR,SAND_Z-3,90]);
  }
+
+ /* ---------- KABUPATEN di sudut pulau + hutan + jalan tanah berkelok (v19) ---------- */
+ function trail(pts,wd,col){
+  const P=[],n=pts.length;
+  for(let i=0;i<n-1;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),m=Math.max(2,Math.round(L/4)),nx=-(b[1]-a[1])/L,nz=(b[0]-a[0])/L;
+   for(let k=0;k<m;k++){const t=k/m,w=Math.sin((i*3+t*3.1)*1.7)*3.2*(k?1:0);P.push([a[0]+(b[0]-a[0])*t+nx*w,a[1]+(b[1]-a[1])*t+nz*w]);}}
+  P.push(pts[n-1]);
+  const pos=[],nor=[],uv=[],idx=[];
+  P.forEach((p,i)=>{const q=P[Math.min(P.length-1,i+1)],o=P[Math.max(0,i-1)],tx=q[0]-o[0],tz=q[1]-o[1],L=Math.hypot(tx,tz)||1,nx=-tz/L,nz=tx/L;
+   [1,-1].forEach(sd=>{pos.push(p[0]+nx*wd*sd,.045,p[1]+nz*wd*sd);nor.push(0,1,0);uv.push(0,0);});});
+  for(let i=0;i<P.length-1;i++){const a=i*2;idx.push(a,a+2,a+1,a+1,a+2,a+3);}
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(new Float32Array(pos),3));g.setAttribute('normal',new T.BufferAttribute(new Float32Array(nor),3));g.setAttribute('uv',new T.BufferAttribute(new Float32Array(uv),2));g.setIndex(idx);
+  const m=new T.Mesh(g,flat('trail-'+col,col));m.receiveShadow=true;m.userData.noMerge=true;G().add(m);
+  return P;
+ }
+ const HAM=[
+  {n:'KAB. BARAT LAUT',x:-100,z:-212,to:[[-66,-176]],s:3},
+  {n:'KAB. TIMUR LAUT',x:240,z:-210,to:[[232,-140],[214,-70]],s:7},
+  {n:'KAB. BARAT',x:-104,z:-8,to:[[-72,-22]],s:11},
+  {n:'KAB. TENGGARA',x:246,z:22,to:[[212,2]],s:15}
+ ];
+ function hamlet(h){
+  const r=RND(h.s*31+5),W=['#ffd98a','#ff9f8a','#8fd3f4','#fff0a8','#ff8f7a','#a6e58a','#c4b0ff','#ffbf5e'],RC=['#e5483b','#d9582f','#2a8bd8','#f2a824','#8a5a36'],placed=[];
+  const plaza=cy(G(),5.2,5.2,.1,'#e3d6b0',h.x,.06,h.z,18);
+  // tiang papan nama kabupaten
+  cy(G(),.12,.14,3.2,'#6e4d2e',h.x,1.6,h.z,6);C.sign(G(),h.n,h.x,3.5,h.z+.2,5.4,.9,'#12304f','#d7ff3f');
+  C.solids.push({x:h.x,z:h.z,w:1,d:1});
+  for(let t=0;t<260&&placed.length<11;t++){
+   const a=r()*Math.PI*2,d=7+Math.sqrt(r())*17,x=h.x+Math.cos(a)*d,z=h.z+Math.sin(a)*d,w=2.4+r()*1.5,dd=2.4+r()*1.2;
+   if(!inPoly(SANDIN,x,z))continue;if(placed.some(q=>Math.hypot(q[0]-x,q[1]-z)<5.4))continue;
+   if(z>SAND_Z-8&&z>shoreZ(x)-9)continue;
+   if(h.z>0&&Math.abs(z-30)<8&&x<70)continue;
+   placed.push([x,z]);
+   const g=new T.Group();g.position.set(x,0,z);g.rotation.y=(r()-.5)*1.4+(r()<.5?0:Math.PI/2);G().add(g);
+   const hh=1.5+r()*.8;bx(g,w,hh,dd,mat('hw'+(placed.length%8),W[(placed.length+h.s)%8]),0,hh/2+.1,0);
+   C.gable(g,w,dd,.9+r()*.5,RC[(placed.length+h.s)%5],hh+.1);
+   bx(g,.7,1.1,.06,'#5a3b2a',0,.65,dd/2+.02);
+   C.solids.push({x,z,w:Math.max(w,dd)+.8,d:Math.max(w,dd)+.8});
+   if(r()<.5){const pc=new T.Mesh(new T.IcosahedronGeometry(.8,0),mat('hw-bush','#4fb84a'));pc.position.set(x+w/2+.7,.6,z+dd/2);put(pc);}
+  }
+  const tp=[[h.x,h.z]].concat(h.to);return trail(tp,1.5,'#d9c79a');
+ }
+ function forest(){
+  const r=RND(909),trails=[];HAM.forEach(h=>trails.push(...(h._trail||[])));
+  const crown=[mat('fo-a','#3ea146'),mat('fo-b','#4fb84a'),mat('fo-c','#2f8a3c')],trunk=mat('fo-t','#6e4d2e');
+  const geoC=new T.IcosahedronGeometry(1.5,0),geoP=new T.ConeGeometry(1.4,3.6,6);
+  let n=0;for(let t=0;t<1600&&n<300;t++){
+   const x=-150+r()*440,z=-266+r()*270;
+   if(x>-74&&x<216&&z>-196)continue;                       // bagian dalam kota: sudah diisi
+   if(!inPoly(SANDIN,x,z))continue;
+   if(HAM.some(h=>Math.hypot(h.x-x,h.z-z)<27))continue;
+   if(trails.some(p=>Math.hypot(p[0]-x,p[1]-z)<4.5))continue;
+   if(z>30&&z<58&&Math.abs(z-30)<9&&x<70)continue;
+   n++;const s=.8+r()*.8,pine=r()<.35;
+   cy(G(),.12*s,.2*s,1.6*s,trunk,x,.8*s,z,5);
+   const c=new T.Mesh(pine?geoP:geoC,crown[n%3]);c.position.set(x,pine?3.2*s:2.4*s,z);c.scale.setScalar(s);put(c);
+  }
+ }
+ function buildDistricts(){HAM.forEach(h=>{h._trail=hamlet(h);});forest();}
+
  function buildParks(){pond(-36,7.4,4.4,2.4);pond(36,7.4,4.8,2.5);pond(144,22,8,5);}
 
  /* ---------- menara kota (tekstur ubin berulang, tinggi bebas) ---------- */
@@ -391,5 +471,5 @@ export function createWorld(C){
   anim.ferries.forEach(f=>{f.g.position.x+=f.dir*f.sp*dt;if(f.g.position.x>235)f.g.position.x=-90;if(f.g.position.x<-90)f.g.position.x=235;f.g.position.y=.08+Math.sin(t*1.3+f.z)*.04;});
  }
  const roadEnd=COAST_Z-.4;
- return {COAST_Z,SAND_Z,shoreZ,coastLimit,reserved,roadEnd,grassMat,canal,buildCoast,buildParks,buildRail,buildStadium,tower,styleFor,mergeStatic,update,waterMat,railState};
+ return {COAST_Z,SAND_Z,shoreZ,coastLimit,inLand,makeGround,reserved,roadEnd,grassMat,canal,buildCoast,buildParks,buildRail,buildStadium,tower,styleFor,mergeStatic,update,waterMat,railState};
 }

@@ -291,7 +291,7 @@ function applyWarp(){
   ROADW=[];const line=(pts)=>{pts.forEach((q,i)=>{const f=WARPF(q[0],q[1]);ROADW.push({x:f.x,z:f.z,cut:i===pts.length-1});});};
   PH.forEach(r=>{const a=[];for(let x=r.x1;x<r.x2;x+=3)a.push([x,r.z]);a.push([r.x2,r.z]);line(a);});PV.forEach(r=>{const a=[];for(let z=r.z1;z<r.z2;z+=3)a.push([r.x,z]);a.push([r.x,r.z2]);line(a);});
   RBS.forEach(b=>{const a=[];for(let k=0;k<=24;k++)a.push([b.x+Math.cos(k/24*Math.PI*2)*b.r,b.z+Math.sin(k/24*Math.PI*2)*b.r]);line(a);});
-  CANALW=[];for(let x=-70;x<=60;x+=3){const f=WARPF(x,30);CANALW.push({x:f.x,z:f.z,cut:x+3>60});}BASINW=WARPF(62,30);
+  CANALW=[];for(let x=-150;x<=60;x+=3){const f=WARPF(x,30);CANALW.push({x:f.x,z:f.z,cut:x+3>60});}BASINW=WARPF(62,30);
 }
 const warpSurf=()=>({poles:ART_SURF.poles.map(([x,z,id])=>{const f=WARPF(x,z);return [f.x,f.z,id];}),boards:ART_SURF.boards.map(([x,z,id])=>{const f=WARPF(x,z);return [f.x,f.z,id];}),walls:ART_SURF.walls.map(([x,z,id])=>{const f=WARPF(x,z);return [f.x,f.z,id];})});
 /* titik kerja untuk misi: sudut simpang & trotoar (grid → dunia) */
@@ -301,7 +301,7 @@ function jobCorners(n){const all=[];H_ROADS.forEach(h=>V_ROADS.forEach(v=>{if(h.
 function jobStreetPts(n,xr){const out=[],hs=PH.filter(p=>p.z>-70);for(let t=0;t<500&&out.length<n;t++){const p=hs[Math.floor(Math.random()*hs.length)],x0=Math.max(p.x1+6,xr?xr[0]:-58),x1=Math.min(p.x2-6,xr?xr[1]:196);if(x1<=x0)continue;const gx=x0+Math.random()*(x1-x0),gz=p.z+(Math.random()<.5?-3.4:3.4),f=WARPF(gx,gz);if(roadDist(gx,gz,p)<5||blocked(f.x,f.z,.5)||out.some(o=>Math.hypot(o.x-f.x,o.z-f.z)<14))continue;out.push(f);}return out;}
 function createCity(){
  cityGroup=new THREE.Group();scene.add(cityGroup);
- ground=new THREE.Mesh(new THREE.PlaneGeometry(290,270),WLD.grassMat());ground.rotation.x=-Math.PI/2;ground.position.set(70,-.08,-60);ground.userData.noWarp=true;ground.receiveShadow=true;cityGroup.add(ground);
+ ground=WLD.makeGround();ground.userData.noWarp=true;
  roads();river();WLD.buildCoast();WLD.buildParks();bigStadiums();
  FARM=createFarm({THREE,group:()=>cityGroup,RND,solids,sign,gable,regPlace,addNPC,warp:WARPF,warpRot:WARPR});FARM.build();
   addPlace({id:'fttr',name:'FUCK THE RULES STORE',type:'STREETWEAR / RETAIL',desc:'Toko utama FTTR di pusat kota. Jelajahi koleksi, lihat produk di rak, lalu lanjutkan ke katalog dan checkout asli.',glyph:'FTTR',tag:'FLAGSHIP STORE',x:-7,z:-7,w:5.5,d:4.2,color:'#c8c3b4'});
@@ -589,7 +589,7 @@ function moveInput(dt){if(window.FTTRArt?.on)return;let ix=0,iz=0;if(keys.has('w
 const inRect=(p,x,z,m)=>{if(!p.rot)return Math.abs(x-p.x)<p.w/2+m&&Math.abs(z-p.z)<p.d/2+m;const dx=x-p.x,dz=z-p.z,c=Math.cos(p.rot),sn=Math.sin(p.rot),lx=dx*c-dz*sn,lz=dx*sn+dz*c;return Math.abs(lx)<p.w/2+m&&Math.abs(lz)<p.d/2+m;};
 let ROADW=[],CANALW=[],BASINW=null;
 const segDistW=(arr,x,z)=>{let d=99;for(let i=0;i<arr.length-1;i++){const a=arr[i],b=arr[i+1];if(a.cut)continue;const v=dSeg(x,z,a.x,a.z,b.x,b.z);if(v<d)d=v;}return d;};
-const blocked=(x,z,m=.35)=>{if(isInside)return false;if(x<-68.5||x>EAST_X-2||z<NORTH_Z+1||z>WLD.coastLimit(x))return true;if(CANALW.length&&segDistW(CANALW,x,z)<2.1&&segDistW(ROADW,x,z)>3.2)return true;if(BASINW&&((x-BASINW.x)/5.4)**2+((z-BASINW.z)/4)**2<1)return true;const f=p=>inRect(p,x,z,m);return places.some(f)||solids.some(f);};
+const blocked=(x,z,m=.35)=>{if(isInside)return false;if(z>WLD.coastLimit(x)||!WLD.inLand(x,z))return true;if(CANALW.length&&segDistW(CANALW,x,z)<2.1&&segDistW(ROADW,x,z)>3.2)return true;if(BASINW&&((x-BASINW.x)/10.2)**2+((z-BASINW.z)/6.4)**2<1)return true;const f=p=>inRect(p,x,z,m);return places.some(f)||solids.some(f);};
 function update(dt){if(window.FTTRArt)window.FTTRArt.update(dt);const px0=player.position.x,pz0=player.position.z;moveInput(dt);if(destination){const dx=destination.x-player.position.x,dz=destination.z-player.position.z,dist=Math.hypot(dx,dz);if(dist<.12)destination=null;else{const speed=moveBase()*(needs.energy<20?.6:1);const step=Math.min(dist,speed*dt);player.position.x+=dx/dist*step;player.position.z+=dz/dist*step;player.rotation.y=Math.atan2(dx,dz);}}
   const bm=ride?ride.margin:.35;if(blocked(player.position.x,player.position.z,bm)){const nx=player.position.x,nz=player.position.z;if(!blocked(nx,pz0,bm))player.position.z=pz0;else if(!blocked(px0,nz,bm))player.position.x=px0;else{player.position.x=px0;player.position.z=pz0;if(destination&&Math.hypot(destination.x-px0,destination.z-pz0)>.5)destination=null;}}
   const tt=performance.now()/1000;{const ps=isInside?1:CITIZEN_S;if(player.scale.x!==ps)player.scale.setScalar(ps);}const mv=dt>0?Math.hypot(player.position.x-px0,player.position.z-pz0)/dt:0;animCitizen(player,dt,mv,tt);if(destination){stuckT=mv<.2?stuckT+dt:0;if(stuckT>.45){destination=null;stuckT=0;}}else stuckT=0;updateTapMarker(dt);if(ride){ride.g.position.set(player.position.x,0,player.position.z);ride.g.rotation.y=player.rotation.y;ride.wheels.forEach(w=>{w.rotation.x+=mv*dt/.32;});}JOBSYS?.update(dt);
