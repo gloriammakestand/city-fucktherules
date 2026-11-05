@@ -1,8 +1,8 @@
-import {createJobs} from './city-jobs.js';
-import {createFarm} from './city-farm.js';
-import {warp as WARPF,warpRot as WARPR} from './city-warp.js';
-import {createWorld} from './city-world.js';
-import {buildLayout,RIVER_HW,LAKE,SITES,RAIL} from './city-layout.js';
+import {createJobs} from './city-jobs.js?v=25';
+import {createFarm} from './city-farm.js?v=25';
+import {warp as WARPF,warpRot as WARPR} from './city-warp.js?v=25';
+import {createWorld} from './city-world.js?v=25';
+import {buildLayout,RIVER_HW,LAKE,SITES,RAIL} from './city-layout.js?v=25';
 const $ = s => document.querySelector(s);
 const canvas = $('#world');
 const moneyEl = $('#moneyVal');
