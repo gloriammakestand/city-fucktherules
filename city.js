@@ -1,8 +1,8 @@
-import {createJobs} from './city-jobs.js?v=25';
-import {createFarm} from './city-farm.js?v=25';
-import {warp as WARPF,warpRot as WARPR} from './city-warp.js?v=25';
-import {createWorld} from './city-world.js?v=25';
-import {buildLayout,RIVER_HW,LAKE,SITES,RAIL} from './city-layout.js?v=25';
+import {createJobs} from './city-jobs.js?v=25-5';
+import {createFarm} from './city-farm.js?v=25-5';
+import {warp as WARPF,warpRot as WARPR} from './city-warp.js?v=25-5';
+import {createWorld} from './city-world.js?v=25-5';
+import {buildLayout,RIVER_HW,LAKE,SITES,RAIL} from './city-layout.js?v=25-5';
 const $ = s => document.querySelector(s);
 const canvas = $('#world');
 const moneyEl = $('#moneyVal');
@@ -584,7 +584,7 @@ function resize(){if(!renderer||!camera)return;const w=innerWidth,h=innerHeight;
   const block=dpr>=1.5?2:1.5,pr=(gfxMode==='pixel'?Math.max(.5,Math.min(1.5,dpr/block)):Math.min(dpr,1.75))*gfxScale;
   renderer.setSize(Math.max(1,Math.round(w*pr)),Math.max(1,Math.round(h*pr)),false);canvas.style.width='100%';canvas.style.height='100%';canvas.classList.toggle('pixel',gfxMode==='pixel');
   const aspect=w/h;const view=w<h?24:19;viewH=view;camera.left=-view*aspect/2;camera.right=view*aspect/2;camera.top=view/2;camera.bottom=-view/2;camera.updateProjectionMatrix();}
-function applyZoom(v){if(window.FTTRArt?.on)return;cameraZoom=Math.max(.16,Math.min(2.4,v));}
+function applyZoom(v){if(window.FTTRArt?.on)return;cameraZoom=Math.max(.34,Math.min(2.4,v));}
 function resetCamera(){cameraFollow=true;cameraZoom=1;if(player)cameraTarget?.set(player.position.x,0,player.position.z);$('#cameraFollow')?.classList.add('active');toast('Kamera mengikuti karakter');}
 function pointerDown(e){if(e.pointerType==='touch'&&e.isPrimary===false)return;dragState={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false};canvas.setPointerCapture?.(e.pointerId);}
 function pointerMove(e){if(window.FTTRArt?.on)return;if(!dragState||dragState.id!==e.pointerId)return;const dx=e.clientX-dragState.lastX,dy=e.clientY-dragState.lastY;if(Math.hypot(e.clientX-dragState.x,e.clientY-dragState.y)>5)dragState.moved=true;if(dragState.moved){cameraFollow=false;$('#cameraFollow')?.classList.remove('active');const u=viewH/((innerHeight||1)*camera.zoom),k=.7071;cameraTarget ||= new THREE.Vector3(player?.position.x||0,0,player?.position.z||0);const nx=Math.max(-60,Math.min(190,cameraTarget.x-k*u*(dx+dy/CAM_SIN))),nz=Math.max(-185,Math.min(60,cameraTarget.z+k*u*(dx-dy/CAM_SIN)));const panX=nx-cameraTarget.x,panZ=nz-cameraTarget.z;cameraTarget.x+=panX;cameraTarget.z+=panZ;camera.position.x+=panX;camera.position.z+=panZ;camera.lookAt(cameraTarget); }dragState.lastX=e.clientX;dragState.lastY=e.clientY;}

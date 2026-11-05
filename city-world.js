@@ -443,8 +443,13 @@ export function createWorld(C){
  /* ---------- rel berkelok & kereta yang mengikuti lengkungan ---------- */
  const railState={};
  function buildRail(st){
-  const ZC=st.z,AMP=2.0,LEN=8.5,X0=-72,X1=70,pts=[],WP=C.warp||((x,z)=>({x,z})),STW=WP(st.x,st.z),f=x=>{const g={x,z:ZC+AMP*Math.sin((x-st.x)/LEN)*(Math.abs(x-st.x)<2?Math.abs(x-st.x)/2:1)};return WP(g.x,g.z);};
-  for(let x=X0;x<=X1+.01;x+=1.2)pts.push(f(x));
+  const ZC=st.z,pts=[],WP=C.warp||((x,z)=>({x,z})),STW=WP(st.x,st.z);
+  // Regional railway: rural approach, urban station, coastal sea-crossing, outer town, then back through farmland.
+  // The central section stays close to the original station alignment; the distant legs make the route feel continuous.
+  const route=[[-178,-166],[-150,-198],[-112,-218],[-78,-184],[-70,-118],[-72,-62],[-72,ZC],[-48,ZC-.35],[-20,ZC+.15],[st.x,ZC],[28,ZC-.25],[52,ZC+.35],[70,ZC],[88,-39],[112,-72],[148,-105],[192,-132],[242,-150],[292,-143],[334,-108],[358,-55],[360,5],[332,48],[286,66],[238,52],[202,20],[166,-18],[130,-60],[92,-105],[54,-146],[12,-180],[-32,-212],[-78,-226],[-126,-207],[-166,-176],[-205,-142]];
+  const cat=(a,b,c,d,t)=>.5*((2*b)+(-a+c)*t+(2*a-5*b+4*c-d)*t*t+(-a+3*b-3*c+d)*t*t*t);
+  for(let i=0;i<route.length-1;i++){const a=route[Math.max(0,i-1)],b=route[i],c=route[i+1],d=route[Math.min(route.length-1,i+2)],steps=Math.max(3,Math.ceil(Math.hypot(c[0]-b[0],c[1]-b[1])/2.2));for(let k=0;k<steps;k++){const t=k/steps;pts.push(WP(cat(a[0],b[0],c[0],d[0],t),cat(a[1],b[1],c[1],d[1],t)));}}
+  pts.push(WP(route[-1][0],route[-1][1]));
   const seg=[0];for(let i=1;i<pts.length;i++)seg.push(seg[i-1]+Math.hypot(pts[i].x-pts[i-1].x,pts[i].z-pts[i-1].z));
   const L=seg[seg.length-1];
   const sample=s=>{s=Math.max(0,Math.min(L,s));let i=1;while(i<seg.length-1&&seg[i]<s)i++;const a=pts[i-1],b=pts[i],k=(s-seg[i-1])/Math.max(1e-6,seg[i]-seg[i-1]);return {x:a.x+(b.x-a.x)*k,z:a.z+(b.z-a.z)*k,ang:Math.atan2(b.z-a.z,b.x-a.x)};};
@@ -457,7 +462,7 @@ export function createWorld(C){
   // kereta 3 gerbong
   const cols=['#d7ff3f','#171914','#d7ff3f'],carsT=[];
   cols.forEach((c,i)=>{const g=new T.Group();g.userData.noMerge=true;G().add(g);bx(g,2.6,1,.95,c,0,.8,0);bx(g,2.2,.3,.97,'#9fc4cf',0,1.05,0).castShadow=false;bx(g,2.4,.12,.8,'#2a2d28',0,1.35,0);carsT.push(g);});
-  let sSt=0;for(let i=1;i<pts.length;i++){if(pts[i].x>=STW.x){sSt=seg[i];break;}}
+  let sSt=0,best=Infinity;for(let i=0;i<pts.length;i++){const d=Math.hypot(pts[i].x-STW.x,pts[i].z-STW.z);if(d<best){best=d;sSt=seg[i];}}
   Object.assign(railState,{L,sample,carsT,sSt,s:sSt-40,dir:1,speed:0,state:'run',t:0,done:false});
   const place=()=>{carsT.forEach((g,i)=>{const q=sample(railState.s-railState.dir*i*2.9);g.position.set(q.x,.1,q.z);g.rotation.y=-q.ang;});};place();railState.place=place;
  }

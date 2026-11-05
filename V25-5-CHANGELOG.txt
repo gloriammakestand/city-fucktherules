@@ -1,0 +1,8 @@
+FTTR CITY V25-5
+
+- Road network north edge clipped before the beach/promenade to prevent road segments spilling onto sand.
+- Regional rail route extended from rural areas through the city, across an offshore/coastal bridge section, to an outer-town route and back through countryside. Train remains animated along the continuous route and stops at the city station.
+- Minimum zoom-out raised to avoid exposing the world boundary as a distracting blue strip.
+- Updated module cache version to v25-5.
+
+Deploy by replacing the repository files with this archive.
