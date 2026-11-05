@@ -72,3 +72,10 @@ Note: citizen needs are local-browser gameplay state in this prototype. Online e
 ## V20 — kota tidak simetris
 - Jaringan jalan dipangkas: perempatan jauh berkurang (sisa T-junction, tikungan, jalan buntu), blok berukuran beda-beda. Lengkung gelombang dihapus, hanya kemiringan halus.
 - Pulau organik, 4 kabupaten di sudut, hutan, sungai ke pantai barat, danau tengah lebih besar.
+
+## V21 — jaringan jalan organik
+- Jalan dibangun ulang dari nol (`city-layout.js`): diagram Voronoi + kurva halus, jadi ada T-junction, tikungan, jalan buntu, jalan diagonal/melengkung, dan blok berbeda-beda ukuran. Perempatan sangat jarang.
+- Bangunan, rumah, dan gedung kini diletakkan menghadap jalan baru (berputar sesuai arah jalan), lalu lahan kosong diisi bangunan tambahan dan pohon.
+- Sungai berkelok membelah pusat kota dari danau di timur ke pantai barat, dengan jembatan di tempat jalan menyeberang.
+- Warp lama dimatikan (`city-warp.js` kini identitas). Mobil dan pejalan kaki mengikuti jalan baru. Tembok seni, rel, plaza, kolam, dan lapangan dipindah ke lokasi yang cocok.
+- Jalan di wilayah tani (utara) tetap lurus dan tersambung ke kota.

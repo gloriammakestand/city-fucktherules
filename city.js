@@ -2,6 +2,7 @@ import {createJobs} from './city-jobs.js';
 import {createFarm} from './city-farm.js';
 import {warp as WARPF,warpRot as WARPR} from './city-warp.js';
 import {createWorld} from './city-world.js';
+import {buildLayout,RIVER_HW,LAKE,SITES,RAIL} from './city-layout.js';
 const $ = s => document.querySelector(s);
 const canvas = $('#world');
 const moneyEl = $('#moneyVal');
@@ -29,29 +30,15 @@ function textTexture(text, bg='#171914', fg='#d7ff3f', width=512, height=128) {
   const c=document.createElement('canvas');c.width=width;c.height=height;const x=c.getContext('2d');x.fillStyle=bg;x.fillRect(0,0,width,height);x.fillStyle=fg;x.textAlign='center';x.textBaseline='middle';x.font='900 58px Arial, sans-serif';x.fillText(text,width/2,height/2,width-24);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return new THREE.MeshBasicMaterial({map:t});
 }
 function sign(parent,text,x,y,z,w=3.5,h=.7,bg='#171914',fg='#d7ff3f') { const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),textTexture(text,bg,fg));m.position.set(x,y,z);parent.add(m);return m; }
-const ART_SURF={poles:[[-13.5,-3.3,'pole-01'],[10.5,-3.3,'pole-02'],[-30,-3.3,'pole-03'],[30,-3.3,'pole-04'],[-4.8,18.7,'pole-05'],[-42,18.7,'pole-06'],[42,18.7,'pole-07']],boards:[[-8,-17.4,'board-01']],walls:[[-34,-17.5,'wall-01'],[34,-17.5,'wall-02'],[-34,10.6,'wall-03'],[34,10.6,'wall-04'],[-15.5,10.8,'wall-05']]};
-const ART_RES=[...ART_SURF.poles.map(p=>[p[0]-.8,p[0]+.8,p[1]-.8,p[1]+.8]),...ART_SURF.boards.map(p=>[p[0]-2,p[0]+2,p[1]-.6,p[1]+.6]),...ART_SURF.walls.map(p=>[p[0]-4.4,p[0]+4.4,p[1]-.7,p[1]+.7])];
 const EAST_X=206,NORTH_Z=-190;
-/* Jaringan jalan (ruang grid; setelah selesai dibangun seluruh kota dilengkungkan oleh city-warp.js).
-   Potongan jalan tidak lagi melintasi seluruh peta: tiga sudut kota dikosongkan untuk stadion. */
-const H_ROADS=[{z:-44,x1:-24,x2:48},{z:-44,x1:76,x2:156},{z:-22,x1:-70.5,x2:72},{z:0,x1:-66,x2:206},{z:22,x1:-48,x2:0},{z:22,x1:24,x2:48},{z:22,x1:76,x2:108},{z:44,x1:-48,x2:156},{z:-88,x1:48,x2:66},{z:-132,x1:-66,x2:0},{z:-176,x1:-48,x2:66},{z:-69.5,x1:-70.5,x2:-24},{z:-21,x1:156,x2:206}];
-const V_ROADS=[{x:-48,z1:-176,z2:-132},{x:-48,z1:-22,z2:0},{x:-48,z1:22,z2:55.6},{x:-24,z1:-69.5,z2:-22},{x:-24,z1:44,z2:55.6},{x:0,z1:-190,z2:-176},{x:0,z1:-132,z2:-88},{x:0,z1:-44,z2:-22},{x:0,z1:0,z2:55.6},{x:24,z1:22,z2:44},{x:48,z1:-176,z2:-44},{x:48,z1:0,z2:22},{x:48,z1:44,z2:55.6},{x:76,z1:-66,z2:-44},{x:76,z1:-22,z2:22},{x:108,z1:-66,z2:-44},{x:108,z1:-22,z2:22},{x:108,z1:44,z2:55.6},{x:132,z1:-44,z2:0},{x:132,z1:44,z2:55.6},{x:156,z1:-44,z2:44},{x:206,z1:-66,z2:55.6}];
-const RBS=[{x:76,z:0,r:8},{x:108,z:0,r:8},{x:156,z:0,r:8}];
-const HR=[-44,-22,0,22,44],VR=[-48,-24,0,24,48];
-/* potongan jalan setelah bundaran memotong: jalan berakhir di cincin */
-const PH=[],PV=[];
-H_ROADS.forEach(r=>{let lo=r.x1,e1=false;const cuts=RBS.filter(b=>Math.abs(b.z-r.z)<.1&&b.x>r.x1&&b.x<r.x2).sort((m,n)=>m.x-n.x);cuts.forEach(b=>{PH.push({z:r.z,x1:lo,x2:b.x-b.r,e1,e2:true});lo=b.x+b.r;e1=true;});PH.push({z:r.z,x1:lo,x2:r.x2,e1,e2:false});});
-V_ROADS.forEach(r=>{let lo=r.z1,e1=false;const cuts=RBS.filter(b=>Math.abs(b.x-r.x)<.1&&b.z>r.z1&&b.z<r.z2).sort((m,n)=>m.z-n.z);cuts.forEach(b=>{PV.push({x:r.x,z1:lo,z2:b.z-b.r,e1,e2:true});lo=b.z+b.r;e1=true;});PV.push({x:r.x,z1:lo,z2:r.z2,e1,e2:false});});
+/* V21: jaringan jalan organik dari city-layout.js (ruang dunia, tanpa warp). */
+const LAYC=buildLayout({seed:21,rmin:14,rvar:12});
 const dSeg=(px,pz,ax,az,bx,bz)=>{const dx=bx-ax,dz=bz-az,t=Math.max(0,Math.min(1,((px-ax)*dx+(pz-az)*dz)/(dx*dx+dz*dz||1)));return Math.hypot(px-(ax+dx*t),pz-(az+dz*t));};
-/* jarak ke sumbu jalan terdekat (ruang grid); bundaran dihitung sebagai cincin */
-const roadDist=(x,z,skip)=>{let d=99;for(const r of PH){if(r===skip)continue;const v=dSeg(x,z,r.x1,r.z,r.x2,r.z);if(v<d)d=v;}for(const r of PV){if(r===skip)continue;const v=dSeg(x,z,r.x,r.z1,r.x,r.z2);if(v<d)d=v;}for(const b of RBS){const v=Math.abs(Math.hypot(x-b.x,z-b.z)-b.r);if(v<d)d=v;}return d;};
+const RBS=LAYC.rbs;
+const roadDist=(x,z,skip)=>LAYC.roadDist(x,z,skip);
 const nearRing=(x,z,m=0)=>RBS.some(b=>Math.hypot(x-b.x,z-b.z)<b.r+3.2+m);
-/* apakah persegi (grid) menyentuh jalan? cek sudut + titik tengah sisi + pusat */
-const rectOnRoad=(cx,cz,w,d,m=.6)=>{const pts=[[0,0],[-1,-1],[1,-1],[-1,1],[1,1],[0,-1],[0,1],[-1,0],[1,0]];return pts.some(([a,b])=>{const x=cx+a*w/2,z=cz+b*d/2;return roadDist(x,z)<3+m||nearRing(x,z);});};
-const inRB=(x,z,m=0)=>RBS.some(b=>Math.hypot(x-b.x,z-b.z)<b.r+2.9+m&&Math.hypot(x-b.x,z-b.z)>b.r-2.9-m);
 const roadWarp=(x,z)=>WARPF(x,z);
 const solids=[],LOT={A:-4.6,B:17.4,C:-26.6,E:39.4,F:-48.6};
-const zs0=x=>V_ROADS.filter(r=>r.x===x).reduce((m,r)=>Math.min(m,r.z1),99);
 const faceRot=f=>f==='N'?Math.PI:f==='E'?Math.PI/2:f==='W'?-Math.PI/2:0;
 const RND=seed=>{let s=(seed*7919+13)%2147483647;return()=>(s=(s*16807+11)%2147483647)/2147483647;};
 const TEXC=new Map();
@@ -116,7 +103,7 @@ function detail(g,o,w,d,H){
 }
 function mk(o){
  const w=o.w,d=o.d,fl=o.fl||2,gfH=o.gfH||1.5,fh=1.15,H=gfH+fl*fh,z=o.z??LOT[o.row]-d/2;
- const g=new THREE.Group();g.position.set(o.x,0,z);g.rotation.y=faceRot(o.face);cityGroup.add(g);
+ const g=new THREE.Group();g.position.set(o.x,0,z);g.rotation.y=o.rot!==undefined?o.rot:faceRot(o.face);cityGroup.add(g);
  if(!o.lite)box(g,w+1.2,.1,d+1.2,o.kind==='busstop'||o.kind==='billboard'?'#8f9e82':'#b9b7aa',0,.05,.2,{shadow:false});
  let HH=H;
  if(o.kind==='stadium'){stadiumBits(g,w,d,o);HH=3;}
@@ -137,7 +124,7 @@ function mk(o){
 function addPlace(o0){const L=LAY[o0.id]||{},o={...o0,...L};if(L.row&&L.z===undefined)delete o.z;
  if(!['billboard','busstop'].includes(o.id)){const q=v=>Math.round(v*1.25*2)/2;o.w=q(o.w);o.d=q(o.d);}const {id,name,type,desc,glyph,tag,x,w,d,hours='OPEN · ALL DAY',kind='building'}=o;const r=mk(o),z=r.z,g=r.g;
  const hit=new THREE.Mesh(new THREE.BoxGeometry(w+.8,r.H+.8,d+.8),new THREE.MeshBasicMaterial({transparent:true,opacity:0.001,depthWrite:false}));hit.position.set(0,r.H/2+.2,0);hit.userData.placeId=id;g.add(hit);pickables.push(hit);
- const p={id,name,type,desc,glyph,tag,x,z,w,d,hours,kind,group:g,hit,rot0:faceRot(o.face)};places.push(p);return p;}
+ const p={id,name,type,desc,glyph,tag,x,z,w,d,hours,kind,group:g,hit,rot0:o.rot!==undefined?o.rot:faceRot(o.face),rot:o.rot!==undefined?o.rot:faceRot(o.face)};places.push(p);return p;}
 const LAY={
  fttr:{x:-9,row:'A',w:5.6,d:4.4,fl:2,wall:'#22241f',sb:'#d7ff3f',sf:'#171914',awning:'#d7ff3f',extra:'fttr'},
  market:{x:-17,row:'A',w:4.4,d:3.4,fl:1,wall:'#cfd8c3',sb:'#2f6b3a',sf:'#ffffff',awning:'#2f6b3a',extra:'crates'},
@@ -164,99 +151,97 @@ const LAY={
  works:{x:57,row:'B',w:5.6,d:4,fl:1,gfH:2.4,wall:'#aaa99f',sb:'#2a2d28',sf:'#d7ff3f',roofType:'gable',rh:.9,roof:'#5b5e56',extra:'works'}
 };
 function roads(){
- const asph='#4a5262',walk='#ece4d0';
- const cutIv=(iv,lo,hi)=>{const o=[];iv.forEach(([a,b])=>{if(hi<=a||lo>=b){o.push([a,b]);return;}if(lo>a)o.push([a,lo]);if(hi<b)o.push([hi,b]);});return o;};
- const crossV=z=>V_ROADS.filter(r=>z>=r.z1-.1&&z<=r.z2+.1),crossH=x=>H_ROADS.filter(r=>x>=r.x1-.1&&x<=r.x2+.1);
- const nearRBp=(x,z)=>RBS.some(b=>Math.hypot(x-b.x,z-b.z)<b.r+4.4);
- const lamps=[],dx=[],zb=[];
- // aspal
- PH.forEach(p=>{for(let x=p.x1;x<p.x2-.01;x+=3){const len=Math.min(3,p.x2-x);box(cityGroup,len+.05,.06,6,asph,x+len/2,0,p.z,{shadow:false});}});
- PV.forEach(p=>{for(let z=p.z1;z<p.z2-.01;z+=3){const len=Math.min(3,p.z2-z);box(cityGroup,6,.07,len+.05,asph,p.x,0,z+len/2,{shadow:false});}});
- // trotoar, marka tengah, lampu
- PH.forEach(p=>{let iv=[[p.x1+(p.e1?3.9:0),p.x2-(p.e2?3.9:0)]];crossV(p.z).forEach(v=>{if(v.x>p.x1&&v.x<p.x2)iv=cutIv(iv,v.x-3.8,v.x+3.8);});
-  iv.forEach(([a,b])=>{if(b<=a+.3)return;[-1,1].forEach(sd=>{for(let x=a;x<b-.01;x+=3){const len=Math.min(3,b-x);box(cityGroup,len+.05,.1,.8,walk,x+len/2,.04,p.z+sd*3.4,{shadow:false});}});});
-  for(let x=p.x1+2;x<p.x2;x+=4)if(!crossV(p.z).some(v=>Math.abs(x-v.x)<4.4)&&!nearRBp(x,p.z))dx.push([x,.06,p.z,1.6,.02,.14]);
-  for(let x=p.x1+7;x<p.x2-3;x+=14)if(!crossV(p.z).some(v=>Math.abs(x-v.x)<5)&&!nearRBp(x,p.z))lamps.push([x,0,p.z+3.5]);});
- PV.forEach(p=>{let iv=[[p.z1+(p.e1?3.9:0),p.z2-(p.e2?3.9:0)]];crossH(p.x).forEach(h=>{if(h.z>p.z1&&h.z<p.z2)iv=cutIv(iv,h.z-3.8,h.z+3.8);});
-  iv.forEach(([a,b])=>{if(b<=a+.3)return;[-1,1].forEach(sd=>{for(let z=a;z<b-.01;z+=3){const len=Math.min(3,b-z);box(cityGroup,.8,.1,len+.05,walk,p.x+sd*3.4,.04,z+len/2,{shadow:false});}});});
-  for(let z=p.z1+2;z<p.z2;z+=4)if(!crossH(p.x).some(h=>Math.abs(z-h.z)<4.4)&&!nearRBp(p.x,z))dx.push([p.x,.07,z,.14,.02,1.6]);
-  for(let z=p.z1+7;z<p.z2-3;z+=14)if(!crossH(p.x).some(h=>Math.abs(z-h.z)<5)&&!nearRBp(p.x,z))lamps.push([p.x+3.5,0,z]);});
- // zebra di tiap lengan simpang
- const inH=(x,z)=>PH.some(p=>Math.abs(z-p.z)<1&&x>=p.x1-.5&&x<=p.x2+.5),inV=(x,z)=>PV.some(p=>Math.abs(x-p.x)<1&&z>=p.z1-.5&&z<=p.z2+.5);
- H_ROADS.forEach(h=>V_ROADS.forEach(v=>{if(v.x<h.x1||v.x>h.x2||h.z<v.z1||h.z>v.z2||RBS.some(b=>Math.abs(b.x-v.x)<.1&&Math.abs(b.z-h.z)<.1))return;
-  for(let k=-3;k<=3;k++)[-1,1].forEach(s2=>{if(inV(v.x,h.z+s2*4.6)&&h.z>-70)zb.push([v.x+k*.8,.075,h.z+s2*4.6,.5,.02,1.2]);if(inH(v.x+s2*4.6,h.z)&&h.z>-70)zb.push([v.x+s2*4.6,.075,h.z+k*.8,1.2,.02,.5]);});}));
- // bundaran
+ const asph='#4a5262',walk='#ece4d0',dx=[],zb=[],lamps=[],HW=3;
+ const ribbon=(pts,off,half,y,col,runs)=>{ /* pita sepanjang polyline; runs = daftar [i0,i1] indeks titik */
+  const pos=[],nor=[],idx=[];let vb=0;
+  (runs||[[0,pts.length-1]]).forEach(([i0,i1])=>{if(i1-i0<1)return;
+   for(let i=i0;i<=i1;i++){const p=pts[i],a=pts[Math.max(i0,i-1)],b=pts[Math.min(i1,i+1)],L=Math.hypot(b.x-a.x,b.z-a.z)||1,nx=-(b.z-a.z)/L,nz=(b.x-a.x)/L;
+    [1,-1].forEach(sd=>{pos.push(p.x+nx*(off+sd*half),y,p.z+nz*(off+sd*half));nor.push(0,1,0);});}
+   for(let i=0;i<i1-i0;i++){const q=vb+i*2;idx.push(q,q+2,q+1,q+1,q+2,q+3);}vb=pos.length/3;});
+  if(!pos.length)return;
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(pos),3));g.setAttribute('normal',new THREE.BufferAttribute(new Float32Array(nor),3));g.setIndex(idx);
+  const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:col,roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));m.receiveShadow=true;m.userData.noMerge=true;m.userData.warped=true;cityGroup.add(m);};
+ const disc=(x,z,r,y,col)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,.06,22),material('disc'+col,col,1,{polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));m.position.set(x,y,z);m.receiveShadow=true;m.userData.noMerge=true;m.userData.warped=true;cityGroup.add(m);};
+ const jnodes=LAYC.nodes.map((n,i)=>({x:n.x,z:n.z,d:LAYC.deg(i)})).filter(n=>n.d>=3||n.d===1);
+ const ringAt=(x,z)=>RBS.some(b=>Math.hypot(x-b.x,z-b.z)<b.r+4.6);
+ LAYC.allEdges.forEach((e,ei)=>{const p=e.pts;if(p.length<2)return;
+  ribbon(p,0,HW,.06,asph);
+  /* trotoar: putus di dekat simpang / jalan lain */
+  [-1,1].forEach(sd=>{const runs=[];let st=-1;for(let i=0;i<p.length;i++){const q=p[Math.min(p.length-1,i+1)],o=p[Math.max(0,i-1)],L=Math.hypot(q.x-o.x,q.z-o.z)||1,x=p[i].x+(-(q.z-o.z)/L)*3.4*sd,z=p[i].z+((q.x-o.x)/L)*3.4*sd;
+    const ok=LAYC.roadDist(x,z,ei)>3.9&&!jnodes.some(n=>Math.hypot(x-n.x,z-n.z)<(n.d===1?4.3:5.2))&&!ringAt(x,z);
+    if(ok&&st<0)st=i;if((!ok||i===p.length-1)&&st>=0){runs.push([st,ok?i:i-1]);st=-1;}}
+   ribbon(p,3.4*sd,.4,.09,walk,runs);});
+  let acc=0;for(let i=1;i<p.length;i++){const L=Math.hypot(p[i].x-p[i-1].x,p[i].z-p[i-1].z);acc+=L;if(acc>=4){acc=0;const mx=(p[i].x+p[i-1].x)/2,mz=(p[i].z+p[i-1].z)/2;
+    if(!jnodes.some(n=>Math.hypot(mx-n.x,mz-n.z)<5.4)&&!ringAt(mx,mz)&&LAYC.roadDist(mx,mz,ei)>3.6)dx.push([mx,.075,mz,.14,.02,1.5,Math.atan2(p[i].x-p[i-1].x,p[i].z-p[i-1].z)]);}}
+  let la=7;for(let i=1;i<p.length;i++){la+=Math.hypot(p[i].x-p[i-1].x,p[i].z-p[i-1].z);if(la>=14){la=0;const o=p[i-1],q=p[i],L=Math.hypot(q.x-o.x,q.z-o.z)||1,x=q.x-(q.z-o.z)/L*3.5,z=q.z+(q.x-o.x)/L*3.5;
+    if(!jnodes.some(n=>Math.hypot(x-n.x,z-n.z)<6)&&!ringAt(x,z)&&LAYC.roadDist(x,z,ei)>4.6)lamps.push([x,0,z]);}}
+ });
+ /* simpang: cakram aspal + trotoar melingkar kecil, zebra di tiap lengan */
+ LAYC.nodes.forEach((n,i)=>{const d=LAYC.deg(i);if(RBS.some(b=>b.node===i))return;if(d>=3){disc(n.x,n.z,4.1,.062,asph);}else if(d===1&&n.z<DOM_MAXZ){disc(n.x,n.z,3.5,.062,asph);}});
+ LAYC.edges.forEach((e,ei)=>{[[e.a,0,1],[e.b,e.pts.length-1,-1]].forEach(([n,pi,dir])=>{if(LAYC.deg(n)<3||RBS.some(b=>b.node===n)||e.len<14)return;const k=pi+dir*Math.round(5.8/2.5),a=e.pts[Math.max(0,Math.min(e.pts.length-1,k))],b=e.pts[Math.max(0,Math.min(e.pts.length-1,k+dir))],L=Math.hypot(b.x-a.x,b.z-a.z)||1,tx=(b.x-a.x)/L,tz=(b.z-a.z)/L,ry=Math.atan2(tx,tz);
+   for(let j=-3;j<=3;j++)zb.push([a.x-tz*j*.8,.077,a.z+tx*j*.8,.5,.02,1.2,ry]);});});
+ /* bundaran */
  RBS.forEach(b=>{const N=34,len=2*Math.PI*b.r/N+.3;
   for(let k=0;k<N;k++){const a=(k+.5)/N*Math.PI*2,x=b.x+Math.cos(a)*b.r,z=b.z+Math.sin(a)*b.r,ry=Math.atan2(-Math.cos(a),-Math.sin(a));box(cityGroup,len,.065,5.8,asph,x,0,z,{ry,shadow:false});
    const sx=b.x+Math.cos(a)*(b.r+3.5),sz=b.z+Math.sin(a)*(b.r+3.5),slen=2*Math.PI*(b.r+3.5)/N+.3;
-   let pd=99;for(const r of PH)pd=Math.min(pd,dSeg(sx,sz,r.x1,r.z,r.x2,r.z));for(const r of PV)pd=Math.min(pd,dSeg(sx,sz,r.x,r.z1,r.x,r.z2));
-   if(pd>4.6)box(cityGroup,slen,.1,.8,walk,sx,.04,sz,{ry,shadow:false});
+   if(LAYC.roadDist(sx,sz)>4.6)box(cityGroup,slen,.1,.8,walk,sx,.04,sz,{ry,shadow:false});
    const ix=b.x+Math.cos(a)*(b.r-3.2),iz=b.z+Math.sin(a)*(b.r-3.2);box(cityGroup,len*.7,.14,.5,'#bfbcae',ix,.07,iz,{ry,shadow:false});}
   cylinder(cityGroup,b.r-3.4,b.r-3.4,.12,'#86d65a',b.x,.06,b.z,24);cylinder(cityGroup,1.7,1.9,.5,'#bfbcae',b.x,.3,b.z,18);cylinder(cityGroup,1.35,1.35,.52,'#3aa6e6',b.x,.3,b.z,18);cylinder(cityGroup,.18,.24,1.5,'#bfbcae',b.x,1,b.z,8);
   [0,2.1,4.2].forEach((a2,i)=>{const tx=b.x+Math.cos(a2+.6)*2.6,tz=b.z+Math.sin(a2+.6)*2.6;cylinder(cityGroup,.1,.16,1.2,'#6b5239',tx,.7,tz,6);const c=new THREE.Mesh(new THREE.IcosahedronGeometry(.95,1),material('rb-tree'+i,'#4fb84a'));c.position.set(tx,1.9,tz);c.castShadow=true;cityGroup.add(c);});});
  const B=new THREE.BoxGeometry(1,1,1);inst(B,'#ffeaa0',dx);inst(B,'#ffffff',zb);
  inst(new THREE.CylinderGeometry(.05,.07,1,6),'#3a3d36',lamps.map(p=>[p[0],1.3,p[2],1,2.6,1]));inst(new THREE.SphereGeometry(.18,8,6),'#ffe9a8',lamps.map(p=>[p[0],2.7,p[2]]));
+ /* jembatan: dek + pagar di tiap penyeberangan sungai */
+ LAYC.edges.forEach(e=>{if(!e.bridge)return;const p=e.pts;let inB=false;for(let i=0;i<p.length-1;i++){const m=[(p[i].x+p[i+1].x)/2,(p[i].z+p[i+1].z)/2];const rd=LAYC.riverDist(m[0],m[1]);if(rd>RIVER_HW+3.2)continue;
+   const L=Math.hypot(p[i+1].x-p[i].x,p[i+1].z-p[i].z),ry=Math.atan2(p[i+1].x-p[i].x,p[i+1].z-p[i].z),nx=Math.cos(ry),nz=-Math.sin(ry);
+   box(cityGroup,6.4,.3,L+.15,'#7d8794',m[0],.0,m[1],{ry,shadow:false});
+   [-1,1].forEach(sd=>box(cityGroup,.16,.6,L+.1,'#5a5d55',m[0]+nx*3.2*sd,.45,m[1]+nz*3.2*sd,{ry,shadow:false}));}});
 }
+const DOM_MAXZ=54;
 const SHOPS=[['BAKERY','#a64e3d','#ffffff'],['LAUNDRY','#2d4f7a','#ffffff'],['BARBER','#171914','#d7ff3f'],['PHARMACY','#2f6b3a','#ffffff'],['KIOSK','#d9a441','#171914'],['BOOKS','#5a3b2a','#f4e3c8'],['TAILOR','#6b4f6e','#ffffff'],['MOTOR','#2a2d28','#d7ff3f'],['RAMEN','#c4533f','#ffffff'],['COFFEE','#3a2a1f','#f4e3c8'],['SPORTS','#2a5fa8','#ffffff'],['VINYL','#171914','#e8e2cc']];
-function river(){WLD.canal();
- const br=V_ROADS.filter(r=>r.z1<30&&r.z2>30&&r.x<56).map(r=>r.x).sort((m,n)=>m-n),seg=[];let p=-66;br.forEach(c=>{seg.push([p,c-3.8]);p=c+3.8;});seg.push([p,56]);
- seg.forEach(([a,b])=>[-1,1].forEach(sd=>{for(let x=a;x<b-.01;x+=3){const len=Math.min(3,b-x);box(cityGroup,len+.05,.25,.45,'#8f8f80',x+len/2,.1,30+sd*2.4,{shadow:false});}}));
- br.forEach(x=>[-1,1].forEach(sd=>box(cityGroup,.14,.55,4.6,'#5a5d55',x+sd*3.9,.35,30,{shadow:false})));}
+function river(){WLD.river();}
 function fillCity(){
- const rnd=RND(77),RES=[[-19,-5,-40.4,-32.6],[-70,70,-18.4,-10.4],[8,16,6.3,11.3],[-10.9,-5.1,8.5,9.5],[-11.6,-8.4,3.2,4.6],[-66,70,27.5,32.5],[55.5,69,24.5,35.5]].concat(ART_RES,WLD.reserved);
-  const W=['#ffd98a','#ff9f8a','#8fd3f4','#fff0a8','#ff8f7a','#a6e58a','#c4b0ff','#ffbf5e'],RC=['#e5483b','#d9582f','#2a8bd8','#f2a824'];let n=100;
- const fits=(x,z,w,d)=>!places.some(p=>Math.abs(x-p.x)<(w+p.w)/2+.7&&Math.abs(z-p.z)<(d+p.d)/2+.7)&&!solids.some(p=>Math.abs(x-p.x)<(w+p.w)/2+.3&&Math.abs(z-p.z)<(d+p.d)/2+.3)&&!RES.some(r=>x+w/2+.4>r[0]&&x-w/2-.4<r[1]&&z+d/2+.3>r[2]&&z-d/2-.3<r[3])&&!rectOnRoad(x,z,w,d);
- const make=(cx,cz,w,d,face,kind,k)=>{n++;if(!(kind==='shop'&&cx>28))houseSpots.push(doorPoint(cx,cz,w,d,face));const sw=face==='E'||face==='W',fx=sw?d:w,fz=sw?w:d,o={id:'f'+n,x:cx,z:cz,face,w,d,lite:true,wall:W[n%8]};
-   if(kind==='house')Object.assign(o,{fl:1+(n%2),gfH:1.4,roof:RC[n%4],roofType:'gable',rh:1.2,brick:n%2===0});
-   else if(kind==='shop'&&cx>28)Object.assign(o,{fl:1,gfH:2.2,roofType:'gable',rh:.9,roof:'#6b6e66',wall:'#aaa99f',glyph:'WAREHOUSE',sb:'#2a2d28',sf:'#d7ff3f'});
-   else if(kind==='shop'){const s=SHOPS[n%12];Object.assign(o,{fl:2,glyph:s[0],sb:s[1],sf:s[2],awning:s[1],brick:n%3===0});}
-   else{
-    /* menara/apartemen: tinggi dibatasi agar bayangan visualnya tidak menutupi jalan di belakangnya (kamera melihat dari tenggara) */
-    const apt=kind==='apt',tw=Math.max(w,3.8),td=Math.max(d,3.4),ex=sw?td:tw,ez=sw?tw:td,nE=cz-ez/2,wE=cx-ex/2;
-    const hmax=behindMax(wE,nE);
-    const ctr=Math.abs(cx)<26&&cz>-40&&cz<50,want=apt?3+(n%3):5+(n*7)%4+(ctr?(n%3===0?4:n%7===0?2:0):0),fl=Math.max(2,Math.min(want,Math.floor((hmax-3.2)/FHT)));
-    const tr=WLD.tower({x:cx,z:cz,w:tw,d:td,fl,face,style:WLD.styleFor(cx,n),seed:n,kind:apt?'apt':'office'});solids.push({x:cx,z:tr.z,w:ex+.6,d:ez+.6});return;}
-   const r=mk(o);solids.push({x:cx,z:r.z,w:fx+.6,d:fz+.6});};
+ const W=['#ffd98a','#ff9f8a','#8fd3f4','#fff0a8','#ff8f7a','#a6e58a','#c4b0ff','#ffbf5e'],RC=['#e5483b','#d9582f','#2a8bd8','#f2a824'];let n=100;
  const behindMax=(x,z)=>{for(let q=2;q<=34;q+=2)for(const f of [0,.25,.5,.75,1]){const a=q*f,b=q-a;if(roadDist(x-a,z-b)<3.2||nearRing(x-a,z-b))return q/1.1;}return 99;};
- const dims=()=>{const k=rnd(),kind=k<.3?'house':k<.55?'shop':k<.8?'apt':'office';const q=v=>Math.round(v*2)/2;return {k,kind,w:q(kind==='house'?4.6+rnd()*1:4.5+rnd()*2.5),d:q(kind==='house'?3.8+rnd()*.8:4+rnd()*1.4)};};
- /* sisi yang menghadap kamera (selatan/timur jalan) hanya boleh bangunan rendah; menara hanya di sisi belakang jalan */
- const lowIfFront=(D0,front)=>front&&(D0.kind==='office'||D0.kind==='apt')?(D0.k<.675?'house':'shop'):D0.kind;
- const cutIv=(iv,lo,hi)=>{const o=[];iv.forEach(([a,b])=>{if(hi<=a||lo>=b){o.push([a,b]);return;}if(lo>a)o.push([a,lo]);if(hi<b)o.push([hi,b]);});return o;};
- const ivH=r=>{let iv=[[Math.max(r.x1,-63),Math.min(r.x2,203)]];V_ROADS.filter(v=>r.z>=v.z1-.1&&r.z<=v.z2+.1&&v.x>r.x1&&v.x<r.x2).forEach(v=>{iv=cutIv(iv,v.x-3.9,v.x+3.9);});RBS.filter(b=>Math.abs(b.z-r.z)<.1).forEach(b=>{iv=cutIv(iv,b.x-b.r-4,b.x+b.r+4);});return iv.filter(([a,b])=>b-a>4.4);};
- const ivV=r=>{let iv=[[Math.max(r.z1,-63),Math.min(r.z2,54.4)]];H_ROADS.filter(h=>r.x>=h.x1-.1&&r.x<=h.x2+.1&&h.z>=r.z1-.1&&h.z<=r.z2+.1).forEach(h=>{iv=cutIv(iv,h.z-3.9,h.z+3.9);});RBS.filter(b=>Math.abs(b.x-r.x)<.1).forEach(b=>{iv=cutIv(iv,b.z-b.r-4,b.z+b.r+4);});return iv.filter(([a,b])=>b-a>4.4);};
- // deretan bangunan menghadap jalan: barat-timur lalu utara-selatan (hanya di kota; wilayah tani dikerjakan modul sendiri)
- H_ROADS.filter(r=>r.z>-70).forEach(h=>ivH(h).forEach(([a,b])=>[-1,1].forEach(side=>[4.6,10.9].forEach(base=>{let x=a+rnd()*1.2,guard=0;while(x<b-4.4&&guard++<18){const D0=dims(),w=D0.w,d=D0.d,k=D0.k,kind=lowIfFront(D0,side>0),cx=x+w/2;if(cx+w/2>b)break;const cz=h.z+side*(base+d/2);
-  if(fits(cx,cz,w,d)){make(cx,cz,w,d,side>0?'N':'S',kind,k);x=cx+w/2+.5;}else x+=1.4;}}))));
- V_ROADS.forEach(v=>ivV(v).forEach(([a,b])=>[-1,1].forEach(s2=>[4.6,10.9].forEach(base=>{let z=a+rnd()*1.2,guard=0;while(z<b-4.4&&guard++<18){const D0=dims(),w=D0.w,d=D0.d,k=D0.k,kind=lowIfFront(D0,s2>0),cz=z+w/2;if(cz+w/2>b)break;const cx=v.x+s2*(base+d/2);
-  if(fits(cx,cz,d,w)){make(cx,cz,w,d,s2>0?'W':'E',kind,k);z=cz+w/2+.5;}else z+=1.4;}}))));
+ LAYC.lots.forEach(lot=>{n++;const {x:cx,z:cz,w,d,rot,kind,k}=lot,fx=Math.sin(rot),fz=Math.cos(rot);
+  if(!(kind==='shop'&&cx>28))houseSpots.push({x:cx+fx*(d/2+1.2),z:cz+fz*(d/2+1.2)});
+  const o={id:'f'+n,x:cx,z:cz,rot,w,d,lite:true,wall:W[n%8]};
+  if(kind==='house')Object.assign(o,{fl:1+(n%2),gfH:1.4,roof:RC[n%4],roofType:'gable',rh:1.2,brick:n%2===0});
+  else if(kind==='shop'&&cx>28)Object.assign(o,{fl:1,gfH:2.2,roofType:'gable',rh:.9,roof:'#6b6e66',wall:'#aaa99f',glyph:'WAREHOUSE',sb:'#2a2d28',sf:'#d7ff3f'});
+  else if(kind==='shop'){const s=SHOPS[n%12];Object.assign(o,{fl:2,glyph:s[0],sb:s[1],sf:s[2],awning:s[1],brick:n%3===0});}
+  else{
+   const apt=kind==='apt',tw=Math.max(w,3.8),td=Math.max(d,3.4),ext=Math.max(tw,td)/2,hmax=behindMax(cx-ext,cz-ext);
+   const ctr=Math.abs(cx-20)<40&&cz>-40&&cz<50,want=apt?3+(n%3):5+(n*7)%4+(ctr?(n%3===0?4:n%7===0?2:0):0),fl=Math.max(2,Math.min(want,Math.floor((hmax-3.2)/FHT)));
+   const tr=WLD.tower({x:cx,z:cz,w:tw,d:td,fl,rot,style:WLD.styleFor(cx,n),seed:n,kind:apt?'apt':'office'});solids.push({x:cx,z:cz,w:tw+.6,d:td+.6,rot});return;}
+  mk(o);solids.push({x:cx,z:cz,w:w+.6,d:d+.6,rot});});
 }
+const OFFICES=[
+ {id:'office-cleaner',name:'DINAS KEBERSIHAN',glyph:'KEBERSIHAN',sb:'#2f9a6a',tx:-12,tz:37.7,desc:'Kantor Dinas Kebersihan Kota. Petugas mengambil sapu dan kantong sampah di sini sebelum membersihkan jalanan.'},
+ {id:'office-garden',name:'DINAS PERTAMANAN',glyph:'PERTAMANAN',sb:'#59b84a',tx:-41,tz:37.7,desc:'Kantor Dinas Pertamanan. Tukang taman mengambil penyiram dan peralatan tanam di sini.'},
+ {id:'office-medic',name:'POS AMBULANS 118',glyph:'AMBULANS',sb:'#e5483b',tx:31,tz:37.7,desc:'Pos ambulans gawat darurat. Paramedis mengambil tas P3K dan kunci ambulans di sini.'},
+ {id:'office-bus',name:'PO BUS KOTA',glyph:'BUS KOTA',sb:'#f2a824',tx:58,tz:37.7,desc:'Kantor operator bus kota. Sopir mengambil mesin tiket dan kunci bus di sini.'},
+ {id:'office-photo',name:'STUDIO FOTO MATCHDAY',glyph:'STUDIO FOTO',sb:'#2a74c8',tx:41,tz:-50.3,desc:'Studio foto dan peminjaman kamera untuk fotografer matchday.'}];
 function houses(){
- const W=['#ffe3b3','#ffd0b0','#d4f0c4','#fff0d0','#ffd6e0'],RC=['#e5483b','#2f9a6a','#2a74c8','#f2a824'];let n=0;
- const xs=[-58,-41,-36,-31,-17,-12,-7,7,12,17,31,36,41,58];
- const OFF={'E-12':{id:'office-cleaner',name:'DINAS KEBERSIHAN',glyph:'KEBERSIHAN',sb:'#2f9a6a',desc:'Kantor Dinas Kebersihan Kota. Petugas mengambil sapu dan kantong sampah di sini sebelum membersihkan jalanan.'},'E-41':{id:'office-garden',name:'DINAS PERTAMANAN',glyph:'PERTAMANAN',sb:'#59b84a',desc:'Kantor Dinas Pertamanan. Tukang taman mengambil penyiram dan peralatan tanam di sini.'},'E31':{id:'office-medic',name:'POS AMBULANS 118',glyph:'AMBULANS',sb:'#e5483b',desc:'Pos ambulans gawat darurat. Paramedis mengambil tas P3K dan kunci ambulans di sini.'},'E58':{id:'office-bus',name:'PO BUS KOTA',glyph:'BUS KOTA',sb:'#f2a824',desc:'Kantor operator bus kota. Sopir mengambil mesin tiket dan kunci bus di sini.'},'F41':{id:'office-photo',name:'STUDIO FOTO MATCHDAY',glyph:'STUDIO FOTO',sb:'#2a74c8',desc:'Studio foto dan peminjaman kamera untuk fotografer matchday.'}};
- const put=(x,row)=>{n++;const od=OFF[row+x];if(od){addPlace({id:od.id,name:od.name,type:'KANTOR PEKERJAAN',desc:od.desc,glyph:od.glyph,tag:'KANTOR',x,row,w:4.4,d:3.4,fl:2,wall:'#e8f1f6',sb:od.sb,sf:'#ffffff',awning:od.sb});return;}const o={id:'h'+n,x,row,w:4.5,d:4.1,fl:1+(n%2),gfH:1.4,wall:W[n%5],roof:RC[n%4],roofType:'gable',rh:1.2,brick:n%2===0};const r=mk(o);solids.push({x,z:r.z,w:o.w+.4,d:o.d+.4});houseSpots.push(doorPoint(x,r.z,o.w,o.d,'S'));};
- xs.forEach(x=>{put(x,'E');if(x>-27)put(x,'F');});[-57,57].forEach(x=>{if(x<0)put(x,'B');put(x,'C');});
+ OFFICES.forEach(od=>{const L=LAY[od.id]||{};addPlace({id:od.id,name:od.name,type:'KANTOR PEKERJAAN',desc:od.desc,glyph:od.glyph,tag:'KANTOR',x:L.x??od.tx,z:L.z??od.tz,rot:L.rot,w:4.4,d:3.4,fl:2,wall:'#e8f1f6',sb:od.sb,sf:'#ffffff',awning:od.sb});});
 }
-const FARM_ROADS_NEAR=(x,z)=>Math.abs(x)<52&&(Math.abs(x+48)<4.8||Math.abs(x)<4.8||Math.abs(x-48)<4.8||[-88,-132,-176].some(h=>Math.abs(z-h)<4.8));
 function scenery(){
  const rnd=RND(5),tr=[],cr=[],cr2=[];
- const free=(x,z)=>!places.some(p=>Math.abs(x-p.x)<p.w/2+1.5&&Math.abs(z-p.z)<p.d/2+1.5)&&!solids.some(p=>Math.abs(x-p.x)<p.w/2+1.2&&Math.abs(z-p.z)<p.d/2+1.2);
- const NOTREE=[[-19,-5,-40.4,-32.6],[7,17,5.5,12],[-70,70,-18.4,-10.4],[55,69,24,36],[-15,-3,8,10]].concat(ART_RES,WLD.reserved);
- /* BUG FIX: pohon sebelumnya bisa muncul di tengah jalan utara-selatan. Semua pohon sekarang lewat onRoad() */
- const onRoad=(x,z)=>roadDist(x,z)<4.8||nearRing(x,z,1)||(z<-66&&FARM_ROADS_NEAR(x,z));
- const ok=(x,z)=>!onRoad(x,z)&&free(x,z)&&z<53&&!(Math.abs(z-30)<4.5&&x<66)&&!NOTREE.some(r=>x>r[0]-1&&x<r[1]+1&&z>r[2]-1&&z<r[3]+1);
+ const free=(x,z)=>!places.some(p=>inRect(p,x,z,1.5))&&!solids.some(p=>inRect(p,x,z,1.2));
+ const NOTREE=[[RAIL.x1,RAIL.x2,RAIL.z-RAIL.hz-.6,RAIL.z+RAIL.hz+.6],SITES.plaza.r,SITES.court.r].concat(WLD.reserved);
+ const onRoad=(x,z)=>roadDist(x,z)<4.8||nearRing(x,z,1);
+ const ok=(x,z)=>!onRoad(x,z)&&free(x,z)&&z<53&&LAYC.riverDist(x,z)>RIVER_HW+1.4&&!LAYC.lakeIn(x,z,2.5)&&!NOTREE.some(r=>x>r[0]-1&&x<r[1]+1&&z>r[2]-1&&z<r[3]+1);
  const addTree=(x,z)=>{const s=.85+rnd()*.6;tr.push([x,.6*s,z,s,1.2*s,s]);(rnd()>.5?cr:cr2).push([x,1.9*s,z,1.1*s,1.15*s,1.1*s,rnd()*3]);};
- [[-62,62,9,14,46],[-62,62,-12.5,-8.5,22],[-62,62,-36,-31,26],[-62,62,50,54.5,14],[-62,62,-63,-52,10],[-62,62,35,38,10]].forEach(([x1,x2,z1,z2,n])=>{for(let i=0;i<n;i++){const x=x1+rnd()*(x2-x1),z=z1+rnd()*(z2-z1);if(ok(x,z))addTree(x,z);}});
- for(let i=0,c=0;i<3600&&c<260;i++){const x=-62+rnd()*252,z=-62+rnd()*114;if(ok(x,z)){addTree(x,z);c++;}}
- for(let x=-62;x<=54;x+=5){[26.5,33.5].forEach(zz=>{if(!onRoad(x,zz)&&free(x,zz))addTree(x,zz);});}
+ for(let i=0,c=0;i<9000&&c<520;i++){const x=-62+rnd()*266,z=-64+rnd()*116;if(ok(x,z)){addTree(x,z);c++;}}
+ /* pohon di tepi sungai */
+ LAYC.rpts.forEach((p,i)=>{if(i%3)return;[-1,1].forEach(sd=>{const x=p.x-p.tz*sd*(RIVER_HW+2.6),z=p.z+p.tx*sd*(RIVER_HW+2.6);if(x>-62&&x<204&&ok(x,z))addTree(x,z);});});
  inst(new THREE.CylinderGeometry(.12,.18,1,6),'#6b5239',tr,true);inst(new THREE.IcosahedronGeometry(1,1),'#4fb84a',cr,true);inst(new THREE.IcosahedronGeometry(1,1),'#3ea146',cr2,true);
- // plaza air mancur (dipindah ke utara agar jalur rel bisa berkelok)
- const fx=-12,fz=-36.5;box(cityGroup,13,.06,6.5,'#c9c4b0',fx,.04,fz-.3,{shadow:false});cylinder(cityGroup,1.9,2,.4,'#bfbcae',fx,.3,fz,20);cylinder(cityGroup,1.55,1.55,.42,'#3aa6e6',fx,.3,fz,20);cylinder(cityGroup,.2,.25,1.2,'#bfbcae',fx,.9,fz,10);cylinder(cityGroup,.7,.1,.2,'#bfbcae',fx,1.5,fz,12);
+ // plaza air mancur
+ const fx=SITES.plaza.x,fz=SITES.plaza.z;box(cityGroup,13,.06,6.5,'#c9c4b0',fx,.04,fz-.3,{shadow:false});cylinder(cityGroup,1.9,2,.4,'#bfbcae',fx,.3,fz,20);cylinder(cityGroup,1.55,1.55,.42,'#3aa6e6',fx,.3,fz,20);cylinder(cityGroup,.2,.25,1.2,'#bfbcae',fx,.9,fz,10);cylinder(cityGroup,.7,.1,.2,'#bfbcae',fx,1.5,fz,12);
  [[-4,-2.5],[4,-2.5],[-4,2.5],[4,2.5]].forEach(([dx,dz])=>{const x=fx+dx,z=fz+dz;box(cityGroup,1.3,.1,.4,'#755b3f',x,.5,z);box(cityGroup,1.3,.3,.08,'#755b3f',x,.7,z-.2);cylinder(cityGroup,.04,.04,.4,'#333',x-.5,.25,z,5);cylinder(cityGroup,.04,.04,.4,'#333',x+.5,.25,z,5);});
- // futsal court in east park
- const ct=new THREE.Mesh(new THREE.PlaneGeometry(8,5),new THREE.MeshStandardMaterial({map:pitchTex()}));ct.rotation.x=-Math.PI/2;ct.position.set(12,.05,8.8);ct.receiveShadow=true;cityGroup.add(ct);
- // rel berkelok + kereta (dunia) dan peron stasiun
- WLD.buildRail({x:14.5,z:-14.8});box(cityGroup,9,.25,1.7,'#cfcbbb',14.5,.12,-13.1);
+ // lapangan futsal
+ const ct=new THREE.Mesh(new THREE.PlaneGeometry(8,5),new THREE.MeshStandardMaterial({map:pitchTex()}));ct.rotation.x=-Math.PI/2;ct.position.set(SITES.court.x,.05,SITES.court.z);ct.receiveShadow=true;cityGroup.add(ct);
+ // rel + kereta; peron mengikuti stasiun
+ const st=places.find(p=>p.id==='station'),sx=Math.max(-55,Math.min(55,st?st.x:14.5));
+ WLD.buildRail({x:sx,z:RAIL.z});box(cityGroup,9,.25,1.7,'#cfcbbb',sx,.12,RAIL.z+1.7);
 }
 function bigStadiums(){
  const reg=(id,kind,x,z,o)=>{const r=WLD.buildStadium(kind,x,z);WLD.reserved.push([x-21,x+21,z-18.5,z+18.5]);const hit=new THREE.Mesh(new THREE.BoxGeometry(r.w,r.H+1,r.d),new THREE.MeshBasicMaterial({transparent:true,opacity:.001,depthWrite:false}));hit.position.set(x,r.H/2,z);hit.userData.placeId=id;cityGroup.add(hit);pickables.push(hit);places.push({id,...o,x,z,w:r.w,d:r.d,hours:'MATCHDAY · 24 JAM',kind:'building',group:null,hit,rot0:0});};
@@ -279,27 +264,29 @@ function warpInst(im){
   im.instanceMatrix.needsUpdate=true;im.frustumCulled=false;
 }
 function applyWarp(){
-  cityGroup.updateMatrixWorld(true);
-  const rig=[];cityGroup.traverse(o=>{if(o!==cityGroup&&!o.isMesh&&o.userData&&o.userData.noMerge)rig.push(o);});rig.forEach(o=>{if(o.parent!==cityGroup)cityGroup.attach(o);});
-  const meshes=[],insts=[];cityGroup.children.slice().forEach(ch=>{if(ch===ground||(ch.userData.noMerge&&!ch.isMesh))return;ch.traverse(o=>{if(o.isInstancedMesh)insts.push(o);else if(o.isMesh&&!o.userData.warped)meshes.push(o);});});
-  meshes.forEach(bakeMesh);insts.forEach(warpInst);
-  cityGroup.children.forEach(ch=>{if(ch.userData.noMerge&&!ch.isMesh&&!ch.userData.warped){const f=WARPF(ch.position.x,ch.position.z);ch.rotation.y+=WARPR(ch.position.x,ch.position.z);ch.position.x=f.x;ch.position.z=f.z;}});
-  places.forEach(p=>{const f=WARPF(p.x,p.z),th=WARPR(p.x,p.z);p.x=f.x;p.z=f.z;p.rot=(p.rot0||0)+th;const k=p.d/2+1.3;p.fx=p.x+Math.sin(p.rot)*k;p.fz=p.z+Math.cos(p.rot)*k;});
-  solids.forEach(o=>{const f=WARPF(o.x,o.z);o.rot=WARPR(o.x,o.z);o.x=f.x;o.z=f.z;});
-  houseSpots.forEach(h=>{const f=WARPF(h.x,h.z);h.x=f.x;h.z=f.z;});
-  // sumbu jalan & kanal di ruang dunia untuk jembatan, titik patroli, dll
-  ROADW=[];const line=(pts)=>{pts.forEach((q,i)=>{const f=WARPF(q[0],q[1]);ROADW.push({x:f.x,z:f.z,cut:i===pts.length-1});});};
-  PH.forEach(r=>{const a=[];for(let x=r.x1;x<r.x2;x+=3)a.push([x,r.z]);a.push([r.x2,r.z]);line(a);});PV.forEach(r=>{const a=[];for(let z=r.z1;z<r.z2;z+=3)a.push([r.x,z]);a.push([r.x,r.z2]);line(a);});
-  RBS.forEach(b=>{const a=[];for(let k=0;k<=24;k++)a.push([b.x+Math.cos(k/24*Math.PI*2)*b.r,b.z+Math.sin(k/24*Math.PI*2)*b.r]);line(a);});
-  CANALW=[];for(let x=-150;x<=60;x+=3){const f=WARPF(x,30);CANALW.push({x:f.x,z:f.z,cut:x+3>60});}BASINW=WARPF(62,30);
+  /* V21: dunia sudah di ruang dunia (tanpa lengkung); hanya hitung titik depan bangunan + sumbu jalan/sungai untuk tabrakan */
+  places.forEach(p=>{p.rot=p.rot0||0;const k=p.d/2+1.3;p.fx=p.x+Math.sin(p.rot)*k;p.fz=p.z+Math.cos(p.rot)*k;});
+  ROADW=[];LAYC.allEdges.forEach(e=>e.pts.forEach((q,i)=>ROADW.push({x:q.x,z:q.z,cut:i===e.pts.length-1})));
+  RBS.forEach(b=>{for(let k=0;k<=24;k++)ROADW.push({x:b.x+Math.cos(k/24*Math.PI*2)*b.r,z:b.z+Math.sin(k/24*Math.PI*2)*b.r,cut:k===24});});
+  CANALW=LAYC.rpts.map((p,i)=>({x:p.x,z:p.z,cut:i===LAYC.rpts.length-1}));BASINW=null;
 }
-const warpSurf=()=>({poles:ART_SURF.poles.map(([x,z,id])=>{const f=WARPF(x,z);return [f.x,f.z,id];}),boards:ART_SURF.boards.map(([x,z,id])=>{const f=WARPF(x,z);return [f.x,f.z,id];}),walls:ART_SURF.walls.map(([x,z,id])=>{const f=WARPF(x,z);return [f.x,f.z,id];})});
+const warpSurf=()=>LAYC.art;
 /* titik kerja untuk misi: sudut simpang & trotoar (grid → dunia) */
 function farmPtsWorld(){const P=FARM?.points;if(!P)return null;const m=p=>WARPF(p.x,p.z);return {wheat:P.wheat.map(m),corn:P.corn.map(m),ranch:P.ranch.map(m),sheep:P.sheep.map(m),veg:P.veg.map(m),coop:m(P.coop),stall:m(P.stall)};}
-function jobCorners(n){const all=[];H_ROADS.forEach(h=>V_ROADS.forEach(v=>{if(h.z<-70||v.x<h.x1||v.x>h.x2||h.z<v.z1||h.z>v.z2)return;[[3.9,3.9],[-3.9,-3.9],[3.9,-3.9],[-3.9,3.9]].forEach(([a,b])=>all.push(WARPF(v.x+a,h.z+b)));}));
-  for(let i=all.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[all[i],all[j]]=[all[j],all[i]];}const out=[];all.forEach(p=>{if(out.length<n&&!blocked(p.x,p.z,.5)&&p.z<48&&out.every(o=>Math.hypot(o.x-p.x,o.z-p.z)>26))out.push(p);});return out;}
-function jobStreetPts(n,xr){const out=[],hs=PH.filter(p=>p.z>-70);for(let t=0;t<500&&out.length<n;t++){const p=hs[Math.floor(Math.random()*hs.length)],x0=Math.max(p.x1+6,xr?xr[0]:-58),x1=Math.min(p.x2-6,xr?xr[1]:196);if(x1<=x0)continue;const gx=x0+Math.random()*(x1-x0),gz=p.z+(Math.random()<.5?-3.4:3.4),f=WARPF(gx,gz);if(roadDist(gx,gz,p)<5||blocked(f.x,f.z,.5)||out.some(o=>Math.hypot(o.x-f.x,o.z-f.z)<14))continue;out.push(f);}return out;}
+function jobCorners(n){const all=[];LAYC.nodes.forEach((nd,i)=>{if(LAYC.deg(i)<3||nd.z>48||RBS.some(b=>b.node===i))return;[[3.9,3.9],[-3.9,-3.9],[3.9,-3.9],[-3.9,3.9]].forEach(([a,b])=>all.push({x:nd.x+a,z:nd.z+b}));});
+  for(let i=all.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[all[i],all[j]]=[all[j],all[i]];}const out=[];all.forEach(p=>{if(out.length<n&&!blocked(p.x,p.z,.5)&&roadDist(p.x,p.z)>3&&out.every(o=>Math.hypot(o.x-p.x,o.z-p.z)>26))out.push(p);});return out;}
+function jobStreetPts(n,xr){const out=[],es=LAYC.edges.filter(e=>!e.bridge&&e.len>14);for(let t=0;t<600&&out.length<n&&es.length;t++){const e=es[Math.floor(Math.random()*es.length)],c=LAYC.at(e,4+Math.random()*(e.len-8)),sd=Math.random()<.5?-1:1,x=c.x-c.tz*3.4*sd,z=c.z+c.tx*3.4*sd;
+  if(xr&&(x<xr[0]||x>xr[1]))continue;if(roadDist(x,z,-2)<2.4||blocked(x,z,.5)||out.some(o=>Math.hypot(o.x-x,o.z-z)<14))continue;out.push({x,z});}return out;}
+function planLayout(){
+ const q=v=>Math.round(v*1.25*2)/2,ids=['fttr','station','hq','jobcentre','hospital','residential','police','press','cafe','cafe2','market','pub','garage','works','northside-market','eastbank-market','busstop','billboard'];
+ const list=ids.map(id=>{const L=LAY[id],sp=id==='busstop'||id==='billboard',w=sp?L.w:q(L.w),d=sp?L.d:q(L.d),tz=L.z!==undefined?L.z:LOT[L.row]-d/2;return {id,w,d,tx:L.x,tz,base:sp?4.4:4.6};});
+ OFFICES.forEach(o=>list.push({id:o.id,w:q(4.4),d:q(3.4),tx:o.tx,tz:o.tz,base:4.6}));
+ LAYC.placeNamed(list);
+ list.forEach(it=>{const p=LAYC.named[it.id];if(p){const L=LAY[it.id]||(LAY[it.id]={});L.x=p.x;L.z=p.z;L.rot=p.rot;delete L.row;}});
+ LAYC.frontage(4.6);LAYC.frontage(10.9);LAYC.infill();LAYC.infill(4.4,.1,6.4,34);
+}
 function createCity(){
+ planLayout();
  cityGroup=new THREE.Group();scene.add(cityGroup);
  ground=WLD.makeGround();ground.userData.noWarp=true;
  roads();river();WLD.buildCoast();WLD.buildParks();bigStadiums();
@@ -329,24 +316,32 @@ function createCity(){
 }
 function shirt(parent,x,z,color,scale=1){const g=new THREE.Group();g.position.set(x,0,z);parent.add(g);const body=box(g,.52*scale,.68*scale,.12*scale,color,0,.82*scale,0);body.rotation.z=.02;box(g,.24*scale,.3*scale,.11*scale,color,-.34*scale,.94*scale,0,{ry:0});box(g,.24*scale,.3*scale,.11*scale,color,.34*scale,.94*scale,0);box(g,.18*scale,.035*scale,.125*scale,'#f2efdf',0,.87*scale,.066*scale,{shadow:false});return g;}
 
-function makeCar(color,axis,lane,dir,t,lo,hi){const c=new THREE.Group();c.scale.setScalar(1.45);box(c,1.7,.42,.82,color,0,.4,0);box(c,.9,.34,.7,'#dfe6df',-.05,.76,0);box(c,.2,.16,.84,'#2a2d27',.2,.78,0,{shadow:false});box(c,.14,.1,.1,'#ffe9a3',.86,.42,.25,{shadow:false});box(c,.14,.1,.1,'#ffe9a3',.86,.42,-.25,{shadow:false});for(const [x,z] of [[-.55,.42],[.55,.42],[-.55,-.42],[.55,-.42]])box(c,.3,.3,.12,'#1b1c18',x,.15,z,{shadow:false});
-  c.userData={axis,lane,t,lo,hi,s:dir*(3.2+Math.abs(t%3)*.4),base:axis==='x'?(dir>0?0:Math.PI):(dir>0?-Math.PI/2:Math.PI/2),noMerge:true};cityGroup.add(c);cars.push(c);return c;}
-function createTraffic(){const cl=['#d7ff3f','#c4533f','#4a6fa5','#e8e2cc','#2f3a34','#d9a441'];
-  /* [sumbu, jalur, arah, posisi awal, batas bawah, batas atas] di ruang grid; posisi akhir dilengkungkan lewat WARPF tiap frame */
-  [['x',1.2,1,-30,-62,58],['x',-1.2,-1,30,-62,58],['x',23.2,1,10,-62,68],['x',20.8,-1,-20,-62,68],['x',-20.8,1,40,-62,68],['x',-23.2,-1,-40,-62,68],['x',45.2,1,70,-62,192],['x',42.8,-1,120,-62,192],['x',-42.8,1,100,-18,150],['x',-45.2,-1,60,-18,150],
-   ['z',1.2,1,-20,-185,52],['z',-1.2,-1,15,-185,52],['z',25.2,1,-30,-62,52],['z',22.8,-1,25,-62,52],['z',-22.8,1,10,-62,52],['z',-25.2,-1,-10,-62,52],['z',49.2,1,-20,-185,52],['z',46.8,-1,10,-62,52]].forEach(([a,l,d,t,lo,hi],i)=>makeCar(cl[i%6],a,l,d,t,lo,hi));
+function makeCar(color,route,t,dir){const c=new THREE.Group();c.scale.setScalar(1.45);box(c,1.7,.42,.82,color,0,.4,0);box(c,.9,.34,.7,'#dfe6df',-.05,.76,0);box(c,.2,.16,.84,'#2a2d27',.2,.78,0,{shadow:false});box(c,.14,.1,.1,'#ffe9a3',.86,.42,.25,{shadow:false});box(c,.14,.1,.1,'#ffe9a3',.86,.42,-.25,{shadow:false});for(const [x,z] of [[-.55,.42],[.55,.42],[-.55,-.42],[.55,-.42]])box(c,.3,.3,.12,'#1b1c18',x,.15,z,{shadow:false});
+  c.userData={route,t,s:dir*(3.2+Math.abs(t%3)*.4),noMerge:true};cityGroup.add(c);cars.push(c);return c;}
+/* rute acak menyusuri graf jalan (maju lurus bila bisa) */
+function makeRoute(rnd,minLen){const E=LAYC.edges;for(let tries=0;tries<30;tries++){const e0=E[Math.floor(rnd()*E.length)];if(e0.bridge&&rnd()<.5)continue;
+  let e=e0,node=e0.b,pts=e0.pts.map(p=>[p.x,p.z]),len=e0.len,prev=e0,guard=0;
+  while(len<minLen&&guard++<12){const nx=LAYC.ADJ[node].map(i=>E[i]).filter(f=>f!==prev&&f.len>3);if(!nx.length)break;
+   const last=pts[pts.length-1],bef=pts[Math.max(0,pts.length-3)],hx=last[0]-bef[0],hz=last[1]-bef[1];let best=null,bs=-9;
+   nx.forEach(f=>{const fw=f.a===node,fp=fw?f.pts:f.pts.slice().reverse(),dx=fp[Math.min(2,fp.length-1)].x-fp[0].x,dz=fp[Math.min(2,fp.length-1)].z-fp[0].z,sc=(hx*dx+hz*dz)/(Math.hypot(hx,hz)*Math.hypot(dx,dz)||1)+rnd()*.5;if(sc>bs){bs=sc;best={f,fp};}});
+   best.fp.slice(1).forEach(p=>pts.push([p.x,p.z]));len+=best.f.len;node=best.f.a===node?best.f.b:best.f.a;prev=best.f;}
+  if(len<Math.min(minLen,40))continue;
+  const cum=[0];for(let i=1;i<pts.length;i++)cum.push(cum[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));return {xs:pts.map(p=>p[0]),zs:pts.map(p=>p[1]),cum,len:cum[cum.length-1]};}
+  return null;}
+function routeAt(r,t){let i=1;while(i<r.cum.length-1&&r.cum[i]<t)i++;const a=i-1,L=r.cum[i]-r.cum[a]||1,k=Math.max(0,Math.min(1,(t-r.cum[a])/L));return {x:r.xs[a]+(r.xs[i]-r.xs[a])*k,z:r.zs[a]+(r.zs[i]-r.zs[a])*k,hx:(r.xs[i]-r.xs[a])/L,hz:(r.zs[i]-r.zs[a])/L};}
+function createTraffic(){const cl=['#d7ff3f','#c4533f','#4a6fa5','#e8e2cc','#2f3a34','#d9a441'],rnd=RND(321);
+  for(let i=0;i<18;i++){const r=makeRoute(rnd,150);if(r)makeCar(cl[i%6],r,rnd()*r.len,i%2?1:-1);}
   const sk=['#d5a07b','#b87d58','#8d5a3c'],sh=['#d7ff3f','#5875a6','#c76f51','#e0d9c7','#5d8c83','#f2efdf','#586a8c','#a64e3d'];
-  for(let i=0;i<16;i++){const n=makeCitizen({key:'w'+i,shirt:sh[i%8],skin:sk[i%3],hair:'#30251f',pants:'#34372f',eyes:false});n.scale.setScalar(CITIZEN_S);n.userData.noMerge=true;
-    const ax=i%2?'x':'z',sd=(i%4<2?-1:1)*3.4,side=ax==='x'?[0,22,-22][i%3]+sd:[0,24,-24][i%3]+sd,c=(i*17%50)-25;Object.assign(n.userData,{axis:ax,c,t:0,side,r:6+i%4*2,s:.9+(i%3)*.25,p:i,base:ax==='x'?Math.PI/2:0});cityGroup.add(n);walkers.push(n);}}
+  for(let i=0;i<16;i++){const r=makeRoute(rnd,60);if(!r)continue;const n=makeCitizen({key:'w'+i,shirt:sh[i%8],skin:sk[i%3],hair:'#30251f',pants:'#34372f',eyes:false});n.scale.setScalar(CITIZEN_S);n.userData.noMerge=true;
+    const rr=Math.min(6+i%4*2,r.len/2-1);Object.assign(n.userData,{route:r,c:r.len/2+(rnd()-.5)*(r.len-2*rr-2),t:0,off:(i%4<2?-1:1)*3.4,r:rr,s:.9+(i%3)*.25,p:i});cityGroup.add(n);walkers.push(n);}}
 function liveCity(){
  const rnd=RND(4242),tr=[],cr=[[],[],[],[]],f1=[],f2=[],cab=[],cl=['#e8453c','#2f7fd1','#f2c230','#f5f5f0','#2fa86a','#8e5bd8'],cars=cl.map(()=>[]);
- const clear=(x,z,r)=>!places.some(p=>Math.abs(x-p.x)<p.w/2+r&&Math.abs(z-p.z)<p.d/2+r)&&!solids.some(p=>Math.abs(x-p.x)<p.w/2+r&&Math.abs(z-p.z)<p.d/2+r);
+ const clear=(x,z,r)=>!places.some(p=>inRect(p,x,z,r))&&!solids.some(p=>inRect(p,x,z,r));
  const tree=(x,z)=>{const s=.8+rnd()*.5,k=rnd();tr.push([x,.7*s,z,.16*s,1.4*s,.16*s]);cr[k<.5?0:k<.8?1:k<.92?2:3].push([x,1.9*s,z,.85*s,.8*s,.85*s,rnd()*6]);if(k>.4){f1.push([x+.75,.2,z+.2,.28,.22,.28]);f2.push([x-.7,.2,z-.25,.26,.2,.26]);}};
  const PS=1.45,wh=[],park=(x,z,rot)=>{const i=Math.floor(rnd()*6);cars[i].push([x,.36,z,PS,PS,PS,rot]);cab.push([x,.95,z,PS,PS,PS,rot]);const c=Math.cos(rot),sn=Math.sin(rot);[[-.55,.42],[.55,.42],[-.55,-.42],[.55,-.42]].forEach(([dx,dz])=>wh.push([x+(dx*c+dz*sn)*PS,.22,z+(-dx*sn+dz*c)*PS,PS,PS,PS,rot]));};
- PH.forEach(p=>{if(p.z<-70)return;for(let x=p.x1+4;x<=p.x2-4;x+=7){const xx=x+rnd()*2,tz=p.z-3.4;if(roadDist(xx,tz,p)>4.3&&!nearRing(xx,tz,1)&&clear(xx,tz,.4))tree(xx,tz);}
-  for(let x=p.x1+6;x<=p.x2-6;x+=9+rnd()*8){const z=p.z+(rnd()<.5?-1:1)*2.6;if(roadDist(x,z,p)>5.2&&!nearRing(x,z,1)&&rnd()<.6&&clear(x,z,.2))park(x,z,0);}});
- PV.forEach(p=>{if(p.z2<-66)return;const zend=Math.min(p.z2,WLD.roadEnd);for(let z=p.z1+4;z<=zend-4;z+=7){const zz=z+rnd()*2,tx=p.x-3.4;if(roadDist(tx,zz,p)>4.3&&!nearRing(tx,zz,1)&&clear(tx,zz,.4))tree(tx,zz);}
-  for(let z=p.z1+6;z<=zend-6;z+=10+rnd()*8){const x=p.x+(rnd()<.5?-1:1)*2.6;if(roadDist(x,z,p)>5.2&&!nearRing(x,z,1)&&rnd()<.6&&clear(x,z,.2))park(x,z,Math.PI/2);}});
+ LAYC.edges.forEach((e,ei)=>{if(e.bridge)return;let a1=4,a2=6;for(let u=4;u<e.len-4;u+=1.5){const c=LAYC.at(e,u);
+   if(u>=a1){a1=u+7+rnd()*2;const tx=c.x+c.tz*3.4,tz=c.z-c.tx*3.4;if(roadDist(tx,tz,ei)>4.3&&!nearRing(tx,tz,1)&&LAYC.roadClear(tx,tz,-.5)&&clear(tx,tz,.4)&&LAYC.riverDist(tx,tz)>RIVER_HW+1.5)tree(tx,tz);}
+   if(u>=a2){a2=u+9+rnd()*8;const sd=rnd()<.5?-1:1,px=c.x-c.tz*2.6*sd,pz=c.z+c.tx*2.6*sd;if(roadDist(px,pz,ei)>5.2&&!nearRing(px,pz,1)&&rnd()<.6&&clear(px,pz,.2)&&LAYC.roadClear(px,pz,-.9))park(px,pz,-Math.atan2(c.tz,c.tx));}}});
  inst(new THREE.CylinderGeometry(.12,.18,1,6),'#6b4a2f',tr,false);
  ['#4fb046','#3c9a3a','#f2b134','#ff9ec4'].forEach((c,i)=>inst(new THREE.IcosahedronGeometry(1,0),c,cr[i],false));
  inst(new THREE.IcosahedronGeometry(1,0),'#ff5d8f',f1,false);inst(new THREE.IcosahedronGeometry(1,0),'#ffd23f',f2,false);
@@ -589,7 +584,7 @@ function moveInput(dt){if(window.FTTRArt?.on)return;let ix=0,iz=0;if(keys.has('w
 const inRect=(p,x,z,m)=>{if(!p.rot)return Math.abs(x-p.x)<p.w/2+m&&Math.abs(z-p.z)<p.d/2+m;const dx=x-p.x,dz=z-p.z,c=Math.cos(p.rot),sn=Math.sin(p.rot),lx=dx*c-dz*sn,lz=dx*sn+dz*c;return Math.abs(lx)<p.w/2+m&&Math.abs(lz)<p.d/2+m;};
 let ROADW=[],CANALW=[],BASINW=null;
 const segDistW=(arr,x,z)=>{let d=99;for(let i=0;i<arr.length-1;i++){const a=arr[i],b=arr[i+1];if(a.cut)continue;const v=dSeg(x,z,a.x,a.z,b.x,b.z);if(v<d)d=v;}return d;};
-const blocked=(x,z,m=.35)=>{if(isInside)return false;if(z>WLD.coastLimit(x)||!WLD.inLand(x,z))return true;if(CANALW.length&&segDistW(CANALW,x,z)<2.1&&segDistW(ROADW,x,z)>3.2)return true;if(BASINW&&((x-BASINW.x)/10.2)**2+((z-BASINW.z)/6.4)**2<1)return true;const f=p=>inRect(p,x,z,m);return places.some(f)||solids.some(f);};
+const blocked=(x,z,m=.35)=>{if(isInside)return false;if(z>WLD.coastLimit(x)||!WLD.inLand(x,z))return true;if(CANALW.length&&segDistW(CANALW,x,z)<RIVER_HW-.4&&segDistW(ROADW,x,z)>3.2)return true;if(LAYC.lakeIn(x,z,-.4))return true;const f=p=>inRect(p,x,z,m);return places.some(f)||solids.some(f);};
 function update(dt){if(window.FTTRArt)window.FTTRArt.update(dt);const px0=player.position.x,pz0=player.position.z;moveInput(dt);if(destination){const dx=destination.x-player.position.x,dz=destination.z-player.position.z,dist=Math.hypot(dx,dz);if(dist<.12)destination=null;else{const speed=moveBase()*(needs.energy<20?.6:1);const step=Math.min(dist,speed*dt);player.position.x+=dx/dist*step;player.position.z+=dz/dist*step;player.rotation.y=Math.atan2(dx,dz);}}
   const bm=ride?ride.margin:.35;if(blocked(player.position.x,player.position.z,bm)){const nx=player.position.x,nz=player.position.z;if(!blocked(nx,pz0,bm))player.position.z=pz0;else if(!blocked(px0,nz,bm))player.position.x=px0;else{player.position.x=px0;player.position.z=pz0;if(destination&&Math.hypot(destination.x-px0,destination.z-pz0)>.5)destination=null;}}
   const tt=performance.now()/1000;{const ps=isInside?1:CITIZEN_S;if(player.scale.x!==ps)player.scale.setScalar(ps);}const mv=dt>0?Math.hypot(player.position.x-px0,player.position.z-pz0)/dt:0;animCitizen(player,dt,mv,tt);if(destination){stuckT=mv<.2?stuckT+dt:0;if(stuckT>.45){destination=null;stuckT=0;}}else stuckT=0;updateTapMarker(dt);if(ride){ride.g.position.set(player.position.x,0,player.position.z);ride.g.rotation.y=player.rotation.y;ride.wheels.forEach(w=>{w.rotation.x+=mv*dt/.32;});}JOBSYS?.update(dt);
@@ -597,7 +592,7 @@ function update(dt){if(window.FTTRArt)window.FTTRArt.update(dt);const px0=player
   if(cameraFollow&&!window.FTTRArt?.on){cameraTarget ||= new THREE.Vector3();cameraTarget.lerp(new THREE.Vector3(player.position.x,0,player.position.z),Math.min(1,dt*2.6));const offset=isInside?new THREE.Vector3(13,19,13):new THREE.Vector3(CAM_OFF[0],CAM_OFF[1],CAM_OFF[2]);camera.position.lerp(cameraTarget.clone().add(offset),Math.min(1,dt*2.6));camera.lookAt(cameraTarget);}
   if(sunLight&&cameraTarget){sunLight.target.position.set(cameraTarget.x,0,cameraTarget.z);sunLight.position.set(cameraTarget.x-12,24,cameraTarget.z+12);}
   const zt=cameraZoom*(isInside?1:BASE_ZOOM);if(camera&&!window.FTTRArt?.on&&Math.abs(camera.zoom-zt)>.001){camera.zoom+=(zt-camera.zoom)*Math.min(1,dt*9);camera.updateProjectionMatrix();}
-  if(!isInside){WLD?.update(dt,performance.now()/1000);FARM?.update(dt,performance.now()/1000);cars.forEach(c=>{const u=c.userData;u.t+=u.s*dt;if(u.t>u.hi)u.t=u.lo;if(u.t<u.lo)u.t=u.hi;const gx=u.axis==='x'?u.t:u.lane,gz=u.axis==='x'?u.lane:u.t,f=WARPF(gx,gz);c.position.set(f.x,0,f.z);c.rotation.y=u.base+WARPR(gx,gz);});walkers.forEach(w=>{const u=w.userData;u.t+=u.s*dt;if(Math.abs(u.t)>u.r){u.s*=-1;u.t=Math.sign(u.t)*u.r;}const gx=u.axis==='x'?u.c+u.t:u.side,gz=u.axis==='x'?u.side:u.c+u.t,f=WARPF(gx,gz);w.position.set(f.x,0,f.z);w.rotation.y=u.base+(u.s<0?Math.PI:0)+WARPR(gx,gz);animCitizen(w,dt,Math.abs(u.s),tt);});}
+  if(!isInside){WLD?.update(dt,performance.now()/1000);FARM?.update(dt,performance.now()/1000);cars.forEach(c=>{const u=c.userData;u.t+=u.s*dt;if(u.t>u.route.len){u.t=u.route.len;u.s=-Math.abs(u.s);}else if(u.t<0){u.t=0;u.s=Math.abs(u.s);}const q=routeAt(u.route,u.t),sg=u.s<0?-1:1,hx=q.hx*sg,hz=q.hz*sg;c.position.set(q.x-hz*1.25,0,q.z+hx*1.25);c.rotation.y=-Math.atan2(hz,hx);});walkers.forEach(w=>{const u=w.userData;u.t+=u.s*dt;if(Math.abs(u.t)>u.r){u.s*=-1;u.t=Math.sign(u.t)*u.r;}const q=routeAt(u.route,u.c+u.t),sg=u.s<0?-1:1;w.position.set(q.x-q.hz*u.off,0,q.z+q.hx*u.off);w.rotation.y=Math.atan2(q.hx*sg,q.hz*sg);animCitizen(w,dt,Math.abs(u.s),tt);});}
   if(player?.userData.arrow)player.userData.arrow.position.y=2.25+Math.sin(performance.now()*.006)*.1;
   botWorkers.forEach(n=>animCitizen(n,dt,0,tt));
   remoteAvatars.forEach(g=>{const T=g.userData.target;if(!T||!(dt>0))return;const dx=T.x-g.position.x,dz=T.z-g.position.z,d=Math.hypot(dx,dz);let v=0;if(d>.04){v=Math.min(4.2,Math.max(1.2,d*3));const st=Math.min(d,v*dt);g.position.x+=dx/d*st;g.position.z+=dz/d*st;g.rotation.y=Math.atan2(dx,dz);}animCitizen(g,dt,v,tt);});
@@ -661,7 +656,7 @@ function bindUI(){ $('#phoneBtn').onclick=()=>openPhone();$('#phoneClose').oncli
   $('#gfxBtn')?.addEventListener('click',()=>{gfxMode=gfxMode==='pixel'?'hd':'pixel';try{localStorage.setItem('fttr.city.gfx',gfxMode);}catch{}resize();toast(gfxMode==='pixel'?'Gambar: semi-pixel':'Gambar: HD halus (aktif penuh setelah muat ulang)');});
 }
 async function init(){setMoney(money);bindUI();try{THREE=await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js');}catch(e){$('#toast').textContent='3D engine gagal dimuat. Periksa koneksi internet.';$('#toast').classList.add('show');const bs=$('#boot small');if(bs)bs.textContent='3D engine gagal dimuat. Periksa koneksi internet lalu muat ulang.';return;}
-  WLD=createWorld({THREE,group:()=>cityGroup,RND,solids,VR:[...new Set(V_ROADS.filter(r=>r.z2>55).map(r=>r.x))],gable,sign,faceRot,warp:WARPF});
+  WLD=createWorld({THREE,group:()=>cityGroup,RND,solids,VR:LAYC.nodes.filter((n,i)=>LAYC.deg(i)===1&&n.z>50).map(n=>n.x),layout:LAYC,RIVER_HW,LAKE,SITES,boundary:(x,z)=>{let b=null,bd=1e9;LAYC.nodes.forEach((n,i)=>{if(LAYC.deg(i)!==1||!LAYC.onB(n))return;const d=Math.hypot(n.x-x,n.z-z);if(d<bd){bd=d;b=n;}});return b&&bd<90?[b.x,b.z]:null;},gable,sign,faceRot,warp:WARPF});
   scene=new THREE.Scene();scene.background=new THREE.Color('#9fdcf6');scene.fog=new THREE.Fog('#9fdcf6',105,200);camera=new THREE.OrthographicCamera(-18,18,18,-18,.1,200);camera.position.set(CAM_OFF[0],CAM_OFF[1],CAM_OFF[2]);camera.zoom=BASE_ZOOM;cameraTarget=new THREE.Vector3(0,0,0);camera.lookAt(cameraTarget);raycaster=new THREE.Raycaster();pointer=new THREE.Vector2();renderer=new THREE.WebGLRenderer({canvas,antialias:gfxMode!=='pixel'&&Math.min(devicePixelRatio||1,2)<1.8,alpha:false,powerPreference:'high-performance'});renderer.setPixelRatio(1);renderer.setSize(innerWidth,innerHeight,false);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;
   scene.add(new THREE.HemisphereLight('#fff6e2','#86b07a',2.3));sunLight=new THREE.DirectionalLight('#fff1cf',2.6);sunLight.position.set(-12,24,12);sunLight.castShadow=true;sunLight.shadow.mapSize.set(matchMedia('(pointer:coarse)').matches?1024:2048,matchMedia('(pointer:coarse)').matches?1024:2048);sunLight.shadow.camera.left=-32;sunLight.shadow.camera.right=32;sunLight.shadow.camera.top=32;sunLight.shadow.camera.bottom=-32;sunLight.shadow.camera.far=120;scene.add(sunLight,sunLight.target);
   createCity();createBotWorkers();createInterior();createPlayer();createTapMarker();

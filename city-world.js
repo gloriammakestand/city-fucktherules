@@ -61,8 +61,15 @@ export function createWorld(C){
   s.moveTo(xs[0],-top(xs[0]));xs.forEach(x=>s.lineTo(x,-top(x)));for(let i=xs.length-1;i>=0;i--)s.lineTo(xs[i],-bot(xs[i]));s.closePath();return s;}
  function ellipse(cx,cz,rx,rz,n){const s=new T.Shape();for(let i=0;i<=n;i++){const a=i/n*Math.PI*2,px=cx+Math.cos(a)*rx*(1+Math.sin(a*3)*.06),pz=cz+Math.sin(a)*rz*(1+Math.cos(a*2)*.07);if(i===0)s.moveTo(px,-pz);else s.lineTo(px,-pz);}return s;}
 
- /* ---------- kanal kota (air sungguhan, mengalir ke laut) ---------- */
- function canal(){const xs=[];for(let x=-156;x<=60.01;x+=3)xs.push(x);const cs=new T.Shape();cs.moveTo(xs[0],-27.8);xs.forEach(x=>cs.lineTo(x,-27.8));for(let i=xs.length-1;i>=0;i--)cs.lineTo(xs[i],-32.2);cs.closePath();shapeMesh(cs,waterMat,.012);shapeMesh(ellipse(62,30,11.4,7.2,40),flat('pond-edge','#e3d6b0'),.011);shapeMesh(ellipse(62,30,10.3,6.2,40),waterMat,.013);reserved.push([49,76,21,39.5]);}
+ /* ---------- sungai & danau (v21): membelah pusat kota, mengalir ke pantai barat ---------- */
+ function river(){
+  const L=C.layout,hw=C.RIVER_HW,pts=L.rpts,lk=C.LAKE,s=new T.Shape();
+  pts.forEach((p,i)=>{const x=p.x-p.tz*hw,z=p.z+p.tx*hw;if(i)s.lineTo(x,-z);else s.moveTo(x,-z);});
+  for(let i=pts.length-1;i>=0;i--){const p=pts[i];s.lineTo(p.x+p.tz*hw,-(p.z-p.tx*hw));}s.closePath();
+  shapeMesh(s,waterMat,.012);
+  shapeMesh(ellipse(lk.x,lk.z,lk.rx+1.1,lk.rz+1.1,48),flat('lake-edge','#e3d6b0'),.011);shapeMesh(ellipse(lk.x,lk.z,lk.rx,lk.rz,48),waterMat,.013);
+  pts.forEach((p,i)=>{if(i%1)return;[-1,1].forEach(sd=>{const x=p.x-p.tz*sd*(hw+.25),z=p.z+p.tx*sd*(hw+.25);if(C.layout.roadDist(x,z)<4.2||x<-66)return;const m=bx(G(),.45,.26,3.3,'#8f8f80',x,.11,z);m.rotation.y=Math.atan2(p.tx,p.tz);});});
+ }
 
  /* ---------- pulau: laut luas, tepi pasir, pantai selatan ---------- */
  function island(){
@@ -235,7 +242,7 @@ export function createWorld(C){
   C.solids.push({x:h.x,z:h.z,w:1,d:1});
   for(let t=0;t<260&&placed.length<11;t++){
    const a=r()*Math.PI*2,d=7+Math.sqrt(r())*17,x=h.x+Math.cos(a)*d,z=h.z+Math.sin(a)*d,w=2.4+r()*1.5,dd=2.4+r()*1.2;
-   if(!inPoly(SANDIN,x,z))continue;if(placed.some(q=>Math.hypot(q[0]-x,q[1]-z)<5.4))continue;
+   if(!inPoly(SANDIN,x,z))continue;if(C.layout.riverDist(x,z)<8||C.layout.lakeIn(x,z,6))continue;if(placed.some(q=>Math.hypot(q[0]-x,q[1]-z)<5.4))continue;
    if(z>SAND_Z-8&&z>shoreZ(x)-9)continue;
    if(h.z>0&&Math.abs(z-30)<8&&x<70)continue;
    placed.push([x,z]);
@@ -246,7 +253,7 @@ export function createWorld(C){
    C.solids.push({x,z,w:Math.max(w,dd)+.8,d:Math.max(w,dd)+.8});
    if(r()<.5){const pc=new T.Mesh(new T.IcosahedronGeometry(.8,0),mat('hw-bush','#4fb84a'));pc.position.set(x+w/2+.7,.6,z+dd/2);put(pc);}
   }
-  const tp=[[h.x,h.z]].concat(h.to);return trail(tp,1.5,'#d9c79a');
+  const to=h.to.map(p=>p.slice());if(h.s!==3){const b=C.boundary&&C.boundary(to[to.length-1][0],to[to.length-1][1]);if(b)to[to.length-1]=b;}const tp=[[h.x,h.z]].concat(to);return trail(tp,1.5,'#d9c79a');
  }
  function forest(){
   const r=RND(909),trails=[];HAM.forEach(h=>trails.push(...(h._trail||[])));
@@ -258,7 +265,7 @@ export function createWorld(C){
    if(!inPoly(SANDIN,x,z))continue;
    if(HAM.some(h=>Math.hypot(h.x-x,h.z-z)<27))continue;
    if(trails.some(p=>Math.hypot(p[0]-x,p[1]-z)<4.5))continue;
-   if(z>30&&z<58&&Math.abs(z-30)<9&&x<70)continue;
+   if(C.layout.riverDist(x,z)<7||C.layout.lakeIn(x,z,5))continue;
    n++;const s=.8+r()*.8,pine=r()<.35;
    cy(G(),.12*s,.2*s,1.6*s,trunk,x,.8*s,z,5);
    const c=new T.Mesh(pine?geoP:geoC,crown[n%3]);c.position.set(x,pine?3.2*s:2.4*s,z);c.scale.setScalar(s);put(c);
@@ -266,7 +273,7 @@ export function createWorld(C){
  }
  function buildDistricts(){HAM.forEach(h=>{h._trail=hamlet(h);});forest();}
 
- function buildParks(){pond(-36,7.4,4.4,2.4);pond(36,7.4,4.8,2.5);pond(144,22,8,5);}
+ function buildParks(){C.SITES.ponds.forEach(p=>pond(p.x,p.z,p.rx,p.rz));}
 
  /* ---------- menara kota (tekstur ubin berulang, tinggi bebas) ---------- */
  const STY={
@@ -303,7 +310,7 @@ export function createWorld(C){
 
  function tower(o){
   const w=o.w,d=o.d,fl=o.fl,key=o.style||'glassBlue',S=styleMats(key),st=STY[key],r=RND((o.seed||1)*17+3);
-  const g=new T.Group();g.position.set(o.x,0,o.z);g.rotation.y=C.faceRot(o.face);G().add(g);
+  const g=new T.Group();g.position.set(o.x,0,o.z);g.rotation.y=o.rot!==undefined?o.rot:C.faceRot(o.face);G().add(g);
   const pod=1.3,H=fl*FH,round=(o.kind==='office'&&fl>=9&&(o.seed||0)%4===1);
   // podium / lobi
   bx(g,w+.5,pod,d+.5,mat('pod-'+key,'#2a3b4d'),0,pod/2+.05,0);
@@ -471,5 +478,5 @@ export function createWorld(C){
   anim.ferries.forEach(f=>{f.g.position.x+=f.dir*f.sp*dt;if(f.g.position.x>235)f.g.position.x=-90;if(f.g.position.x<-90)f.g.position.x=235;f.g.position.y=.08+Math.sin(t*1.3+f.z)*.04;});
  }
  const roadEnd=COAST_Z-.4;
- return {COAST_Z,SAND_Z,shoreZ,coastLimit,inLand,makeGround,reserved,roadEnd,grassMat,canal,buildCoast,buildParks,buildRail,buildStadium,tower,styleFor,mergeStatic,update,waterMat,railState};
+ return {COAST_Z,SAND_Z,shoreZ,coastLimit,inLand,makeGround,reserved,roadEnd,grassMat,river,buildCoast,buildParks,buildRail,buildStadium,tower,styleFor,mergeStatic,update,waterMat,railState};
 }
