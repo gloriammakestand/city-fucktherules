@@ -93,9 +93,13 @@ Note: citizen needs are local-browser gameplay state in this prototype. Online e
 ## V25
 - Memperbaiki V24 (perubahan city.js belum ikut tersimpan). Interior Warung & Balai Desa, dermaga: mancing & berlayar, hewan bisa disentuh (suara + mood), penjaga performa bertingkat, batas tap-move diperluas, distrik 'Pedesaan'.
 
-## V26
+## V27
 - Kamera: rentang kedalaman (near/far) kini mengikuti zoom, jadi tanah di bawah layar tidak terpotong lagi saat zoom out (strip biru).
 - Lapisan jalan/pasir/buih: offset polygon dikompensasi terhadap zoom, urutan lapisan sama di semua zoom (jalan tidak "naik" ke pantai).
 - Rel: jalur panjang Kota Lain (seberang laut) ⇄ Desa ⇄ Central City ⇄ terowongan. Kereta berhenti di tiap stasiun dan berbalik di ujung, tidak lagi hilang di tengah kota.
 - Perlintasan: di tempat rel bertemu jalan, aspal menutup balas dan bantalan; rel baja tertanam rata dengan jalan.
 - boot-guard.js: error saat memuat tampil di layar loading. Modul diberi ?v= supaya cache ikut ter-refresh.
+- Air danau, sungai, dan kolam kini memakai material air yang mengikuti urutan lapisan datar, jadi tidak tertutup tepi pasir (dulu tampak berwarna pasir).
+- Geser kamera (drag) kini bisa sampai seluruh pojok pulau (sebelumnya dibatasi x -60..190, z -185..60).
+- Tap di pojok/pantai/laut (di luar mesh tanah) tetap menggerakkan karakter: titik tap ditempelkan ke daratan terdekat.
+- Jalan: kalau terhalang bangunan/sungai/danau, karakter menyusuri dinding penghalang, bukan berhenti. Batas waktu jalan 25 detik.

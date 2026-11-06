@@ -8,7 +8,7 @@ export function createWorld(C){
  const coastLimit=x=>Math.abs(x-PIER_X)<1.7?79:shoreZ(x)-.9;
  const reserved=[];            // persegi yang tidak boleh diisi bangunan acak: [x1,x2,z1,z2]
 
- /* ---------- rute kereta lintas kota (v26): Kota Lain (seberang laut) -> Desa -> Central City -> terowongan ---------- */
+ /* ---------- rute kereta lintas kota (v27): Kota Lain (seberang laut) -> Desa -> Central City -> terowongan ---------- */
  const RT={ZC:-14.8,AMP:2,LEN:8.5,XW:-125,ZV:-122,ZK:-150,XK:-221,XP:93.5,XE:102.8};
  const crm=(P,step)=>{const o=[],n=P.length;for(let i=0;i<n-1;i++){const a=P[Math.max(0,i-1)],b=P[i],c=P[i+1],d=P[Math.min(n-1,i+2)],m=Math.max(2,Math.ceil(Math.hypot(c[0]-b[0],c[1]-b[1])/step));for(let k=0;k<m;k++){const t=k/m,t2=t*t,t3=t2*t,f=(p,q,r,s)=>.5*(2*q+(-p+r)*t+(2*p-5*q+4*r-s)*t2+(-p+3*q-3*r+s)*t3);o.push([f(a[0],b[0],c[0],d[0]),f(a[1],b[1],c[1],d[1])]);}}o.push(P[n-1]);return o;};
  const cityZ=(x,sx)=>RT.ZC+RT.AMP*Math.sin((x-sx)/RT.LEN)*(Math.abs(x-sx)<2?Math.abs(x-sx)/2:1);
@@ -61,6 +61,7 @@ export function createWorld(C){
   x.fillStyle='rgba(10,90,170,.2)';for(let i=0;i<12;i++)x.fillRect(Math.floor(r()*60)*2,Math.floor(r()*64)*2,4,2);}),[.125,.125],true);
  anim.tex=waterTex;
  const waterMat=new T.MeshStandardMaterial({map:waterTex,roughness:.4,metalness:.05});
+  const waterTop=waterMat.clone();waterTop.polygonOffset=true;waterTop.polygonOffsetFactor=-2;waterTop.polygonOffsetUnits=-2;   // air sungai/danau/kolam: ikut urutan lapisan datar (tidak tertutup tepi pasir)
 
  const shapeMesh=(shape,material,y)=>{const m=new T.Mesh(new T.ShapeGeometry(shape),material);m.rotation.x=-Math.PI/2;m.position.y=y;m.receiveShadow=true;m.userData.noMerge=true;G().add(m);return m;};
  const rectShape=(x1,x2,z1,z2)=>{const s=new T.Shape();s.moveTo(x1,-z1);s.lineTo(x2,-z1);s.lineTo(x2,-z2);s.lineTo(x1,-z2);s.closePath();return s;};
@@ -73,8 +74,8 @@ export function createWorld(C){
   const L=C.layout,hw=C.RIVER_HW,pts=L.rpts,lk=C.LAKE,s=new T.Shape();
   pts.forEach((p,i)=>{const x=p.x-p.tz*hw,z=p.z+p.tx*hw;if(i)s.lineTo(x,-z);else s.moveTo(x,-z);});
   for(let i=pts.length-1;i>=0;i--){const p=pts[i];s.lineTo(p.x+p.tz*hw,-(p.z-p.tx*hw));}s.closePath();
-  shapeMesh(s,waterMat,.012);
-  shapeMesh(ellipse(lk.x,lk.z,lk.rx+1.1,lk.rz+1.1,48),flat('lake-edge','#e3d6b0'),.011);shapeMesh(ellipse(lk.x,lk.z,lk.rx,lk.rz,48),waterMat,.013);
+  shapeMesh(s,waterTop,.016);
+  shapeMesh(ellipse(lk.x,lk.z,lk.rx+1.1,lk.rz+1.1,48),flat('lake-edge','#e3d6b0'),.011);shapeMesh(ellipse(lk.x,lk.z,lk.rx,lk.rz,48),waterTop,.018);
   pts.forEach((p,i)=>{if(i%1)return;[-1,1].forEach(sd=>{const x=p.x-p.tz*sd*(hw+.25),z=p.z+p.tx*sd*(hw+.25);if(C.layout.roadDist(x,z)<4.2||x<-66)return;const m=bx(G(),.45,.26,3.3,'#8f8f80',x,.11,z);m.rotation.y=Math.atan2(p.tx,p.tz);});});
  }
 
@@ -201,7 +202,7 @@ export function createWorld(C){
  /* ---------- kolam taman ---------- */
  function pond(cx,cz,rx,rz){
   shapeMesh(ellipse(cx,cz,rx+1.1,rz+1.1,28),flat('pond-edge','#e3d6b0'),.025);
-  shapeMesh(ellipse(cx,cz,rx,rz,28),waterMat,.04);
+  shapeMesh(ellipse(cx,cz,rx,rz,28),waterTop,.04);
   const r=RND(Math.abs(cx)+7);
   for(let i=0;i<7;i++){const a=i/7*Math.PI*2+.3,x=cx+Math.cos(a)*(rx+1.9),z=cz+Math.sin(a)*(rz+1.9),s=.9+r()*.6;
    cy(G(),.12,.2,1.4*s,'#7a5a3a',x,.7*s,z,6);const c=new T.Mesh(new T.IcosahedronGeometry(1.2*s,1),mat('willow'+(i%2),i%2?'#4fb84a':'#3ea146'));c.position.set(x,1.9*s,z);c.scale.y=.85;put(c);}
@@ -447,7 +448,7 @@ export function createWorld(C){
  }
 
 
- /* ---------- rel lintas kota (v26): jalur panjang, jembatan laut, stasiun desa, terowongan, perlintasan jalan ---------- */
+ /* ---------- rel lintas kota (v27): jalur panjang, jembatan laut, stasiun desa, terowongan, perlintasan jalan ---------- */
  const railState={};
  function buildRail(st){
   const sx=st.x,pts=routePts(sx).map(p=>({x:p[0],z:p[1]})),seg=[0];
