@@ -1,8 +1,8 @@
-import {createJobs} from './city-jobs.js?v=25-5';
-import {createFarm} from './city-farm.js?v=25-5';
-import {warp as WARPF,warpRot as WARPR} from './city-warp.js?v=25-5';
-import {createWorld} from './city-world.js?v=25-5';
-import {buildLayout,RIVER_HW,LAKE,SITES,RAIL} from './city-layout.js?v=25-5';
+import {createJobs} from './city-jobs.js?v=26';
+import {createFarm} from './city-farm.js?v=26';
+import {warp as WARPF,warpRot as WARPR} from './city-warp.js?v=26';
+import {createWorld} from './city-world.js?v=26';
+import {buildLayout,RIVER_HW,LAKE,SITES,RAIL} from './city-layout.js?v=26';
 const $ = s => document.querySelector(s);
 const canvas = $('#world');
 const moneyEl = $('#moneyVal');
@@ -584,7 +584,15 @@ function resize(){if(!renderer||!camera)return;const w=innerWidth,h=innerHeight;
   const block=dpr>=1.5?2:1.5,pr=(gfxMode==='pixel'?Math.max(.5,Math.min(1.5,dpr/block)):Math.min(dpr,1.75))*gfxScale;
   renderer.setSize(Math.max(1,Math.round(w*pr)),Math.max(1,Math.round(h*pr)),false);canvas.style.width='100%';canvas.style.height='100%';canvas.classList.toggle('pixel',gfxMode==='pixel');
   const aspect=w/h;const view=w<h?24:19;viewH=view;camera.left=-view*aspect/2;camera.right=view*aspect/2;camera.top=view/2;camera.bottom=-view/2;camera.updateProjectionMatrix();}
-function applyZoom(v){if(window.FTTRArt?.on)return;cameraZoom=Math.max(.34,Math.min(2.4,v));}
+let _fdv,POMATS=[],POBASE=1,_lastPk=-1;
+/* v26: rentang kedalaman kamera mengikuti zoom (tidak lagi memotong tanah di bawah layar saat zoom out) + offset polygon dikompensasi zoom */
+function fitView(){if(!camera||!renderer)return;
+ _fdv=_fdv||new THREE.Vector3();camera.getWorldDirection(_fdv);
+ const s=Math.max(.3,-_fdv.y),cot=Math.sqrt(Math.max(0,1-s*s))/s,D0=camera.position.y/s,h=camera.top/Math.max(.05,camera.zoom),span=h*cot+48,n=D0-span,f=D0+span;
+ if(Math.abs(n-camera.near)>.4||Math.abs(f-camera.far)>.4){camera.near=n;camera.far=f;camera.updateProjectionMatrix();}
+ const pk=Math.min(2.5,Math.max(.05,camera.zoom*renderer.domElement.height/POBASE));
+ if(POMATS.length&&Math.abs(pk-_lastPk)>.02){_lastPk=pk;POMATS.forEach(a=>{a[0].polygonOffsetFactor=a[1]*pk;});}}
+function applyZoom(v){if(window.FTTRArt?.on)return;cameraZoom=Math.max(.16,Math.min(2.4,v));}
 function resetCamera(){cameraFollow=true;cameraZoom=1;if(player)cameraTarget?.set(player.position.x,0,player.position.z);$('#cameraFollow')?.classList.add('active');toast('Kamera mengikuti karakter');}
 function pointerDown(e){if(e.pointerType==='touch'&&e.isPrimary===false)return;dragState={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:false};canvas.setPointerCapture?.(e.pointerId);}
 function pointerMove(e){if(window.FTTRArt?.on)return;if(!dragState||dragState.id!==e.pointerId)return;const dx=e.clientX-dragState.lastX,dy=e.clientY-dragState.lastY;if(Math.hypot(e.clientX-dragState.x,e.clientY-dragState.y)>5)dragState.moved=true;if(dragState.moved){cameraFollow=false;$('#cameraFollow')?.classList.remove('active');const u=viewH/((innerHeight||1)*camera.zoom),k=.7071;cameraTarget ||= new THREE.Vector3(player?.position.x||0,0,player?.position.z||0);const nx=Math.max(-60,Math.min(190,cameraTarget.x-k*u*(dx+dy/CAM_SIN))),nz=Math.max(-185,Math.min(60,cameraTarget.z+k*u*(dx-dy/CAM_SIN)));const panX=nx-cameraTarget.x,panZ=nz-cameraTarget.z;cameraTarget.x+=panX;cameraTarget.z+=panZ;camera.position.x+=panX;camera.position.z+=panZ;camera.lookAt(cameraTarget); }dragState.lastX=e.clientX;dragState.lastY=e.clientY;}
@@ -607,7 +615,7 @@ function update(dt){if(window.FTTRArt)window.FTTRArt.update(dt);const px0=player
   if(cameraFollow&&!window.FTTRArt?.on){cameraTarget ||= new THREE.Vector3();cameraTarget.lerp(new THREE.Vector3(player.position.x,0,player.position.z),Math.min(1,dt*2.6));const offset=isInside?new THREE.Vector3(13,19,13):new THREE.Vector3(CAM_OFF[0],CAM_OFF[1],CAM_OFF[2]);camera.position.lerp(cameraTarget.clone().add(offset),Math.min(1,dt*2.6));camera.lookAt(cameraTarget);}
   if(sunLight&&cameraTarget){sunLight.target.position.set(cameraTarget.x,0,cameraTarget.z);sunLight.position.set(cameraTarget.x-12,24,cameraTarget.z+12);}
   const zt=cameraZoom*(isInside?1:BASE_ZOOM);if(camera&&!window.FTTRArt?.on&&Math.abs(camera.zoom-zt)>.001){camera.zoom+=(zt-camera.zoom)*Math.min(1,dt*9);camera.updateProjectionMatrix();}
-  if(!isInside){WLD?.update(dt,performance.now()/1000);FARM?.update(dt,performance.now()/1000);cars.forEach(c=>{const u=c.userData;u.t+=u.s*dt;if(u.t>u.route.len){u.t=u.route.len;u.s=-Math.abs(u.s);}else if(u.t<0){u.t=0;u.s=Math.abs(u.s);}const q=routeAt(u.route,u.t),sg=u.s<0?-1:1,hx=q.hx*sg,hz=q.hz*sg;c.position.set(q.x-hz*1.25,0,q.z+hx*1.25);c.rotation.y=-Math.atan2(hz,hx);});walkers.forEach(w=>{const u=w.userData;u.t+=u.s*dt;if(Math.abs(u.t)>u.r){u.s*=-1;u.t=Math.sign(u.t)*u.r;}const q=routeAt(u.route,u.c+u.t),sg=u.s<0?-1:1;w.position.set(q.x-q.hz*u.off,0,q.z+q.hx*u.off);w.rotation.y=Math.atan2(q.hx*sg,q.hz*sg);animCitizen(w,dt,Math.abs(u.s),tt);});}
+  fitView();if(!isInside){WLD?.update(dt,performance.now()/1000);FARM?.update(dt,performance.now()/1000);cars.forEach(c=>{const u=c.userData;u.t+=u.s*dt;if(u.t>u.route.len){u.t=u.route.len;u.s=-Math.abs(u.s);}else if(u.t<0){u.t=0;u.s=Math.abs(u.s);}const q=routeAt(u.route,u.t),sg=u.s<0?-1:1,hx=q.hx*sg,hz=q.hz*sg;c.position.set(q.x-hz*1.25,0,q.z+hx*1.25);c.rotation.y=-Math.atan2(hz,hx);});walkers.forEach(w=>{const u=w.userData;u.t+=u.s*dt;if(Math.abs(u.t)>u.r){u.s*=-1;u.t=Math.sign(u.t)*u.r;}const q=routeAt(u.route,u.c+u.t),sg=u.s<0?-1:1;w.position.set(q.x-q.hz*u.off,0,q.z+q.hx*u.off);w.rotation.y=Math.atan2(q.hx*sg,q.hz*sg);animCitizen(w,dt,Math.abs(u.s),tt);});}
   if(player?.userData.arrow)player.userData.arrow.position.y=2.25+Math.sin(performance.now()*.006)*.1;
   botWorkers.forEach(n=>animCitizen(n,dt,0,tt));
   remoteAvatars.forEach(g=>{const T=g.userData.target;if(!T||!(dt>0))return;const dx=T.x-g.position.x,dz=T.z-g.position.z,d=Math.hypot(dx,dz);let v=0;if(d>.04){v=Math.min(4.2,Math.max(1.2,d*3));const st=Math.min(d,v*dt);g.position.x+=dx/d*st;g.position.z+=dz/d*st;g.rotation.y=Math.atan2(dx,dz);}animCitizen(g,dt,v,tt);});
@@ -680,5 +688,6 @@ async function init(){setMoney(money);bindUI();try{THREE=await import('https://c
   $('#mCancel')?.addEventListener('click',()=>JOBSYS.cancel());
   resize();window.FTTRArt?.init({THREE,scene,camera,cityGroup,pickables,solids,surfaces:warpSurf(),canvas,getPlayer:()=>player,getViewH:()=>viewH,raycastFrom:e=>{worldFromEvent(e);return raycaster;},profile,toast,getFollow:()=>cameraFollow,setFollow:v=>{cameraFollow=v;},isInside:()=>isInside});canvas.addEventListener('pointerdown',pointerDown);canvas.addEventListener('pointermove',pointerMove);canvas.addEventListener('pointerup',pointerUp);canvas.addEventListener('pointercancel',()=>{dragState=null;});canvas.addEventListener('wheel',e=>{e.preventDefault();applyZoom(cameraZoom+(e.deltaY<0?.1:-.1));},{passive:false});canvas.addEventListener('touchmove',touchPinch,{passive:false});window.addEventListener('resize',resize);addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;const k=e.key.toLowerCase();if('wasd'.includes(k)&&k.length===1||k.startsWith('arrow')){keys.add(k);e.preventDefault();}});addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));addEventListener('blur',()=>keys.clear());
   {const joy=$('#joy'),knob=$('#joyKnob');let act=null;const mv=e=>{const r=joy.getBoundingClientRect();let x=(e.clientX-r.left-r.width/2)/(r.width/2),y=(e.clientY-r.top-r.height/2)/(r.height/2);const m=Math.hypot(x,y);if(m>1){x/=m;y/=m;}joyVec=m>.2?{x,y}:null;knob.style.transform=`translate(${x*30}px,${y*30}px)`;};const end=()=>{act=null;joyVec=null;knob.style.transform='';};joy.addEventListener('pointerdown',e=>{act=e.pointerId;joy.setPointerCapture(act);mv(e);});joy.addEventListener('pointermove',e=>{if(act===e.pointerId)mv(e);});joy.addEventListener('pointerup',end);joy.addEventListener('pointercancel',end);}
+  {const seen=new Set();scene.traverse(o=>{[].concat(o.material||[]).forEach(m=>{if(m&&m.polygonOffset&&m.polygonOffsetFactor&&!seen.has(m)){seen.add(m);POMATS.push([m,m.polygonOffsetFactor]);}});});POBASE=Math.max(1,BASE_ZOOM*renderer.domElement.height);fitView();}
   applyProfile();updateNeedsUI();$('#cameraFollow')?.classList.add('active');requestAnimationFrame(animate);setTimeout(()=>$('#hint')?.classList.add('hide'),9000);setTimeout(()=>$('#boot')?.classList.add('done'),250);toast('Selamat datang di FTTR CITY');}
 init();

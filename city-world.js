@@ -7,6 +7,13 @@ export function createWorld(C){
  const shoreZ=x=>64+Math.sin(x*.11)*1.3+Math.sin(x*.047+1)*1.7;
  const coastLimit=x=>Math.abs(x-PIER_X)<1.7?79:shoreZ(x)-.9;
  const reserved=[];            // persegi yang tidak boleh diisi bangunan acak: [x1,x2,z1,z2]
+
+ /* ---------- rute kereta lintas kota (v26): Kota Lain (seberang laut) -> Desa -> Central City -> terowongan ---------- */
+ const RT={ZC:-14.8,AMP:2,LEN:8.5,XW:-125,ZV:-122,ZK:-150,XK:-221,XP:93.5,XE:102.8};
+ const crm=(P,step)=>{const o=[],n=P.length;for(let i=0;i<n-1;i++){const a=P[Math.max(0,i-1)],b=P[i],c=P[i+1],d=P[Math.min(n-1,i+2)],m=Math.max(2,Math.ceil(Math.hypot(c[0]-b[0],c[1]-b[1])/step));for(let k=0;k<m;k++){const t=k/m,t2=t*t,t3=t2*t,f=(p,q,r,s)=>.5*(2*q+(-p+r)*t+(2*p-5*q+4*r-s)*t2+(-p+3*q-3*r+s)*t3);o.push([f(a[0],b[0],c[0],d[0]),f(a[1],b[1],c[1],d[1])]);}}o.push(P[n-1]);return o;};
+ const cityZ=(x,sx)=>RT.ZC+RT.AMP*Math.sin((x-sx)/RT.LEN)*(Math.abs(x-sx)<2?Math.abs(x-sx)/2:1);
+ const routePts=sx=>{const A=[[RT.XK,RT.ZK],[-196,RT.ZK],[-168,RT.ZK],[-148,RT.ZK],[-137,RT.ZK+1],[-130,-143],[RT.XW,-132],[RT.XW,-110],[RT.XW,-80],[RT.XW,-50],[RT.XW,-30],[-122,-19.5],[-116,cityZ(-116,sx)],[-110,cityZ(-110,sx)],[-104,cityZ(-104,sx)]];const out=crm(A,1.2);for(let x=-102.8;x<=RT.XE+.01;x+=1.2)out.push([x,cityZ(x,sx)]);return out;};
+ routePts(0).forEach((p,i)=>{if(p[0]<-112&&p[0]>-148&&i%6===0)reserved.push([p[0]-5.5,p[0]+5.5,p[1]-5.5,p[1]+5.5]);});
  const anim={boats:[],ferries:[],wheel:null,gond:[],tex:null};
  const M={};
  const mat=(k,color,extra)=>M[k]||(M[k]=new T.MeshStandardMaterial({color,roughness:.85,...(extra||{})}));
@@ -440,47 +447,60 @@ export function createWorld(C){
  }
 
 
- /* ---------- rel berkelok & kereta yang mengikuti lengkungan ---------- */
+ /* ---------- rel lintas kota (v26): jalur panjang, jembatan laut, stasiun desa, terowongan, perlintasan jalan ---------- */
  const railState={};
  function buildRail(st){
-  const ZC=st.z,pts=[],WP=C.warp||((x,z)=>({x,z})),STW=WP(st.x,st.z);
-  // Regional railway: rural approach, urban station, coastal sea-crossing, outer town, then back through farmland.
-  // The central section stays close to the original station alignment; the distant legs make the route feel continuous.
-  const route=[[-178,-166],[-150,-198],[-112,-218],[-78,-184],[-70,-118],[-72,-62],[-72,ZC],[-48,ZC-.35],[-20,ZC+.15],[st.x,ZC],[28,ZC-.25],[52,ZC+.35],[70,ZC],[88,-39],[112,-72],[148,-105],[192,-132],[242,-150],[292,-143],[334,-108],[358,-55],[360,5],[332,48],[286,66],[238,52],[202,20],[166,-18],[130,-60],[92,-105],[54,-146],[12,-180],[-32,-212],[-78,-226],[-126,-207],[-166,-176],[-205,-142]];
-  const cat=(a,b,c,d,t)=>.5*((2*b)+(-a+c)*t+(2*a-5*b+4*c-d)*t*t+(-a+3*b-3*c+d)*t*t*t);
-  for(let i=0;i<route.length-1;i++){const a=route[Math.max(0,i-1)],b=route[i],c=route[i+1],d=route[Math.min(route.length-1,i+2)],steps=Math.max(3,Math.ceil(Math.hypot(c[0]-b[0],c[1]-b[1])/2.2));for(let k=0;k<steps;k++){const t=k/steps;pts.push(WP(cat(a[0],b[0],c[0],d[0],t),cat(a[1],b[1],c[1],d[1],t)));}}
-  pts.push(WP(route[route.length - 1][0],route[route.length - 1][1]));
-  const seg=[0];for(let i=1;i<pts.length;i++)seg.push(seg[i-1]+Math.hypot(pts[i].x-pts[i-1].x,pts[i].z-pts[i-1].z));
+  const sx=st.x,pts=routePts(sx).map(p=>({x:p[0],z:p[1]})),seg=[0];
+  for(let i=1;i<pts.length;i++)seg.push(seg[i-1]+Math.hypot(pts[i].x-pts[i-1].x,pts[i].z-pts[i-1].z));
   const L=seg[seg.length-1];
   const sample=s=>{s=Math.max(0,Math.min(L,s));let i=1;while(i<seg.length-1&&seg[i]<s)i++;const a=pts[i-1],b=pts[i],k=(s-seg[i-1])/Math.max(1e-6,seg[i]-seg[i-1]);return {x:a.x+(b.x-a.x)*k,z:a.z+(b.z-a.z)*k,ang:Math.atan2(b.z-a.z,b.x-a.x)};};
-  const ribbon=(off,half,y,col)=>{const pos=[],nor=[],uv=[],idx=[];pts.forEach((p,i)=>{const q=sample(seg[i]),nx=-Math.sin(q.ang),nz=Math.cos(q.ang);[1,-1].forEach(sd=>{pos.push(p.x+nx*(off+sd*half),y,p.z+nz*(off+sd*half));nor.push(0,1,0);uv.push(0,0);});});
-   for(let i=0;i<pts.length-1;i++){const a=i*2,b=a+1,c=a+2,d=a+3;idx.push(a,c,b,b,c,d);}
-   const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(new Float32Array(pos),3));g.setAttribute('normal',new T.BufferAttribute(new Float32Array(nor),3));g.setAttribute('uv',new T.BufferAttribute(new Float32Array(uv),2));g.setIndex(idx);
+  const sAt=(x,z)=>{let bi=0,bd=1e9;pts.forEach((p,i)=>{const d=Math.hypot(p.x-x,p.z-z);if(d<bd){bd=d;bi=i;}});return seg[bi];};
+  const ribbon=(off,half,y,col,i0,i1)=>{i0=i0||0;i1=i1==null?pts.length-1:i1;if(i1-i0<1)return;const pos=[],nor=[],idx=[];
+   for(let i=i0;i<=i1;i++){const p=pts[i],q=sample(seg[i]),nx=-Math.sin(q.ang),nz=Math.cos(q.ang);[1,-1].forEach(sd=>{pos.push(p.x+nx*(off+sd*half),y,p.z+nz*(off+sd*half));nor.push(0,1,0);});}
+   for(let i=0;i<i1-i0;i++){const a=i*2;idx.push(a,a+2,a+1,a+1,a+2,a+3);}
+   const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(new Float32Array(pos),3));g.setAttribute('normal',new T.BufferAttribute(new Float32Array(nor),3));g.setIndex(idx);
    const m=new T.Mesh(g,new T.MeshStandardMaterial({color:col,roughness:1,side:T.DoubleSide}));m.receiveShadow=true;m.userData.noMerge=true;m.userData.warped=true;G().add(m);return m;};
   ribbon(0,1.05,.05,'#a89a7e');ribbon(.55,.06,.075,'#2b2e29');ribbon(-.55,.06,.075,'#2b2e29');
   {const sl=[];for(let s=0.6;s<L;s+=1.1){const q=sample(s);sl.push([q.x,.06,q.z,1,1,1,-q.ang]);}const im=new T.InstancedMesh(new T.BoxGeometry(.22,.06,1.9),mat('sleeper','#6b5239'),sl.length),dm=new T.Object3D();sl.forEach((p,i)=>{dm.position.set(p[0],p[1],p[2]);dm.rotation.set(0,p[6],0);dm.updateMatrix();im.setMatrixAt(i,dm.matrix);});im.instanceMatrix.needsUpdate=true;im.receiveShadow=true;im.userData.warped=true;G().add(im);}
-  // kereta 3 gerbong
+  /* perlintasan sebidang: aspal menutup balas & bantalan rel di tempat jalan memotong; rel baja tertanam rata dengan jalan (bukan rel melayang di atas jalan) */
+  {const LY=C.layout,runs=[];let a0=-1;
+   pts.forEach((p,i)=>{const on=p.x>-114&&p.x<RT.XP-2&&LY.roadDist(p.x,p.z)<3.2;if(on&&a0<0)a0=i;if(a0>=0&&(!on||i===pts.length-1)){runs.push([Math.max(0,a0-1),Math.min(pts.length-1,i)]);a0=-1;}});
+   runs.forEach(([i0,i1])=>{ribbon(0,1.3,.108,'#4a5262',i0,i1);ribbon(1.3,.05,.11,'#ebe5cf',i0,i1);ribbon(-1.3,.05,.11,'#ebe5cf',i0,i1);ribbon(.55,.07,.113,'#2b2e29',i0,i1);ribbon(-.55,.07,.113,'#2b2e29',i0,i1);});}
+  /* jembatan laut + pulau "KOTA LAIN" */
+  {const zk=RT.ZK,bx0=-210,bx1=-146,len=bx1-bx0,cxm=(bx0+bx1)/2;
+   bx(G(),len,.5,3.6,'#9a9da3',cxm,-.22,zk);[-1,1].forEach(sd=>bx(G(),len,.3,.14,'#d94a3a',cxm,.2,zk+sd*1.65));
+   for(let x=bx0+4;x<bx1-4;x+=7)[-1,1].forEach(sd=>cy(G(),.45,.55,2.8,'#6f747b',x,-1.4,zk+sd*1.1));
+   const ic=-214;cy(G(),17,18,.6,'#ead59c',ic,-.26,zk,28);
+   bx(G(),.4,.9,1.6,'#d94a3a',RT.XK-.4,.5,zk);bx(G(),16,.22,2.4,'#cfcbbb',-207,.13,zk+2.5);bx(G(),14,.12,2.6,'#c4553f',-207,2.3,zk+2.5);[-6.5,6.5].forEach(dx=>bx(G(),.2,2.2,.2,'#6f747b',-207+dx,1.2,zk+3.5));
+   const gk=new T.Group();gk.position.set(-207,0,zk+3.9);G().add(gk);C.sign(gk,'KOTA LAIN · BARAT',0,3.1,0,6.4,.8,'#12304f','#ffffff');
+   [[-5,-9,5,7,5,'#7aa7d9'],[3,-10,6,10,5,'#e7c35c'],[11,-8,5,6,4,'#d97a6a'],[-9,9,6,5,5,'#8fc58a'],[2,11,5,9,5,'#b894d6'],[10,10,6,6,5,'#e8e1d0']].forEach(([dx,dz,w,h,d,c])=>{bx(G(),w,h,d,c,ic+dx,h/2,zk+dz);bx(G(),w+.4,.3,d+.4,'#4a4d46',ic+dx,h+.15,zk+dz);});}
+  /* stasiun desa */
+  {const xv=RT.XW,zv=RT.ZV;bx(G(),2,.25,11,'#cfcbbb',xv+2.2,.12,zv);bx(G(),1.7,.12,7,'#c4553f',xv+2.4,2.3,zv);[-3,3].forEach(dz=>bx(G(),.18,2.2,.18,'#6f747b',xv+3,1.2,zv+dz));
+   const gv=new T.Group();gv.position.set(xv+3.4,0,zv);gv.rotation.y=Math.PI/2;G().add(gv);C.sign(gv,'ST. DESA',0,3.1,0,3.6,.7,'#2a5a3a','#ffffff');}
+  /* terowongan di ujung timur: kereta masuk ke bukit lalu berbalik */
+  {const zc=cityZ(RT.XP+5,sx),hx=RT.XP+5.5;bx(G(),11,3.4,10.6,'#8f8c80',hx,1.7,zc);bx(G(),9.6,1.5,9,'#68b447',hx+.1,4.1,zc);C.solids.push({x:hx,z:zc,w:11,d:10.6});}
+  /* kereta 3 gerbong */
   const cols=['#d7ff3f','#171914','#d7ff3f'],carsT=[];
   cols.forEach((c,i)=>{const g=new T.Group();g.userData.noMerge=true;G().add(g);bx(g,2.6,1,.95,c,0,.8,0);bx(g,2.2,.3,.97,'#9fc4cf',0,1.05,0).castShadow=false;bx(g,2.4,.12,.8,'#2a2d28',0,1.35,0);carsT.push(g);});
-  let sSt=0,best=Infinity;for(let i=0;i<pts.length;i++){const d=Math.hypot(pts[i].x-STW.x,pts[i].z-STW.z);if(d<best){best=d;sSt=seg[i];}}
-  Object.assign(railState,{L,sample,carsT,sSt,s:sSt-40,dir:1,speed:0,state:'run',t:0,done:false});
+  const stops=[{s:sAt(-211.5,RT.ZK),end:1,dw:6},{s:sAt(RT.XW,RT.ZV)},{s:sAt(sx,cityZ(sx,sx))},{s:sAt(RT.XE,cityZ(RT.XE,sx)),end:1,dw:2.5}];
+  Object.assign(railState,{L,sample,carsT,stops,done:stops.map(()=>0),cur:0,dw:4.5,s:stops[2].s-40,dir:1,speed:0,state:'run',t:0});
   const place=()=>{carsT.forEach((g,i)=>{const q=sample(railState.s-railState.dir*i*2.9);g.position.set(q.x,.1,q.z);g.rotation.y=-q.ang;});};place();railState.place=place;
  }
  function updateTrain(dt){
-  const R=railState;if(!R.carsT)return;const V=6;
-  if(R.state==='dwell'){R.t+=dt;R.speed=0;if(R.t>4.5){R.state='run';R.done=true;}}
-  else{
-   let target=V;const stop=R.sSt+R.dir*2.9,dSt=(stop-R.s)*R.dir;
-   if(!R.done&&dSt>0&&dSt<12)target=Math.max(1.2,V*dSt/12);
-   if(!R.done&&dSt<=.35&&dSt>=-1.5){R.state='dwell';R.t=0;R.speed=0;}
-   R.speed+=(target-R.speed)*Math.min(1,dt*2);R.s+=R.dir*R.speed*dt;
-   if(R.dir>0&&R.s>R.L-10){R.dir=-1;R.done=false;R.speed=.5;}
-   if(R.dir<0&&R.s<10+2.9*2){R.dir=1;R.done=false;R.speed=.5;}
+  const R=railState;if(!R.carsT)return;const V=7;
+  if(R.state==='dwell'){R.t+=dt;R.speed=0;
+   if(R.t>R.dw){R.state='run';R.done[R.cur]=R.dir;
+    if(R.stops[R.cur].end){R.s-=R.dir*5.8;R.dir=-R.dir;R.speed=.5;R.done=R.stops.map(()=>0);R.done[R.cur]=R.dir;}}
+  }else{
+   let tg=V,best=null;
+   R.stops.forEach((p,i)=>{if(R.done[i]===R.dir)return;const d=((p.end?p.s:p.s+R.dir*2.9)-R.s)*R.dir;if(d>-1.5&&(!best||d<best.d))best={i,d};});
+   if(best){const d=best.d;if(d>0&&d<12)tg=Math.max(1.2,V*d/12);if(d<=.35){R.state='dwell';R.t=0;R.speed=0;R.cur=best.i;R.dw=R.stops[best.i].dw||4.5;}}
+   R.speed+=(tg-R.speed)*Math.min(1,dt*2);R.s+=R.dir*R.speed*dt;
   }
   R.place();
  }
 
-
+ 
  /* ---------- STADION BESAR: Maguwo, GBK, Old Trafford (bentuk terinspirasi, tanpa logo) ---------- */
  const epts=(a,b,n)=>{const o=[];for(let i=0;i<n;i++){const t=i/n*Math.PI*2;o.push([Math.cos(t)*a,Math.sin(t)*b]);}return o;};
  function ringMesh(g,a1,b1,a2,b2,h,y,col){
