@@ -465,7 +465,7 @@ export function createWorld(C){
   {const sl=[];for(let s=0.6;s<L;s+=1.1){const q=sample(s);sl.push([q.x,.06,q.z,1,1,1,-q.ang]);}const im=new T.InstancedMesh(new T.BoxGeometry(.22,.06,1.9),mat('sleeper','#6b5239'),sl.length),dm=new T.Object3D();sl.forEach((p,i)=>{dm.position.set(p[0],p[1],p[2]);dm.rotation.set(0,p[6],0);dm.updateMatrix();im.setMatrixAt(i,dm.matrix);});im.instanceMatrix.needsUpdate=true;im.receiveShadow=true;im.userData.warped=true;G().add(im);}
   /* perlintasan sebidang: aspal menutup balas & bantalan rel di tempat jalan memotong; rel baja tertanam rata dengan jalan (bukan rel melayang di atas jalan) */
   {const LY=C.layout,runs=[];let a0=-1;
-   pts.forEach((p,i)=>{const on=p.x>-114&&p.x<RT.XP-2&&LY.roadDist(p.x,p.z)<3.2;if(on&&a0<0)a0=i;if(a0>=0&&(!on||i===pts.length-1)){runs.push([Math.max(0,a0-1),Math.min(pts.length-1,i)]);a0=-1;}});
+   pts.forEach((p,i)=>{const on=p.x>-114&&p.x<RT.XP-2&&(LY.roadGap?LY.roadGap(p.x,p.z):LY.roadDist(p.x,p.z)-3)<.2;if(on&&a0<0)a0=i;if(a0>=0&&(!on||i===pts.length-1)){runs.push([Math.max(0,a0-1),Math.min(pts.length-1,i)]);a0=-1;}});
    runs.forEach(([i0,i1])=>{ribbon(0,1.3,.108,'#4a5262',i0,i1);ribbon(1.3,.05,.11,'#ebe5cf',i0,i1);ribbon(-1.3,.05,.11,'#ebe5cf',i0,i1);ribbon(.55,.07,.113,'#2b2e29',i0,i1);ribbon(-.55,.07,.113,'#2b2e29',i0,i1);});}
   /* jembatan laut + pulau "KOTA LAIN" */
   {const zk=RT.ZK,bx0=-210,bx1=-146,len=bx1-bx0,cxm=(bx0+bx1)/2;

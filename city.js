@@ -1,8 +1,8 @@
-import {createJobs} from './city-jobs.js?v=27';
-import {createFarm} from './city-farm.js?v=27';
-import {warp as WARPF,warpRot as WARPR} from './city-warp.js?v=27';
-import {createWorld} from './city-world.js?v=27';
-import {buildLayout,RIVER_HW,LAKE,SITES,RAIL} from './city-layout.js?v=27';
+import {createJobs} from './city-jobs.js?v=28';
+import {createFarm} from './city-farm.js?v=28';
+import {warp as WARPF,warpRot as WARPR} from './city-warp.js?v=28';
+import {createWorld} from './city-world.js?v=28';
+import {buildLayout,RIVER_HW,LAKE,SITES,RAIL} from './city-layout.js?v=28';
 const $ = s => document.querySelector(s);
 const canvas = $('#world');
 const moneyEl = $('#moneyVal');
@@ -32,7 +32,7 @@ function textTexture(text, bg='#171914', fg='#d7ff3f', width=512, height=128) {
 function sign(parent,text,x,y,z,w=3.5,h=.7,bg='#171914',fg='#d7ff3f') { const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),textTexture(text,bg,fg));m.position.set(x,y,z);parent.add(m);return m; }
 const EAST_X=206,NORTH_Z=-190;
 /* V21: jaringan jalan organik dari city-layout.js (ruang dunia, tanpa warp). */
-const LAYC=buildLayout({seed:21,rmin:14,rvar:12,maxLots:1500});
+const LAYC=buildLayout({seed:21,rmin:17,rvar:11,del:.15,laneGap:6.6,laneMin:9,maxLots:1500});
 const dSeg=(px,pz,ax,az,bx,bz)=>{const dx=bx-ax,dz=bz-az,t=Math.max(0,Math.min(1,((px-ax)*dx+(pz-az)*dz)/(dx*dx+dz*dz||1)));return Math.hypot(px-(ax+dx*t),pz-(az+dz*t));};
 const RBS=LAYC.rbs;
 const roadDist=(x,z,skip)=>LAYC.roadDist(x,z,skip);
@@ -164,22 +164,23 @@ function roads(){
  const disc=(x,z,r,y,col)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,.06,22),material('disc'+col,col,1,{polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));m.position.set(x,y,z);m.receiveShadow=true;m.userData.noMerge=true;m.userData.warped=true;cityGroup.add(m);};
  const jnodes=LAYC.nodes.map((n,i)=>({x:n.x,z:n.z,d:LAYC.deg(i)})).filter(n=>n.d>=3||n.d===1);
  const ringAt=(x,z)=>RBS.some(b=>Math.hypot(x-b.x,z-b.z)<b.r+4.6);
- LAYC.allEdges.forEach((e,ei)=>{const p=e.pts;if(p.length<2)return;
-  ribbon(p,0,HW,.06,asph);
+ LAYC.allEdges.forEach((e,ei)=>{const p=e.pts;if(p.length<2)return;const hw=e.hw||HW,so=hw+.4;
+  ribbon(p,0,hw,.06,asph);
   /* trotoar: putus di dekat simpang / jalan lain */
-  [-1,1].forEach(sd=>{const runs=[];let st=-1;for(let i=0;i<p.length;i++){const q=p[Math.min(p.length-1,i+1)],o=p[Math.max(0,i-1)],L=Math.hypot(q.x-o.x,q.z-o.z)||1,x=p[i].x+(-(q.z-o.z)/L)*3.4*sd,z=p[i].z+((q.x-o.x)/L)*3.4*sd;
-    const ok=LAYC.roadDist(x,z,ei)>3.9&&!jnodes.some(n=>Math.hypot(x-n.x,z-n.z)<(n.d===1?4.3:5.2))&&!ringAt(x,z);
+  [-1,1].forEach(sd=>{const runs=[];let st=-1;for(let i=0;i<p.length;i++){const q=p[Math.min(p.length-1,i+1)],o=p[Math.max(0,i-1)],L=Math.hypot(q.x-o.x,q.z-o.z)||1,x=p[i].x+(-(q.z-o.z)/L)*so*sd,z=p[i].z+((q.x-o.x)/L)*so*sd;
+    const ok=LAYC.roadDist(x,z,ei)>so+.5&&!jnodes.some(n=>Math.hypot(x-n.x,z-n.z)<(n.d===1?4.3:5.2))&&!ringAt(x,z);
     if(ok&&st<0)st=i;if((!ok||i===p.length-1)&&st>=0){runs.push([st,ok?i:i-1]);st=-1;}}
-   ribbon(p,3.4*sd,.4,.09,walk,runs);});
+   ribbon(p,so*sd,.4,.09,walk,runs);});
   let acc=0;for(let i=1;i<p.length;i++){const L=Math.hypot(p[i].x-p[i-1].x,p[i].z-p[i-1].z);acc+=L;if(acc>=4){acc=0;const mx=(p[i].x+p[i-1].x)/2,mz=(p[i].z+p[i-1].z)/2;
-    if(!jnodes.some(n=>Math.hypot(mx-n.x,mz-n.z)<5.4)&&!ringAt(mx,mz)&&LAYC.roadDist(mx,mz,ei)>3.6)dx.push([mx,.075,mz,.14,.02,1.5,Math.atan2(p[i].x-p[i-1].x,p[i].z-p[i-1].z)]);}}
-  let la=7;for(let i=1;i<p.length;i++){la+=Math.hypot(p[i].x-p[i-1].x,p[i].z-p[i-1].z);if(la>=14){la=0;const o=p[i-1],q=p[i],L=Math.hypot(q.x-o.x,q.z-o.z)||1,x=q.x-(q.z-o.z)/L*3.5,z=q.z+(q.x-o.x)/L*3.5;
-    if(!jnodes.some(n=>Math.hypot(x-n.x,z-n.z)<6)&&!ringAt(x,z)&&LAYC.roadDist(x,z,ei)>4.6)lamps.push([x,0,z]);}}
+    if(!jnodes.some(n=>Math.hypot(mx-n.x,mz-n.z)<5.4)&&!ringAt(mx,mz)&&hw>=2.4&&LAYC.roadDist(mx,mz,ei)>hw+.6){const ry=Math.atan2(p[i].x-p[i-1].x,p[i].z-p[i-1].z);if(hw>=4){const qx=Math.cos(ry),qz=-Math.sin(ry);[-.4,.4].forEach(o=>dx.push([mx+qx*o,.075,mz+qz*o,.14,.02,1.5,ry]));}else dx.push([mx,.075,mz,.14,.02,1.5,ry]);}}}
+  let la=7;for(let i=1;i<p.length;i++){la+=Math.hypot(p[i].x-p[i-1].x,p[i].z-p[i-1].z);if(la>=14){la=0;const o=p[i-1],q=p[i],L=Math.hypot(q.x-o.x,q.z-o.z)||1,x=q.x-(q.z-o.z)/L*(hw+.5),z=q.z+(q.x-o.x)/L*(hw+.5);
+    if(!jnodes.some(n=>Math.hypot(x-n.x,z-n.z)<6)&&!ringAt(x,z)&&LAYC.roadDist(x,z,ei)>hw+1.6)lamps.push([x,0,z]);}}
  });
  /* simpang: cakram aspal + trotoar melingkar kecil, zebra di tiap lengan */
- LAYC.nodes.forEach((n,i)=>{const d=LAYC.deg(i);if(RBS.some(b=>b.node===i))return;if(d>=3){disc(n.x,n.z,4.1,.062,asph);}else if(d===1&&n.z<DOM_MAXZ){disc(n.x,n.z,3.5,.062,asph);}});
+ LAYC.nodes.forEach((n,i)=>{const d=LAYC.deg(i);if(RBS.some(b=>b.node===i))return;const jh=LAYC.ADJ[i].reduce((m,ei)=>Math.max(m,LAYC.edges[ei].hw||HW),HW);if(d>=3){disc(n.x,n.z,jh+1.1,.062,asph);}else if(d===1&&n.z<DOM_MAXZ){disc(n.x,n.z,jh+.5,.062,asph);}});
  LAYC.edges.forEach((e,ei)=>{[[e.a,0,1],[e.b,e.pts.length-1,-1]].forEach(([n,pi,dir])=>{if(LAYC.deg(n)<3||RBS.some(b=>b.node===n)||e.len<14)return;const k=pi+dir*Math.round(5.8/2.5),a=e.pts[Math.max(0,Math.min(e.pts.length-1,k))],b=e.pts[Math.max(0,Math.min(e.pts.length-1,k+dir))],L=Math.hypot(b.x-a.x,b.z-a.z)||1,tx=(b.x-a.x)/L,tz=(b.z-a.z)/L,ry=Math.atan2(tx,tz);
-   for(let j=-3;j<=3;j++)zb.push([a.x-tz*j*.8,.077,a.z+tx*j*.8,.5,.02,1.2,ry]);});});
+   const kz=Math.max(3,Math.round(e.hw||HW));for(let j=-kz;j<=kz;j++)zb.push([a.x-tz*j*.8,.077,a.z+tx*j*.8,.5,.02,1.2,ry]);});});
+ (LAYC.lanes||[]).forEach(l=>{const q=l.pts[l.pts.length-1];disc(q.x,q.z,l.hw+1.3,.062,asph);});
  /* bundaran */
  RBS.forEach(b=>{const N=34,len=2*Math.PI*b.r/N+.3;
   for(let k=0;k<N;k++){const a=(k+.5)/N*Math.PI*2,x=b.x+Math.cos(a)*b.r,z=b.z+Math.sin(a)*b.r,ry=Math.atan2(-Math.cos(a),-Math.sin(a));box(cityGroup,len,.065,5.8,asph,x,0,z,{ry,shadow:false});
@@ -283,7 +284,7 @@ function planLayout(){
  OFFICES.forEach(o=>list.push({id:o.id,w:q(4.4),d:q(3.4),tx:o.tx,tz:o.tz,base:4.6}));
  LAYC.placeNamed(list);
  list.forEach(it=>{const p=LAYC.named[it.id];if(p){const L=LAY[it.id]||(LAY[it.id]={});L.x=p.x;L.z=p.z;L.rot=p.rot;delete L.row;}});
- LAYC.frontage(4.6);LAYC.frontage(10.9);LAYC.infill();LAYC.infill(4.4,.1,6.4,34);LAYC.infill(3.4,.04,5.4,40);
+ LAYC.addLanes(40,3);LAYC.frontage(4.6);LAYC.addLanes(60,3);LAYC.frontage(4.6);
 }
 function createCity(){
  planLayout();
@@ -340,7 +341,7 @@ function liveCity(){
  const tree=(x,z)=>{const s=.8+rnd()*.5,k=rnd();tr.push([x,.7*s,z,.16*s,1.4*s,.16*s]);cr[k<.5?0:k<.8?1:k<.92?2:3].push([x,1.9*s,z,.85*s,.8*s,.85*s,rnd()*6]);if(k>.4){f1.push([x+.75,.2,z+.2,.28,.22,.28]);f2.push([x-.7,.2,z-.25,.26,.2,.26]);}};
  const PS=1.45,wh=[],park=(x,z,rot)=>{const i=Math.floor(rnd()*6);cars[i].push([x,.36,z,PS,PS,PS,rot]);cab.push([x,.95,z,PS,PS,PS,rot]);const c=Math.cos(rot),sn=Math.sin(rot);[[-.55,.42],[.55,.42],[-.55,-.42],[.55,-.42]].forEach(([dx,dz])=>wh.push([x+(dx*c+dz*sn)*PS,.22,z+(-dx*sn+dz*c)*PS,PS,PS,PS,rot]));};
  LAYC.edges.forEach((e,ei)=>{if(e.bridge)return;let a1=4,a2=6;for(let u=4;u<e.len-4;u+=1.5){const c=LAYC.at(e,u);
-   if(u>=a1){a1=u+7+rnd()*2;const tx=c.x+c.tz*3.4,tz=c.z-c.tx*3.4;if(roadDist(tx,tz,ei)>4.3&&!nearRing(tx,tz,1)&&LAYC.roadClear(tx,tz,-.5)&&clear(tx,tz,.4)&&LAYC.riverDist(tx,tz)>RIVER_HW+1.5)tree(tx,tz);}
+   if(u>=a1){a1=u+7+rnd()*2;const hh=(e.hw||3)+.4,tx=c.x+c.tz*hh,tz=c.z-c.tx*hh;if(roadDist(tx,tz,ei)>hh+.9&&!nearRing(tx,tz,1)&&LAYC.roadClear(tx,tz,-.5)&&clear(tx,tz,.4)&&LAYC.riverDist(tx,tz)>RIVER_HW+1.5)tree(tx,tz);}
    if(u>=a2){a2=u+9+rnd()*8;const sd=rnd()<.5?-1:1,px=c.x-c.tz*2.6*sd,pz=c.z+c.tx*2.6*sd;if(roadDist(px,pz,ei)>5.2&&!nearRing(px,pz,1)&&rnd()<.6&&clear(px,pz,.2)&&LAYC.roadClear(px,pz,-.9))park(px,pz,-Math.atan2(c.tz,c.tx));}}});
  inst(new THREE.CylinderGeometry(.12,.18,1,6),'#6b4a2f',tr,false);
  ['#4fb046','#3c9a3a','#f2b134','#ff9ec4'].forEach((c,i)=>inst(new THREE.IcosahedronGeometry(1,0),c,cr[i],false));

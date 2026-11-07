@@ -129,7 +129,7 @@ export function buildLayout(opts={}){
   for(let i=0;i<=n;i++){const t=i/n,t2=t*t,t3=t2*t,h00=2*t3-3*t2+1,h10=t3-2*t2+t,h01=-2*t3+3*t2,h11=t3-t2;let x=h00*A.x+h10*m0[0]+h01*B.x+h11*m1[0],z=h00*A.z+h10*m0[1]+h01*B.z+h11*m1[1];
    const s=Math.sin(Math.PI*t)*bl*sg;x+=-ch[1]*s;z+=ch[0]*s;out.push({x:clamp(x,DOM.x1,DOM.x2),z:clamp(z,DOM.z1,DOM.z2)});}
   out[0]={x:A.x,z:A.z};out[n]={x:B.x,z:B.z};return out;};
- edges.forEach(e=>{e.sg=R()<.5?-1:1;e.amp=.02+R()*.07;});
+ edges.forEach(e=>{e.sg=R()<.5?-1:1;e.amp=.012+R()*.04;});
  edges.forEach((e,i)=>{let p=sampleEdge(e,1);
   const bad=q=>q.some(s=>HARD.some(r=>inRect(s.x,s.z,r,2.6))||lakeIn(s.x,s.z,2.4)||(!e.bridge&&riverDist(s.x,s.z)<RIVER_HW+3.2));
   if(bad(p)){p=sampleEdge(e,0);if(bad(p)&&!e.bridge){p=sampleEdge(e,0);}}
@@ -142,15 +142,27 @@ export function buildLayout(opts={}){
   if(inside(out[out.length-1])){let k=out.length-1;while(k>=0&&inside(out[k]))k--;const a=out[k],b=out[k+1],da=hyp(a.x-c.x,a.z-c.z),db=hyp(b.x-c.x,b.z-c.z),t=(r-da)/((db-da)||1);out=[...out.slice(0,k+1),{x:a.x+(b.x-a.x)*t,z:a.z+(b.z-a.z)*t}];}return out;};
  rbs.forEach(b=>ADJ[b.node].forEach(ei=>{edges[ei].pts=trim(edges[ei].pts,b,b.r);}));
  edges.forEach(e=>{e.len=0;for(let k=1;k<e.pts.length;k++)e.len+=hyp(e.pts[k].x-e.pts[k-1].x,e.pts[k].z-e.pts[k-1].z);});
+ /* ===== hirarki jalan (v28): utama / desa / komplek, dari frekuensi dilalui jalur terpendek ===== */
+ {const N=nodes.length,wl=e=>e.len||len(e),cnt=new Float64Array(edges.length);
+  const live=[],bord=[];nodes.forEach((n,i)=>{if(ADJ[i].length){live.push(i);if(onB(n))bord.push(i);}});
+  const dij=s=>{const d=new Float64Array(N).fill(1e9),pe=new Int32Array(N).fill(-1),dn=new Uint8Array(N);d[s]=0;for(let it=0;it<N;it++){let u=-1,b=1e9;for(let i=0;i<N;i++)if(!dn[i]&&d[i]<b){b=d[i];u=i;}if(u<0)break;dn[u]=1;ADJ[u].forEach(ei=>{const e=edges[ei],v=other(e,u),w=d[u]+wl(e)*(e.bridge?1.3:1);if(w<d[v]){d[v]=w;pe[v]=ei;}});}return {pe};};
+  const srcs=[...bord.slice().sort(()=>R()-.5).slice(0,14),...live.slice().sort(()=>R()-.5).slice(0,16)];
+  srcs.forEach(sn=>{const {pe}=dij(sn);for(let k=0;k<18;k++){let t=live[Math.floor(R()*live.length)],g=0;while(t!==sn&&pe[t]>=0&&g++<400){cnt[pe[t]]++;t=other(edges[pe[t]],t);}}});
+  const order=edges.map((e,i)=>i).sort((a,b)=>cnt[b]-cnt[a]),nE=order.length,HWC=[3,2.5,3.2,4.4];
+  order.forEach((ei,r)=>{const e=edges[ei],f=r/nE;e.cls=cnt[ei]<=0?1:f<(opts.mainF||.2)?3:f<(opts.collF||.55)?2:1;if((e.bridge||e.farmLink)&&e.cls<2)e.cls=2;e.hw=HWC[e.cls];});}
  const allEdges=[...farm,...edges.map(e=>e)];
  /* ===== indeks spasial ruas jalan ===== */
  const CELL=12,grid=new Map(),gk=(i,j)=>i*4096+j;
- allEdges.forEach((e,ei)=>{for(let k=0;k<e.pts.length-1;k++){const a=e.pts[k],b=e.pts[k+1],i0=Math.floor((Math.min(a.x,b.x)-HW)/CELL),i1=Math.floor((Math.max(a.x,b.x)+HW)/CELL),j0=Math.floor((Math.min(a.z,b.z)-HW)/CELL),j1=Math.floor((Math.max(a.z,b.z)+HW)/CELL);
-  for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){const key=gk(i+200,j+200);(grid.get(key)||grid.set(key,[]).get(key)).push([a.x,a.z,b.x,b.z,ei]);}}});
+ const gridAdd=(e,ei)=>{for(let k=0;k<e.pts.length-1;k++){const a=e.pts[k],b=e.pts[k+1],i0=Math.floor((Math.min(a.x,b.x)-5.2)/CELL),i1=Math.floor((Math.max(a.x,b.x)+5.2)/CELL),j0=Math.floor((Math.min(a.z,b.z)-5.2)/CELL),j1=Math.floor((Math.max(a.z,b.z)+5.2)/CELL);
+  for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){const key=gk(i+200,j+200);(grid.get(key)||grid.set(key,[]).get(key)).push([a.x,a.z,b.x,b.z,ei]);}}};
+ const gridDel=ei=>grid.forEach((l,k)=>{const f=l.filter(q=>q[4]!==ei);if(f.length!==l.length)grid.set(k,f);});
+ allEdges.forEach(gridAdd);
  const nearest=(x,z,skip=-1,R2=1)=>{let d=99,qx=x,qz=z,E=-1;const ci=Math.floor(x/CELL),cj=Math.floor(z/CELL);for(let i=ci-R2;i<=ci+R2;i++)for(let j=cj-R2;j<=cj+R2;j++){const l=grid.get(gk(i+200,j+200));if(!l)continue;for(const s of l){if(s[4]===skip)continue;const dx=s[2]-s[0],dz=s[3]-s[1],t=clamp(((x-s[0])*dx+(z-s[1])*dz)/(dx*dx+dz*dz||1),0,1),px=s[0]+dx*t,pz=s[1]+dz*t,v=hyp(x-px,z-pz);if(v<d){d=v;qx=px;qz=pz;E=s[4];}}}return {d,x:qx,z:qz,e:E};};
  const roadDist=(x,z,skip)=>{const r=nearest(x,z,skip);let d=r.d;for(const b of rbs){const v=Math.abs(hyp(x-b.x,z-b.z)-b.r);if(v<d)d=v;}return d;};
- const jn=[];nodes.forEach((n,i)=>{if(ADJ[i].length>=3&&!rbs.some(b=>b.node===i))jn.push({x:n.x,z:n.z,r:5.3});else if(ADJ[i].length===1)jn.push({x:n.x,z:n.z,r:4.5});});
- const roadClear=(x,z,m=.4)=>{if(roadDist(x,z)<HW+.6+m)return false;for(const n of jn)if(hyp(x-n.x,z-n.z)<n.r+m)return false;for(const b of rbs)if(hyp(x-b.x,z-b.z)<b.r+5.2+m)return false;return true;};
+ const roadGap=(x,z,skip=-1)=>{let d=99;const ci=Math.floor(x/CELL),cj=Math.floor(z/CELL);for(let i=ci-3;i<=ci+3;i++)for(let j=cj-3;j<=cj+3;j++){const l=grid.get(gk(i+200,j+200));if(!l)continue;for(const q of l){if(q[4]===skip)continue;const dx=q[2]-q[0],dz=q[3]-q[1],t=clamp(((x-q[0])*dx+(z-q[1])*dz)/(dx*dx+dz*dz||1),0,1),v=hyp(x-(q[0]+dx*t),z-(q[1]+dz*t))-(allEdges[q[4]].hw||HW);if(v<d)d=v;}}for(const b of rbs){const v=Math.abs(hyp(x-b.x,z-b.z)-b.r)-HW;if(v<d)d=v;}return d;};
+ const jhw=i=>ADJ[i].reduce((m,ei)=>Math.max(m,edges[ei].hw||HW),HW);
+ const jn=[];nodes.forEach((n,i)=>{if(ADJ[i].length>=3&&!rbs.some(b=>b.node===i))jn.push({x:n.x,z:n.z,r:jhw(i)+2.3});else if(ADJ[i].length===1)jn.push({x:n.x,z:n.z,r:jhw(i)+1.5});});
+ const roadClear=(x,z,m=.4)=>{if(roadGap(x,z)<.6+m)return false;for(const n of jn)if(hyp(x-n.x,z-n.z)<n.r+m)return false;for(const b of rbs)if(hyp(x-b.x,z-b.z)<b.r+5.2+m)return false;return true;};
  /* ===== penempatan benda: OBB ===== */
  const placed=[],pg=new Map(),pk=(i,j)=>i*4096+j,PC=16;
  const putObb=o=>{placed.push(o);const r=hyp(o.w,o.d)/2,i0=Math.floor((o.x-r)/PC),i1=Math.floor((o.x+r)/PC),j0=Math.floor((o.z-r)/PC),j1=Math.floor((o.z+r)/PC);for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){const k=pk(i+200,j+200);(pg.get(k)||pg.set(k,[]).get(k)).push(o);}};
@@ -173,11 +185,25 @@ export function buildLayout(opts={}){
   edges.forEach(e=>{if(e.bridge)return;const step=1.5;for(let u=4;u<e.len-4;u+=step)for(const s of [-1,1]){const c=at(e,u),nx=-c.tz*s,nz=c.tx*s,x=c.x+nx*(base+it.d/2),z=c.z+nz*(base+it.d/2),sc=hyp(x-it.tx,z-it.tz);if(best&&sc>=best.sc)continue;const o={x,z,w:it.w,d:it.d,rot:rotToward(-nx,-nz)};if(!free(o,.6,.4))continue;best={sc,o};}});
   if(best){putObb(best.o);named[it.id]={x:best.o.x,z:best.o.z,rot:best.o.rot};}});
  const lots=[];
- const dims=()=>{const k=R(),kind=k<.3?'house':k<.55?'shop':k<.8?'apt':'office',q=v=>Math.round(v*2)/2;return {k,kind,w:q(kind==='house'?4.6+R():4.5+R()*2.5),d:q(kind==='house'?3.8+R()*.8:4+R()*1.4)};};
+ const dims=(cls=2)=>{const k=R();let kind;if(cls>=3)kind=k<.1?'house':k<.5?'shop':k<.75?'apt':'office';else if(cls===2)kind=k<.4?'house':k<.65?'shop':k<.85?'apt':'office';else kind=k<.82?'house':k<.95?'apt':'shop';const q=v=>Math.round(v*2)/2;return {k,cls,kind,w:q(kind==='house'?4.6+R():4.5+R()*2.5),d:q(kind==='house'?3.8+R()*.8:4+R()*1.4)};};
  const MAXL=opts.maxLots||1000;
- const tryLot=(x,z,rot,D,front)=>{const o={x,z,w:D.w,d:D.d,rot};if(!free(o,.5,.2))return false;const kind=front&&(D.kind==='office'||D.kind==='apt')?(D.k<.675?'house':'shop'):D.kind;putObb(o);lots.push({x,z,rot,w:D.w,d:D.d,kind,k:D.k});return true;};
- const frontage=(base)=>edges.forEach(e=>{if(e.bridge)return;for(const s of [-1,1]){const du=n=>ADJ[n].length===2?.6:4.6;let u=du(e.a)+R()*.8;const end=e.len-du(e.b);let guard=0;while(u<end&&guard++<30&&lots.length<MAXL){const D=dims(),uc=u+D.w/2;if(uc+D.w/2>end)break;const c=at(e,uc),nx=-c.tz*s,nz=c.tx*s,cx=c.x+nx*(base+D.d/2),cz=c.z+nz*(base+D.d/2),front=(nx+nz)>.15;
-   if(tryLot(cx,cz,rotToward(-nx,-nz),D,front))u=uc+D.w/2+.5;else u+=1.5;}}});
+ const tryLot=(x,z,rot,D,front)=>{const o={x,z,w:D.w,d:D.d,rot};if(!free(o,.5,.2))return false;const kind=front&&(D.kind==='office'||D.kind==='apt')?((D.cls||2)<=1?'house':'shop'):D.kind;putObb(o);lots.push({x,z,rot,w:D.w,d:D.d,kind,k:D.k,cls:D.cls||2,_o:o});return true;};
+ const frontEdge=(e,base,cls,lane)=>{if(e.bridge)return;for(const s of [-1,1]){const du=n=>ADJ[n].length===2?.6:4.6;let u=lane?(e.hw||HW)+2.6:du(e.a)+R()*.8;const end=lane?e.len-4:e.len-du(e.b);let guard=0;while(u<end&&guard++<30&&lots.length<MAXL){const D=dims(cls),uc=u+D.w/2;if(uc+D.w/2>end)break;const c=at(e,uc),nx=-c.tz*s,nz=c.tx*s,cx=c.x+nx*(base+D.d/2),cz=c.z+nz*(base+D.d/2),front=(nx+nz)>.15;
+   if(tryLot(cx,cz,rotToward(-nx,-nz),D,front))u=uc+D.w/2+.5;else u+=1.5;}}};
+ const frontage=(base)=>edges.forEach(e=>frontEdge(e,base+(e.hw||HW)-HW,e.cls||2,false));
+ /* lorong komplek (buntu): cabang dari jalan ke dalam blok yang masih kosong, rumah menghadap lorong */
+ const laneEdges=[];
+ const unputObb=o=>{const i=placed.indexOf(o);if(i>=0)placed.splice(i,1);const r=hyp(o.w,o.d)/2,i0=Math.floor((o.x-r)/PC),i1=Math.floor((o.x+r)/PC),j0=Math.floor((o.z-r)/PC),j1=Math.floor((o.z+r)/PC);for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){const l=pg.get(pk(i+200,j+200));if(l){const q=l.indexOf(o);if(q>=0)l.splice(q,1);}}};
+ const addLanes=(maxN=60,minLots=4)=>{const cand=[];edges.forEach((e,ei)=>{if(e.bridge||e.len<16)return;for(let u=7;u<e.len-7;u+=3)for(const s of [-1,1]){const c=at(e,u);cand.push({x:c.x,z:c.z,nx:-c.tz*s,nz:c.tx*s,ei});}});let made=0;
+  const okPt=(x,z,hostAI,t,hwE)=>{if(x<DOM.x1+4||x>DOM.x2-4||z<DOM.z1+4||z>51)return false;if(HARDO.some(r=>inRect(x,z,r,2.5)))return false;if(riverDist(x,z)<RIVER_HW+4||lakeIn(x,z,5))return false;if(t>hwE+5&&roadGap(x,z,hostAI)<(opts.laneGap||8.6))return false;
+   const pr={x,z,w:1.5,d:1.5,rot:0},r=3.4,i0=Math.floor((x-r)/PC),i1=Math.floor((x+r)/PC),j0=Math.floor((z-r)/PC),j1=Math.floor((z+r)/PC);for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){const l=pg.get(pk(i+200,j+200));if(l)for(const q of l)if(obbOverlap(pr,q,2.2))return false;}return true;};
+  const lenOf=c=>{const hwE=edges[c.ei].hw||HW,hostAI=farm.length+c.ei;let Ln=0;for(let t=0;t<=34;t+=2){if(!okPt(c.x+c.nx*t,c.z+c.nz*t,hostAI,t,hwE))break;Ln=t;}return Ln;};
+  cand.forEach(c=>{c.r=R();c.L0=lenOf(c);});cand.sort((p,q)=>(q.L0-p.L0)||(p.r-q.r));
+  for(const c of cand){if(made>=maxN||lots.length>=MAXL)break;const hwE=edges[c.ei].hw||HW;if(c.L0<hwE+(opts.laneMin||11))break;const Ln=lenOf(c);
+   if(Ln<hwE+(opts.laneMin||11))continue;const pts=[];for(let t=0;t<Ln;t+=2.5)pts.push({x:c.x+c.nx*t,z:c.z+c.nz*t});pts.push({x:c.x+c.nx*Ln,z:c.z+c.nz*Ln});
+   const lane={lane:true,cls:0,hw:2.1,pts,len:Ln},ai=allEdges.length;allEdges.push(lane);gridAdd(lane,ai);const l0=lots.length,p0=placed.length;frontEdge(lane,2.1+1.6,1,true);
+   if(lots.length-l0>=minLots){laneEdges.push(lane);made++;}else{while(lots.length>l0)lots.pop();for(let i=placed.length-1;i>=p0;i--)unputObb(placed[i]);allEdges.pop();gridDel(ai);}}
+  return made;};
  const infill=(step=3.9,skip=.15,dmin=6.6,dmax=30)=>{for(let x=DOM.x1+3;x<DOM.x2;x+=step)for(let z=DOM.z1+3;z<54;z+=step){if(lots.length>=MAXL)return;const px=x+R()*3-1.5,pz=z+R()*3-1.5;if(R()<skip)continue;const r=nearest(px,pz,-1,3);if(r.d<dmin||r.d>dmax)continue;const f=unit(r.x-px,r.z-pz),D=dims();tryLot(px,pz,rotToward(f[0],f[1]),D,(-f[0]-f[1])>.15);}};
- return {infill,R,nodes,edges,farm,allEdges,rbs,rpts,riverDist,lakeIn,crossRiver,bridges,roadDist,nearest,roadClear,free,putObb,placed,art,named,placeNamed,lots,dims,tryLot,frontage,at,rotToward,deg:n=>ADJ[n].length,ADJ,HARD,onB,MAXL,unit};
+ return {roadGap,HARDO,addLanes,lanes:laneEdges,frontEdge,infill,R,nodes,edges,farm,allEdges,rbs,rpts,riverDist,lakeIn,crossRiver,bridges,roadDist,nearest,roadClear,free,putObb,placed,art,named,placeNamed,lots,dims,tryLot,frontage,at,rotToward,deg:n=>ADJ[n].length,ADJ,HARD,onB,MAXL,unit};
 }

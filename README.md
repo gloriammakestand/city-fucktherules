@@ -103,3 +103,10 @@ Note: citizen needs are local-browser gameplay state in this prototype. Online e
 - Geser kamera (drag) kini bisa sampai seluruh pojok pulau (sebelumnya dibatasi x -60..190, z -185..60).
 - Tap di pojok/pantai/laut (di luar mesh tanah) tetap menggerakkan karakter: titik tap ditempelkan ke daratan terdekat.
 - Jalan: kalau terhalang bangunan/sungai/danau, karakter menyusuri dinding penghalang, bukan berhenti. Batas waktu jalan 25 detik.
+
+## V28
+- Jaringan jalan ditata ulang: lebih sedikit ruas dan kelokan lebih halus. Panjang jalan 1690 → 1488, ruas 87 → 70.
+- Hirarki jalan: jalan utama (lebar, garis tengah ganda), jalan desa, jalan komplek, dan lorong buntu komplek (dengan putaran di ujung). Kelas ditentukan dari seberapa sering ruas dilalui jalur terpendek antar simpul.
+- Aturan akses: semua rumah/bangunan kini menghadap jalan atau lorong. Baris rumah kedua dan isian acak yang jauh dari jalan dihapus (dulu sekitar 45% pintu rumah lebih dari 9 unit dari jalan, sekarang 0).
+- Jenis bangunan mengikuti kelas jalan: jalan utama lebih banyak toko/apartemen/kantor, jalan komplek lebih banyak rumah.
+- Lebar aspal, trotoar, lampu, zebra cross, simpang, dan pohon pinggir jalan mengikuti kelas jalan. Perlintasan rel mengikuti lebar jalan.
