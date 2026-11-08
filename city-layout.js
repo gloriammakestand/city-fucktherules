@@ -59,10 +59,16 @@ export function buildLayout(opts={}){
  /* ===== graf ===== */
  let nodes=[],edges=[];const nmap=new Map();
  const addNode=(x,z)=>{const k=Math.round(x*2)+','+Math.round(z*2);let i=nmap.get(k);if(i===undefined){i=nodes.length;nodes.push({x,z});nmap.set(k,i);}return i;};
- emap.forEach(l=>{if(l.length!==2)return;const A=tris[l[0]],B=tris[l[1]];const c=clipSeg(A.cx,A.cz,B.cx,B.cz);if(!c)return;
+ if(!opts.grid&&!opts.segs)emap.forEach(l=>{if(l.length!==2)return;const A=tris[l[0]],B=tris[l[1]];const c=clipSeg(A.cx,A.cz,B.cx,B.cz);if(!c)return;
   const ax=A.cx+(B.cx-A.cx)*c[0],az=A.cz+(B.cz-A.cz)*c[0],bx=A.cx+(B.cx-A.cx)*c[1],bz=A.cz+(B.cz-A.cz)*c[1];if(hyp(bx-ax,bz-az)<2)return;
   if(hardSeg(ax,az,bx,bz,3.5))return;
   edges.push({a:addNode(ax,az),b:addNode(bx,bz)});});
+  /* ===== (v29) opsi grid: jalan lurus kotak-kotak, kelas jalan per garis ===== */
+ if(opts.grid){const XL=opts.xl,ZL=opts.zl,XC=opts.xc,ZC=opts.zc;
+  const seg=(x1,z1,x2,z2,cls)=>{if(hardSeg(x1,z1,x2,z2,3.5))return;edges.push({a:addNode(x1,z1),b:addNode(x2,z2),gcls:cls});};
+  for(let j=0;j<ZL.length;j++)for(let i=0;i<XL.length-1;i++)seg(XL[i],ZL[j],XL[i+1],ZL[j],Math.min(ZC[j],XC[i]===3&&ZC[j]===3?3:ZC[j]));
+  for(let i=0;i<XL.length;i++)for(let j=0;j<ZL.length-1;j++)seg(XL[i],ZL[j],XL[i],ZL[j+1],XC[i]);}
+ const EXPL=!!opts.segs;const bridges=[];
  const onB=n=>n.x<=DOM.x1+.05||n.x>=DOM.x2-.05||n.z<=DOM.z1+.05||n.z>=DOM.z2-.05;
  const len=e=>hyp(nodes[e.a].x-nodes[e.b].x,nodes[e.a].z-nodes[e.b].z);
  let ADJ=[];
@@ -80,6 +86,20 @@ export function buildLayout(opts={}){
  const comps=()=>{const c=new Array(nodes.length).fill(-1);let id=0;for(let s=0;s<nodes.length;s++){if(c[s]>=0||!ADJ[s].length)continue;const q=[s];c[s]=id;while(q.length){const u=q.pop();ADJ[u].forEach(ei=>{const v=other(edges[ei],u);if(c[v]<0){c[v]=id;q.push(v);}});}id++;}return {c,n:id};};
  const connectedWithout=(ei)=>{const e=edges[ei],seen=new Set([e.a]),q=[e.a];while(q.length){const u=q.pop();if(u===e.b)return true;ADJ[u].forEach(j=>{if(j===ei)return;const v=other(edges[j],u);if(!seen.has(v)){seen.add(v);q.push(v);}});}return false;};
  DBG('contract');
+ /* ===== (v29) jaringan jalan eksplisit: segmen lurus sumbu-x/z, dipotong di persimpangan ===== */
+ if(EXPL){const H=[],V=[];opts.segs.forEach(([x1,z1,x2,z2,cls])=>{if(Math.abs(z1-z2)<1e-6)H.push({z:z1,x1:Math.min(x1,x2),x2:Math.max(x1,x2),cls});else V.push({x:x1,z1:Math.min(z1,z2),z2:Math.max(z1,z2),cls});});
+  const pieces=[];
+  H.forEach(h=>{const xs=new Set([h.x1,h.x2]);V.forEach(v=>{if(v.x>=h.x1-1e-6&&v.x<=h.x2+1e-6&&h.z>=v.z1-1e-6&&h.z<=v.z2+1e-6)xs.add(v.x);});const a=[...xs].sort((p,q)=>p-q);for(let i=0;i<a.length-1;i++)if(a[i+1]-a[i]>1)pieces.push([a[i],h.z,a[i+1],h.z,h.cls]);});
+  V.forEach(v=>{const zs=new Set([v.z1,v.z2]);H.forEach(h=>{if(h.z>=v.z1-1e-6&&h.z<=v.z2+1e-6&&v.x>=h.x1-1e-6&&v.x<=h.x2+1e-6)zs.add(h.z);});const a=[...zs].sort((p,q)=>p-q);for(let i=0;i<a.length-1;i++)if(a[i+1]-a[i]>1)pieces.push([v.x,a[i],v.x,a[i+1],v.cls]);});
+  pieces.forEach(([x1,z1,x2,z2,cls])=>{if(hardSeg(x1,z1,x2,z2,3.5))return;const cr=crossRiver(x1,z1,x2,z2);let near=false;const L=hyp(x2-x1,z2-z1),m=Math.max(2,Math.ceil(L/3));for(let k=0;k<=m;k++){const t=k/m;if(riverDist(x1+(x2-x1)*t,z1+(z2-z1)*t)<RIVER_HW+2.4){near=true;break;}}
+   if(cr.length){if(cr.length===1&&cr[0].s>.7){const c=cr[0],hb=(RIVER_HW+3.4)/c.s,ux=(x2-x1)/L,uz=(z2-z1)/L,p1=[c.x-ux*hb,c.z-uz*hb],p2=[c.x+ux*hb,c.z+uz*hb];
+     if(hb*2<L*.92){edges.push({a:addNode(p1[0],p1[1]),b:addNode(p2[0],p2[1]),gcls:Math.max(cls,2),bridge:true});bridges.push({x:c.x,z:c.z});
+      if(hyp(p1[0]-x1,p1[1]-z1)>1)edges.push({a:addNode(x1,z1),b:addNode(p1[0],p1[1]),gcls:cls});if(hyp(x2-p2[0],z2-p2[1])>1)edges.push({a:addNode(p2[0],p2[1]),b:addNode(x2,z2),gcls:cls});}}return;}
+   if(near)return;edges.push({a:addNode(x1,z1),b:addNode(x2,z2),gcls:cls});});
+  rebuild();
+  {const cm0=comps();if(cm0.n>1){const size=new Array(cm0.n).fill(0);cm0.c.forEach(c=>{if(c>=0)size[c]++;});const mn=size.indexOf(Math.max(...size));edges.forEach(e=>{if(cm0.c[e.a]!==mn)e.dead=true;});rebuild();}}
+  for(let it=0;it<4;it++){let ch=false;for(let n=0;n<nodes.length;n++){if(ADJ[n].length!==1)continue;const e=edges[ADJ[n][0]];if(!e.bridge&&len(e)<(onB(nodes[n])?6:10)){e.dead=true;ch=true;}}if(ch)rebuild();else break;}}
+ if(!EXPL){
  /* ===== sungai: hanya beberapa jembatan ===== */
  const cross=edges.map(e=>crossRiver(nodes[e.a].x,nodes[e.a].z,nodes[e.b].x,nodes[e.b].z));
  const isCross=i=>cross[i]&&cross[i].length>0;
@@ -88,29 +108,38 @@ export function buildLayout(opts={}){
  const crossEdges=candIdx.map(i=>({e:edges[i],c:cross[i]}));edges.forEach((e,i)=>{if(isCross(i))e.dead=true;});
  const alive=edges.filter(e=>!e.dead);edges=alive;rebuild();DBG('river-del');
  let cm=comps();const uf=Array.from({length:cm.n},(_,i)=>i),find=x=>uf[x]===x?x:(uf[x]=find(uf[x]));
- const bridges=[];
+ 
  crossEdges.filter(o=>o.c.length===1&&o.c[0].s>.55).sort((p,q)=>(q.c[0].s-p.c[0].s)||0).forEach(o=>{
   const ca=cm.c[o.e.a],cb=cm.c[o.e.b];if(ca<0&&cb<0)return;const c=o.c[0];
   const need=ca>=0&&cb>=0&&find(ca)!==find(cb),spaced=bridges.every(b=>hyp(b.x-c.x,b.z-c.z)>34);
   if(need||(spaced&&bridges.length<6&&c.s>.75)){if(need)uf[find(ca)]=find(cb);edges.push({a:o.e.a,b:o.e.b,bridge:true});bridges.push({x:c.x,z:c.z});}});
  rebuild();
  DBG('bridges');
+ }
+ if(!EXPL){
  /* ===== sambungkan komponen terpisah (pakai ruas terdekat) ===== */
  for(let it=0;it<30;it++){cm=comps();if(cm.n<=1)break;const size=new Array(cm.n).fill(0);cm.c.forEach(c=>{if(c>=0)size[c]++;});const main=size.indexOf(Math.max(...size));
   let best=null;for(let i=0;i<nodes.length;i++){if(cm.c[i]<0||cm.c[i]===main)continue;for(let j=0;j<nodes.length;j++){if(cm.c[j]!==main)continue;const d=hyp(nodes[i].x-nodes[j].x,nodes[i].z-nodes[j].z);if((!best||d<best.d)&&d<70&&!hardSeg(nodes[i].x,nodes[i].z,nodes[j].x,nodes[j].z,2)){const cr=crossRiver(nodes[i].x,nodes[i].z,nodes[j].x,nodes[j].z);if(cr.length===0||(cr.length===1&&cr[0].s>.5))best={i,j,d,cr};}}}
   if(!best){edges.forEach(e=>{if(cm.c[e.a]!==main)e.dead=true;});rebuild();continue;}
   edges.push({a:best.i,b:best.j,bridge:best.cr.length>0});if(best.cr.length)bridges.push({x:best.cr[0].x,z:best.cr[0].z});rebuild();}
  DBG('connect');
+ }
+ if(!EXPL){
  /* ===== buang sebagian ruas acak (blok lebih besar + jalan buntu), tetap tersambung ===== */
  {const order=edges.slice().sort(()=>R()-.5);for(const e of order){if(e.dead||e.bridge||R()>(opts.del??.12))continue;if(ADJ[e.a].length<3&&ADJ[e.b].length<3)continue;const i=edges.indexOf(e);if(i>=0&&connectedWithout(i)){e.dead=true;rebuild();}}}
  DBG('rand-del');
+ }
+ if(!EXPL){
  /* ===== sudut tajam: hapus ruas terpendek dari pasangan ===== */
  for(let pass=0;pass<3;pass++){for(let n=0;n<nodes.length;n++){if(ADJ[n].length<2)continue;const L=ADJ[n].map(ei=>{const e=edges[ei],o=nodes[other(e,n)];return {ei,a:Math.atan2(o.z-nodes[n].z,o.x-nodes[n].x),len:len(e)};}).sort((p,q)=>p.a-q.a);
    for(let i=0;i<L.length;i++){const p=L[i],q=L[(i+1)%L.length];let da=Math.abs(q.a-p.a);if(da>Math.PI)da=Math.PI*2-da;if(L.length>=3&&i===L.length-1&&L.length===2)continue;if(da<.66&&L.length>=2){const del=p.len<q.len?p:q;if(!edges[del.ei].dead&&!edges[del.ei].bridge&&connectedWithout(del.ei)){edges[del.ei].dead=true;rebuild();break;}}}}}
  DBG('angle');
+ }
+ if(!EXPL){
  /* ===== pangkas ujung buntu pendek ===== */
  for(let it=0;it<6;it++){let ch=false;for(let n=0;n<nodes.length;n++){if(ADJ[n].length!==1)continue;const ei=ADJ[n][0],e=edges[ei];if(e.bridge)continue;if(len(e)<(onB(nodes[n])?12:17)){e.dead=true;ch=true;}}if(ch)rebuild();else break;}
  DBG('spur');
+ }
  /* ===== hubungkan jalan tani (utara) ke kota ===== */
  const farmTop={x:48,z:-66};let ftN=-1;{let bd=1e9;nodes.forEach((n,i)=>{if(!ADJ[i].length)return;const d=hyp(n.x-farmTop.x,n.z-farmTop.z);if(d<bd){bd=d;ftN=i;}});
   if(ftN>=0){const fi=addNode(farmTop.x,farmTop.z);ADJ[fi]=[];if(fi!==ftN&&bd>2)edges.push({a:fi,b:ftN,farmLink:true});rebuild();}}
@@ -130,9 +159,10 @@ export function buildLayout(opts={}){
    const s=Math.sin(Math.PI*t)*bl*sg;x+=-ch[1]*s;z+=ch[0]*s;out.push({x:clamp(x,DOM.x1,DOM.x2),z:clamp(z,DOM.z1,DOM.z2)});}
   out[0]={x:A.x,z:A.z};out[n]={x:B.x,z:B.z};return out;};
  edges.forEach(e=>{e.sg=R()<.5?-1:1;e.amp=.012+R()*.04;});
- edges.forEach((e,i)=>{let p=sampleEdge(e,1);
+ const straight=e=>{const A=nodes[e.a],B=nodes[e.b],L=hyp(B.x-A.x,B.z-A.z),n=Math.max(2,Math.round(L/2.5)),o=[];for(let i=0;i<=n;i++){const t=i/n;o.push({x:A.x+(B.x-A.x)*t,z:A.z+(B.z-A.z)*t});}return o;};
+ edges.forEach((e,i)=>{let p=(opts.grid||EXPL)?straight(e):sampleEdge(e,1);
   const bad=q=>q.some(s=>HARD.some(r=>inRect(s.x,s.z,r,2.6))||lakeIn(s.x,s.z,2.4)||(!e.bridge&&riverDist(s.x,s.z)<RIVER_HW+3.2));
-  if(bad(p)){p=sampleEdge(e,0);if(bad(p)&&!e.bridge){p=sampleEdge(e,0);}}
+  if(!opts.grid&&!EXPL&&bad(p)){p=sampleEdge(e,0);if(bad(p)&&!e.bridge){p=sampleEdge(e,0);}}
   e.pts=p;e.len=0;for(let k=1;k<p.length;k++)e.len+=hyp(p[k].x-p[k-1].x,p[k].z-p[k-1].z);});
  /* ===== bundaran ===== */
  const deg=n=>ADJ[n].length,rbs=[];
@@ -149,7 +179,7 @@ export function buildLayout(opts={}){
   const srcs=[...bord.slice().sort(()=>R()-.5).slice(0,14),...live.slice().sort(()=>R()-.5).slice(0,16)];
   srcs.forEach(sn=>{const {pe}=dij(sn);for(let k=0;k<18;k++){let t=live[Math.floor(R()*live.length)],g=0;while(t!==sn&&pe[t]>=0&&g++<400){cnt[pe[t]]++;t=other(edges[pe[t]],t);}}});
   const order=edges.map((e,i)=>i).sort((a,b)=>cnt[b]-cnt[a]),nE=order.length,HWC=[3,2.5,3.2,4.4];
-  order.forEach((ei,r)=>{const e=edges[ei],f=r/nE;e.cls=cnt[ei]<=0?1:f<(opts.mainF||.2)?3:f<(opts.collF||.55)?2:1;if((e.bridge||e.farmLink)&&e.cls<2)e.cls=2;e.hw=HWC[e.cls];});}
+  order.forEach((ei,r)=>{const e=edges[ei],f=r/nE;if(opts.grid||EXPL){e.cls=Math.max(e.gcls||2,(e.bridge||e.farmLink)?2:1);e.hw=HWC[e.cls];return;}e.cls=cnt[ei]<=0?1:f<(opts.mainF||.2)?3:f<(opts.collF||.55)?2:1;if((e.bridge||e.farmLink)&&e.cls<2)e.cls=2;e.hw=HWC[e.cls];});}
  const allEdges=[...farm,...edges.map(e=>e)];
  /* ===== indeks spasial ruas jalan ===== */
  const CELL=12,grid=new Map(),gk=(i,j)=>i*4096+j;
@@ -185,15 +215,26 @@ export function buildLayout(opts={}){
   edges.forEach(e=>{if(e.bridge)return;const step=1.5;for(let u=4;u<e.len-4;u+=step)for(const s of [-1,1]){const c=at(e,u),nx=-c.tz*s,nz=c.tx*s,x=c.x+nx*(base+it.d/2),z=c.z+nz*(base+it.d/2),sc=hyp(x-it.tx,z-it.tz);if(best&&sc>=best.sc)continue;const o={x,z,w:it.w,d:it.d,rot:rotToward(-nx,-nz)};if(!free(o,.6,.4))continue;best={sc,o};}});
   if(best){putObb(best.o);named[it.id]={x:best.o.x,z:best.o.z,rot:best.o.rot};}});
  const lots=[];
- const dims=(cls=2)=>{const k=R();let kind;if(cls>=3)kind=k<.1?'house':k<.5?'shop':k<.75?'apt':'office';else if(cls===2)kind=k<.4?'house':k<.65?'shop':k<.85?'apt':'office';else kind=k<.82?'house':k<.95?'apt':'shop';const q=v=>Math.round(v*2)/2;return {k,cls,kind,w:q(kind==='house'?4.6+R():4.5+R()*2.5),d:q(kind==='house'?3.8+R()*.8:4+R()*1.4)};};
+ const dims=(cls=2,px=0,pz=0)=>{const k=R();let kind;const dt=opts.dt;if(dt&&cls>=2&&hyp(px-dt.x,pz-dt.z)<dt.r){const q=v=>Math.round(v*2)/2;kind=k<.45?'office':k<.75?'apt':'shop';return {k,cls,kind,w:q(kind==='shop'?5+R()*2:5.5+R()*3),d:q(kind==='shop'?4.2+R()*1.4:5+R()*2.2)};}if(cls>=3)kind=k<.15?'house':k<.5?'shop':k<.75?'apt':'office';else if(cls===2)kind=k<.52?'house':k<.76?'shop':k<.92?'apt':'office';else kind=k<.82?'house':k<.95?'apt':'shop';const q=v=>Math.round(v*2)/2;return {k,cls,kind,w:q(kind==='house'?4.6+R():4.5+R()*2.5),d:q(kind==='house'?3.8+R()*.8:4+R()*1.4)};};
  const MAXL=opts.maxLots||1000;
  const tryLot=(x,z,rot,D,front)=>{const o={x,z,w:D.w,d:D.d,rot};if(!free(o,.5,.2))return false;const kind=front&&(D.kind==='office'||D.kind==='apt')?((D.cls||2)<=1?'house':'shop'):D.kind;putObb(o);lots.push({x,z,rot,w:D.w,d:D.d,kind,k:D.k,cls:D.cls||2,_o:o});return true;};
- const frontEdge=(e,base,cls,lane)=>{if(e.bridge)return;for(const s of [-1,1]){const du=n=>ADJ[n].length===2?.6:4.6;let u=lane?(e.hw||HW)+2.6:du(e.a)+R()*.8;const end=lane?e.len-4:e.len-du(e.b);let guard=0;while(u<end&&guard++<30&&lots.length<MAXL){const D=dims(cls),uc=u+D.w/2;if(uc+D.w/2>end)break;const c=at(e,uc),nx=-c.tz*s,nz=c.tx*s,cx=c.x+nx*(base+D.d/2),cz=c.z+nz*(base+D.d/2),front=(nx+nz)>.15;
+ const frontEdge=(e,base,cls,lane)=>{if(e.bridge)return;for(const s of [-1,1]){const du=n=>ADJ[n].length===2?.6:4.6;let u=lane?(e.through?(e.pad||6.4):(e.hw||HW)+2.6):du(e.a)+R()*.8;const end=lane?e.len-(e.through?(e.pad||6.4):4):e.len-du(e.b);let guard=0;while(u<end&&guard++<30&&lots.length<MAXL){const cq=at(e,Math.min(e.len,u+3)),D=dims(cls,cq.x,cq.z),uc=u+D.w/2;if(uc+D.w/2>end)break;const c=at(e,uc),nx=-c.tz*s,nz=c.tx*s,cx=c.x+nx*(base+D.d/2),cz=c.z+nz*(base+D.d/2),front=(nx+nz)>.15;
    if(tryLot(cx,cz,rotToward(-nx,-nz),D,front))u=uc+D.w/2+.5;else u+=1.5;}}};
  const frontage=(base)=>edges.forEach(e=>frontEdge(e,base+(e.hw||HW)-HW,e.cls||2,false));
  /* lorong komplek (buntu): cabang dari jalan ke dalam blok yang masih kosong, rumah menghadap lorong */
  const laneEdges=[];
  const unputObb=o=>{const i=placed.indexOf(o);if(i>=0)placed.splice(i,1);const r=hyp(o.w,o.d)/2,i0=Math.floor((o.x-r)/PC),i1=Math.floor((o.x+r)/PC),j0=Math.floor((o.z-r)/PC),j1=Math.floor((o.z+r)/PC);for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){const l=pg.get(pk(i+200,j+200));if(l){const q=l.indexOf(o);if(q>=0)l.splice(q,1);}}};
+ /* lorong komplek tembus di tengah blok grid (v29): rumah menghadap lorong di kedua sisi */
+ const addGridLanes=(minW=28,minH=24)=>{if(!opts.grid)return 0;let made=0;const XL=opts.xl,ZL=opts.zl;
+  const okSeg=(x1,z1,x2,z2)=>{const L=hyp(x2-x1,z2-z1),n=Math.ceil(L/2);for(let i=0;i<=n;i++){const t=i/n,x=x1+(x2-x1)*t,z=z1+(z2-z1)*t;if(x<DOM.x1+2||x>DOM.x2-2||z<DOM.z1+2||z>51.5)return false;if(HARDO.some(r=>inRect(x,z,r,2.5)))return false;if(riverDist(x,z)<RIVER_HW+4||lakeIn(x,z,5))return false;
+    const pr={x,z,w:1.5,d:1.5,rot:0},r=3.4,i0=Math.floor((x-r)/PC),i1=Math.floor((x+r)/PC),j0=Math.floor((z-r)/PC),j1=Math.floor((z+r)/PC);for(let a=i0;a<=i1;a++)for(let b=j0;b<=j1;b++){const l=pg.get(pk(a+200,b+200));if(l)for(const q of l)if(obbOverlap(pr,q,2.2))return false;}
+    if(x-x1>12&&x2-x>12&&roadGap(x,z)<6.5)return false;}return true;};
+  for(let j=0;j<ZL.length-1;j++){const h=ZL[j+1]-ZL[j];if(h<minH)continue;const zm=(ZL[j]+ZL[j+1])/2;
+   for(let i=0;i<XL.length-1;i++){const x1=XL[i],x2=XL[i+1];if(x2-x1<minW)continue;if(roadDist(x1,zm)>.6||roadDist(x2,zm)>.6)continue;if(!okSeg(x1,zm,x2,zm))continue;
+    const pts=[];for(let x=x1;x<x2;x+=2.5)pts.push({x,z:zm});pts.push({x:x2,z:zm});
+    const lane={lane:true,through:true,cls:1,hw:2.1,pts,len:x2-x1,pad:6.6},ai=allEdges.length;allEdges.push(lane);gridAdd(lane,ai);const l0=lots.length,p0=placed.length;frontEdge(lane,2.1+1.6,1,true);
+    if(lots.length-l0>=3){laneEdges.push(lane);made++;}else{while(lots.length>l0)lots.pop();for(let q=placed.length-1;q>=p0;q--)unputObb(placed[q]);allEdges.pop();gridDel(ai);}}}
+  return made;};
  const addLanes=(maxN=60,minLots=4)=>{const cand=[];edges.forEach((e,ei)=>{if(e.bridge||e.len<16)return;for(let u=7;u<e.len-7;u+=3)for(const s of [-1,1]){const c=at(e,u);cand.push({x:c.x,z:c.z,nx:-c.tz*s,nz:c.tx*s,ei});}});let made=0;
   const okPt=(x,z,hostAI,t,hwE)=>{if(x<DOM.x1+4||x>DOM.x2-4||z<DOM.z1+4||z>51)return false;if(HARDO.some(r=>inRect(x,z,r,2.5)))return false;if(riverDist(x,z)<RIVER_HW+4||lakeIn(x,z,5))return false;if(t>hwE+5&&roadGap(x,z,hostAI)<(opts.laneGap||8.6))return false;
    const pr={x,z,w:1.5,d:1.5,rot:0},r=3.4,i0=Math.floor((x-r)/PC),i1=Math.floor((x+r)/PC),j0=Math.floor((z-r)/PC),j1=Math.floor((z+r)/PC);for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){const l=pg.get(pk(i+200,j+200));if(l)for(const q of l)if(obbOverlap(pr,q,2.2))return false;}return true;};
@@ -205,5 +246,5 @@ export function buildLayout(opts={}){
    if(lots.length-l0>=minLots){laneEdges.push(lane);made++;}else{while(lots.length>l0)lots.pop();for(let i=placed.length-1;i>=p0;i--)unputObb(placed[i]);allEdges.pop();gridDel(ai);}}
   return made;};
  const infill=(step=3.9,skip=.15,dmin=6.6,dmax=30)=>{for(let x=DOM.x1+3;x<DOM.x2;x+=step)for(let z=DOM.z1+3;z<54;z+=step){if(lots.length>=MAXL)return;const px=x+R()*3-1.5,pz=z+R()*3-1.5;if(R()<skip)continue;const r=nearest(px,pz,-1,3);if(r.d<dmin||r.d>dmax)continue;const f=unit(r.x-px,r.z-pz),D=dims();tryLot(px,pz,rotToward(f[0],f[1]),D,(-f[0]-f[1])>.15);}};
- return {roadGap,HARDO,addLanes,lanes:laneEdges,frontEdge,infill,R,nodes,edges,farm,allEdges,rbs,rpts,riverDist,lakeIn,crossRiver,bridges,roadDist,nearest,roadClear,free,putObb,placed,art,named,placeNamed,lots,dims,tryLot,frontage,at,rotToward,deg:n=>ADJ[n].length,ADJ,HARD,onB,MAXL,unit};
+ return {addGridLanes,roadGap,HARDO,addLanes,lanes:laneEdges,frontEdge,infill,R,nodes,edges,farm,allEdges,rbs,rpts,riverDist,lakeIn,crossRiver,bridges,roadDist,nearest,roadClear,free,putObb,placed,art,named,placeNamed,lots,dims,tryLot,frontage,at,rotToward,deg:n=>ADJ[n].length,ADJ,HARD,onB,MAXL,unit};
 }

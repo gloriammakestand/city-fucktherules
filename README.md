@@ -110,3 +110,9 @@ Note: citizen needs are local-browser gameplay state in this prototype. Online e
 - Aturan akses: semua rumah/bangunan kini menghadap jalan atau lorong. Baris rumah kedua dan isian acak yang jauh dari jalan dihapus (dulu sekitar 45% pintu rumah lebih dari 9 unit dari jalan, sekarang 0).
 - Jenis bangunan mengikuti kelas jalan: jalan utama lebih banyak toko/apartemen/kantor, jalan komplek lebih banyak rumah.
 - Lebar aspal, trotoar, lampu, zebra cross, simpang, dan pohon pinggir jalan mengikuti kelas jalan. Perlintasan rel mengikuti lebar jalan.
+
+## V29
+- Tata kota diganti jadi grid kotak-kotak (jaringan jalan eksplisit): jalan utama, jalan, dan lorong komplek di dalam blok. Jembatan pendek di tempat jalan memotong sungai.
+- Jalan desa: tiap desa/kabupaten punya dua jalan lurus bercabang dari pusat desa, dan rumah desa dibangun menghadap jalan itu.
+- Hunian (city-housing.js): rumah, apartemen, dan rumah desa bisa ditekan. Kartu menampilkan nama, alamat, dan status: KOSONG (dijual, ada harga), DIHUNI n/kapasitas, atau MILIKMU. Rumah kecil kapasitas 4 orang.
+- Beli rumah kosong lewat kartu rumah atau lewat app Housing di HP (daftar rumah dijual + RUMAHKU). Rumah milik pemain bisa dipakai istirahat (Energy +20, Mood +8). Kepemilikan tersimpan di localStorage.

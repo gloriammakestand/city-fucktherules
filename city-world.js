@@ -223,10 +223,10 @@ export function createWorld(C){
  }
 
  /* ---------- KABUPATEN di sudut pulau + hutan + jalan tanah berkelok (v19) ---------- */
- function trail(pts,wd,col,onlyPts){
+ function trail(pts,wd,col,onlyPts,straight){
   const P=[],n=pts.length;
   for(let i=0;i<n-1;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),m=Math.max(2,Math.round(L/4)),nx=-(b[1]-a[1])/L,nz=(b[0]-a[0])/L;
-   for(let k=0;k<m;k++){const t=k/m,w=Math.sin((i*3+t*3.1)*1.7)*3.2*(k?1:0);P.push([a[0]+(b[0]-a[0])*t+nx*w,a[1]+(b[1]-a[1])*t+nz*w]);}}
+   for(let k=0;k<m;k++){const t=k/m,w=straight?0:Math.sin((i*3+t*3.1)*1.7)*3.2*(k?1:0);P.push([a[0]+(b[0]-a[0])*t+nx*w,a[1]+(b[1]-a[1])*t+nz*w]);}}
   P.push(pts[n-1]);
   if(onlyPts)return P;
   const pos=[],nor=[],uv=[],idx=[];
@@ -257,7 +257,7 @@ export function createWorld(C){
  [[152,-168,16,9],[-62,-206,13,7.5],[196,-92,12,7]].forEach(p=>reserved.push([p[0]-p[2]-6,p[0]+p[2]+6,p[1]-p[3]-6,p[1]+p[3]+6]));
  const FIELDS=[],inFarm=(x,z)=>x>-76&&x<74&&z>-198&&z<-64;
  const resvAt=(x,z,m=0)=>reserved.some(r=>x>r[0]-m&&x<r[1]+m&&z>r[2]-m&&z<r[3]+m);
- const TR=[],ANIM_AN=[];
+ const TR=[],ANIM_AN=[],VH=[];
  function hamTp(h){const to=h.to.map(p=>p.slice());if(h.s!==3&&!h.nb){const b=C.boundary&&C.boundary(to[to.length-1][0],to[to.length-1][1]);if(b)to[to.length-1]=b;}return [[h.x,h.z]].concat(to);}
 
  function civic(h,i,placed,r){
@@ -280,21 +280,29 @@ export function createWorld(C){
   cy(G(),.12,.14,3.2,'#6e4d2e',h.x,1.6,h.z,6);C.sign(G(),h.n,h.x,3.5,h.z+.2,5.4,.9,'#12304f','#d7ff3f');
   C.solids.push({x:h.x,z:h.z,w:1,d:1});
   if(h.v)civic(h,HAM.indexOf(h),placed,r);
-  for(let t=0;t<420&&placed.length<(h.cnt||11)+(h.v?2:0);t++){
-   const a=r()*Math.PI*2,d=7+Math.sqrt(r())*(h.rad||17),x=h.x+Math.cos(a)*d,z=h.z+Math.sin(a)*d,w=2.4+r()*1.5,dd=2.4+r()*1.2;
-   if(!inPoly(SANDIN,x,z))continue;if(C.layout.riverDist(x,z)<8||C.layout.lakeIn(x,z,6))continue;if(placed.some(q=>Math.hypot(q[0]-x,q[1]-z)<(h.v?5:5.4))||resvAt(x,z,2)||inFarm(x,z)||TR.some(q=>Math.hypot(q[0]-x,q[1]-z)<4.6))continue;
-   if(z>SAND_Z-8&&z>shoreZ(x)-9)continue;
-   if(h.z>0&&Math.abs(z-30)<8&&x<70)continue;
-   placed.push([x,z]);
-   const g=new T.Group();g.position.set(x,0,z);g.rotation.y=(r()-.5)*1.4+(r()<.5?0:Math.PI/2);G().add(g);
-   const hh=(h.v?1.7:1.5)+r()*.8;bx(g,w,hh,dd,mat('hw'+(placed.length%8),W[(placed.length+h.s)%8]),0,hh/2+.1,0);
-   C.gable(g,w,dd,.9+r()*.5,RC[(placed.length+h.s)%5],hh+.1);
-   bx(g,.7,1.1,.06,'#5a3b2a',0,.65,dd/2+.02);
-   C.solids.push({x,z,w:Math.max(w,dd)+.8,d:Math.max(w,dd)+.8});
-   if(r()<.5){const pc=new T.Mesh(new T.IcosahedronGeometry(.8,0),mat('hw-bush','#4fb84a'));pc.position.set(x+w/2+.7,.6,z+dd/2);put(pc);}
-  }
+   /* jalan desa (v29): dua jalan lurus bercabang dari pusat desa (55 derajat dari jalur ke kota); rumah menghadap jalan */
+   const t0=h.to[0],tdx=t0[0]-h.x,tdz=t0[1]-h.z,tl=Math.hypot(tdx,tdz)||1,tux=tdx/tl,tuz=tdz/tl,RR=Math.min(h.rad||17,19),streetPts=[],cand=[];
+   [.96,-.96].forEach(ang=>{const c=Math.cos(ang),sn=Math.sin(ang),ux=tux*c-tuz*sn,uz=tux*sn+tuz*c;
+    const S=[[h.x+ux*5,h.z+uz*5],[h.x+ux*RR*1.05,h.z+uz*RR*1.05]];streetPts.push(...trail(S,1.15,'#cdbb8c',false,true));
+    for(let d=9;d<RR*1.05;d+=5.4+r()*1.1)[1,-1].forEach(sd=>{const nx=-uz*sd,nz=ux*sd;cand.push({x:h.x+ux*d+nx*3.1,z:h.z+uz*d+nz*3.1,face:Math.atan2(-nx,-nz),d});});});
+   cand.sort((p,q)=>p.d-q.d);
+   const own=new Set(h._P||[]);
+   for(const c of cand){if(placed.length>=(h.cnt||11)+(h.v?2:0))break;const x=c.x,z=c.z,w=2.4+r()*1.5,dd=2.4+r()*1.2;
+    if(!inPoly(SANDIN,x,z))continue;if(C.layout.riverDist(x,z)<8||C.layout.lakeIn(x,z,6))continue;if(placed.some(q=>Math.hypot(q[0]-x,q[1]-z)<(h.v?4.8:5))||resvAt(x,z,2)||inFarm(x,z)||TR.some(q=>!own.has(q)&&Math.hypot(q[0]-x,q[1]-z)<4.6)||(h._P||[]).some(q=>Math.hypot(q[0]-x,q[1]-z)<3.8))continue;
+    if(z>SAND_Z-8&&z>shoreZ(x)-9)continue;
+    if(h.z>0&&Math.abs(z-30)<8&&x<70)continue;
+    placed.push([x,z]);
+    const g=new T.Group();g.position.set(x,0,z);g.rotation.y=c.face;G().add(g);
+    const hh=(h.v?1.7:1.5)+r()*.8;bx(g,w,hh,dd,mat('hw'+(placed.length%8),W[(placed.length+h.s)%8]),0,hh/2+.1,0);
+    C.gable(g,w,dd,.9+r()*.5,RC[(placed.length+h.s)%5],hh+.1);
+    bx(g,.7,1.1,.06,'#5a3b2a',0,.65,dd/2+.02);
+    C.solids.push({x,z,w:Math.max(w,dd)+.8,d:Math.max(w,dd)+.8});
+    VH.push({x,z,w:Math.max(w,dd)+1,d:Math.max(w,dd)+1,rot:c.face,area:h.n,hh});
+    if(r()<.5){const pc=new T.Mesh(new T.IcosahedronGeometry(.8,0),mat('hw-bush','#4fb84a'));pc.position.set(x+w/2+.7,.6,z+dd/2);put(pc);}
+   }
+   TR.push(...streetPts);
   if(h.v)fields(h,r,placed);
-  return trail(h._tp,1.5,'#d9c79a');
+  return trail(h._tp,1.5,'#d9c79a').concat(streetPts);
  }
 
  function fields(h,r,placed){const cols=['#8fbf4a','#c9b84e','#6fae4a','#a67c52','#b6cf5a'];let k=0;
@@ -566,5 +574,5 @@ export function createWorld(C){
   anim.ferries.forEach(f=>{f.g.position.x+=f.dir*f.sp*dt;if(f.g.position.x>235)f.g.position.x=-90;if(f.g.position.x<-90)f.g.position.x=235;f.g.position.y=.08+Math.sin(t*1.3+f.z)*.04;});
  }
  const roadEnd=COAST_Z-.4;
- return {COAST_Z,SAND_Z,shoreZ,coastLimit,inLand,makeGround,reserved,roadEnd,grassMat,river,buildCoast,buildParks,buildRail,buildStadium,tower,styleFor,mergeStatic,update,waterMat,railState};
+ return {COAST_Z,SAND_Z,shoreZ,coastLimit,inLand,makeGround,reserved,roadEnd,grassMat,river,buildCoast,buildParks,buildRail,buildStadium,tower,styleFor,mergeStatic,update,waterMat,railState,villageHouses:VH};
 }
