@@ -1,9 +1,9 @@
-import {createJobs} from './city-jobs.js?v=29';
-import {createFarm} from './city-farm.js?v=29';
-import {warp as WARPF,warpRot as WARPR} from './city-warp.js?v=29';
-import {createWorld} from './city-world.js?v=29';
-import {createHousing} from './city-housing.js?v=29';
-import {buildLayout,RIVER_HW,LAKE,SITES,RAIL} from './city-layout.js?v=29';
+import {createJobs} from './city-jobs.js?v=30';
+import {createFarm} from './city-farm.js?v=30';
+import {warp as WARPF,warpRot as WARPR} from './city-warp.js?v=30';
+import {createWorld} from './city-world.js?v=30';
+import {createHousing} from './city-housing.js?v=30';
+import {buildLayout,RIVER_HW,LAKE,SITES,RAIL} from './city-layout.js?v=30';
 const $ = s => document.querySelector(s);
 const canvas = $('#world');
 const moneyEl = $('#moneyVal');
@@ -163,7 +163,8 @@ function roads(){
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(pos),3));g.setAttribute('normal',new THREE.BufferAttribute(new Float32Array(nor),3));g.setIndex(idx);
   const m=new THREE.Mesh(g,new THREE.MeshStandardMaterial({color:col,roughness:1,side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));m.receiveShadow=true;m.userData.noMerge=true;m.userData.warped=true;cityGroup.add(m);};
  const disc=(x,z,r,y,col)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,.06,22),material('disc'+col,col,1,{polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));m.position.set(x,y,z);m.receiveShadow=true;m.userData.noMerge=true;m.userData.warped=true;cityGroup.add(m);};
- const jnodes=LAYC.nodes.map((n,i)=>({x:n.x,z:n.z,d:LAYC.deg(i)})).filter(n=>n.d>=3||n.d===1);
+ const sq=(x,z,h,y,col)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(h*2,.06,h*2),material('disc'+col,col,1,{polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1}));m.position.set(x,y,z);m.receiveShadow=true;m.userData.noMerge=true;m.userData.warped=true;cityGroup.add(m);};
+  const jnodes=LAYC.nodes.map((n,i)=>({x:n.x,z:n.z,d:LAYC.deg(i)})).filter(n=>n.d>=3||n.d===1);
  const ringAt=(x,z)=>RBS.some(b=>Math.hypot(x-b.x,z-b.z)<b.r+4.6);
  LAYC.allEdges.forEach((e,ei)=>{const p=e.pts;if(p.length<2)return;const hw=e.hw||HW,so=hw+.4;
   ribbon(p,0,hw,.06,asph);
@@ -178,7 +179,7 @@ function roads(){
     if(!jnodes.some(n=>Math.hypot(x-n.x,z-n.z)<6)&&!ringAt(x,z)&&LAYC.roadDist(x,z,ei)>hw+1.6)lamps.push([x,0,z]);}}
  });
  /* simpang: cakram aspal + trotoar melingkar kecil, zebra di tiap lengan */
- LAYC.nodes.forEach((n,i)=>{const d=LAYC.deg(i);if(RBS.some(b=>b.node===i))return;const jh=LAYC.ADJ[i].reduce((m,ei)=>Math.max(m,LAYC.edges[ei].hw||HW),HW);if(d>=3){disc(n.x,n.z,jh+1.1,.062,asph);}else if(d===1&&n.z<DOM_MAXZ){disc(n.x,n.z,jh+.5,.062,asph);}});
+ LAYC.nodes.forEach((n,i)=>{const d=LAYC.deg(i);if(RBS.some(b=>b.node===i))return;const jh=LAYC.ADJ[i].reduce((m,ei)=>Math.max(m,LAYC.edges[ei].hw||HW),HW);if(d===1&&n.z<DOM_MAXZ){sq(n.x,n.z,jh*.9,.062,asph);}else if(d===2){const ds=LAYC.ADJ[i].map(q=>{const e=LAYC.edges[q],o=e.a===i?e.pts[1]:e.pts[e.pts.length-2],L=Math.hypot(o.x-n.x,o.z-n.z)||1;return [(o.x-n.x)/L,(o.z-n.z)/L];});if(Math.abs(ds[0][0]*ds[1][0]+ds[0][1]*ds[1][1])<.95)sq(n.x,n.z,jh,.062,asph);}});
  LAYC.edges.forEach((e,ei)=>{[[e.a,0,1],[e.b,e.pts.length-1,-1]].forEach(([n,pi,dir])=>{if(LAYC.deg(n)<3||RBS.some(b=>b.node===n)||e.len<14)return;const k=pi+dir*Math.round(5.8/2.5),a=e.pts[Math.max(0,Math.min(e.pts.length-1,k))],b=e.pts[Math.max(0,Math.min(e.pts.length-1,k+dir))],L=Math.hypot(b.x-a.x,b.z-a.z)||1,tx=(b.x-a.x)/L,tz=(b.z-a.z)/L,ry=Math.atan2(tx,tz);
    const kz=Math.max(3,Math.round(e.hw||HW));for(let j=-kz;j<=kz;j++)zb.push([a.x-tz*j*.8,.077,a.z+tx*j*.8,.5,.02,1.2,ry]);});});
  (LAYC.lanes||[]).forEach(l=>{const q=l.pts[l.pts.length-1];disc(q.x,q.z,l.hw+1.3,.062,asph);});
@@ -681,7 +682,7 @@ if(action.startsWith('house-rent:')){const r=RENT[action.slice(11)];if(!r)return
   if(action.startsWith('health:')){const key=action.split(':')[1],items={check:{name:'Hospital check-up',cost:180,health:45,energy:15},kit:{name:'First-aid kit',cost:90,health:20},rest:{name:'Rest at home',cost:0,energy:25},emergency:{name:'Emergency treatment',cost:350,health:100},ward:{name:'Ward bed rest',cost:60,health:25,energy:40}};const item=items[key];if(!item)return;if(money<item.cost){toast('Saldo virtual tidak cukup');return;}setMoney(money-item.cost);if(item.health===100)needs.health=100;else if(item.health)recoverNeed('health',item.health);if(item.energy)recoverNeed('energy',item.energy);saveNeeds();updateNeedsUI();showNotice('✚','HEALTH SERVICE',`${item.name} selesai. Health ${Math.round(needs.health)}/100 · Energy ${Math.round(needs.energy)}/100.`);renderPhone('health');return;}
   if(action.startsWith('ticket:')){const key=action.split(':')[1];if(key in DEST||key.startsWith('stadium')){closePhone();rideTo(key,100);return;}if(key==='away'){closePhone();rideTo('east',60);return;}if(key==='match'){if(money<80){toast('Saldo virtual tidak cukup');return;}setMoney(money-80);tickets++;localStorage.setItem('fttr.city.tickets',tickets);recoverNeed('mood',8);showNotice('🎟','TIKET PERTANDINGAN','Tiket Central Ground ditambahkan. Total tiketmu: '+tickets);return;}return;}
   if(action==='book-ride'){const sel=$('#rideDestination');const p=places.find(q=>q.id===sel?.value);if(money<100){toast('Saldo virtual tidak cukup');return;}setMoney(money-100);closePhone();if(p){destination=new THREE.Vector3(p.fx,0,p.fz);openPlace(p);}toast('Ride booked · tarif demo ₡100');return;}
-  if(action.startsWith('mission:')){JOBSYS?.start(action.split(':')[1]);return;}if(action==='mission-cancel'){JOBSYS?.cancel();return;}
+  if(action.startsWith('job-apply:')){JOBSYS?.apply(action.split(':')[1]);return;}if(action.startsWith('job-resign:')){JOBSYS?.resign(action.split(':')[1]);return;}if(action.startsWith('mission:')){JOBSYS?.start(action.split(':')[1]);return;}if(action==='mission-cancel'){JOBSYS?.cancel();return;}
   if(action==='enter-store'){closePhone();if(isInside){toast('Kamu sudah berada di dalam store');return;}const p=places.find(q=>q.id==='fttr');destination=new THREE.Vector3(p.x,0,p.z+2.5);openPlace(p);return;}
   if(action==='open-shop'){openShop();return;}if(action==='stadium'){closePhone();const p=places.find(q=>q.id==='stadium');destination=new THREE.Vector3(p.x,0,p.z+4);openPlace(p);return;}
 }

@@ -116,3 +116,12 @@ Note: citizen needs are local-browser gameplay state in this prototype. Online e
 - Jalan desa: tiap desa/kabupaten punya dua jalan lurus bercabang dari pusat desa, dan rumah desa dibangun menghadap jalan itu.
 - Hunian (city-housing.js): rumah, apartemen, dan rumah desa bisa ditekan. Kartu menampilkan nama, alamat, dan status: KOSONG (dijual, ada harga), DIHUNI n/kapasitas, atau MILIKMU. Rumah kecil kapasitas 4 orang.
 - Beli rumah kosong lewat kartu rumah atau lewat app Housing di HP (daftar rumah dijual + RUMAHKU). Rumah milik pemain bisa dipakai istirahat (Energy +20, Mood +8). Kepemilikan tersimpan di localStorage.
+
+## V30
+- Simpang jalan: cakram bulat diganti petak persegi (hanya di belokan dan ujung buntu); simpang T dan perempatan tidak lagi memakai bulatan.
+- Sistem pekerjaan 2.0 (city-jobs.js):
+  - Profesi khusus (Polisi Patroli, Polisi Kantor, Keamanan Stadion, Paramedis, Perawat) perlu LAMAR sekali, bisa MUNDUR kapan saja. Saat online, karyawan menerima PANGGILAN TUGAS acak (cek berkas, maling, keributan tribun, pasien darurat, UGD) dengan tombol TERIMA/ABAIKAN.
+  - Polisi: patroli kini bisa menemukan maling (kejar dan borgol, lalu serahkan ke kantor). Panggilan maling juga memakai kejar tersangka.
+  - Pekerjaan baru: Montir Bengkel (tugas acak di bengkel: pasang roda, ganti oli, servis rem), Polisi Kantor (berkas), Fotografer Studio, Petani Padi (tanam padi).
+  - Pekerja Konstruksi kini bekerja di lokasi proyek (scaffold, angkut bata, dinding naik); Fotografer Matchday memotret dari dalam lapangan stadion; Montir Keliling punya tugas acak (roda/oli/rem).
+  - Animasi kerja di lokasi: tanam padi, roda/oli/rem, dinding bata, flash kamera dengan pemain, tumpukan berkas.
