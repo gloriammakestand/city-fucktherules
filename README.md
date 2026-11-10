@@ -125,3 +125,9 @@ Note: citizen needs are local-browser gameplay state in this prototype. Online e
   - Pekerjaan baru: Montir Bengkel (tugas acak di bengkel: pasang roda, ganti oli, servis rem), Polisi Kantor (berkas), Fotografer Studio, Petani Padi (tanam padi).
   - Pekerja Konstruksi kini bekerja di lokasi proyek (scaffold, angkut bata, dinding naik); Fotografer Matchday memotret dari dalam lapangan stadion; Montir Keliling punya tugas acak (roda/oli/rem).
   - Animasi kerja di lokasi: tanam padi, roda/oli/rem, dinding bata, flash kamera dengan pemain, tumpukan berkas.
+
+## V31
+- Semua bangunan bisa ditekan dan dimasuki: rumah, apartemen, rumah desa, toko, kantor di kota, serta semua tempat bernama (kantor kerja, polisi, bengkel, studio, lumbung, kandang, pasar tani, stadion, dst). Total 245 tempat; interior memakai 16 ruangan tematik baru (rumah, apartemen, rumah desa, toko, kantor, polisi, garage, works, press, job centre, kantor layanan, studio, lumbung, peternakan sapi, kandang domba, pasar tani, loket stadion).
+- Semua rumah, rumah desa, dan unit apartemen bisa dibeli. Kosong = harga normal, berpenghuni = harga +30% (penghuni lama pindah), apartemen = harga per unit. Kartu rumah punya tombol MASUK dan BELI; rumah juga bisa dibeli dari papan INFO RUMAH di dalam rumah atau dari app Housing.
+- Di dalam rumah milikmu: tempat tidur (istirahat), kulkas (makan), TV. Di rumah orang lain: lihat-lihat saja.
+- Interior kantor kerja punya meja layanan yang membuka misi pekerjaan; toko punya rak (beli air/sandwich) dan kasir; kantor punya meja kerja (lembur +₡40); stadion punya loket tiket.
