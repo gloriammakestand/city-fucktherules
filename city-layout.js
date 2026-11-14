@@ -212,7 +212,7 @@ export function buildLayout(opts={}){
  /* ===== bangunan bernama (menghadap jalan terdekat) ===== */
  const named={};
  const placeNamed=list=>list.forEach(it=>{let best=null;const base=it.base||4.6;
-  edges.forEach(e=>{if(e.bridge)return;const step=1.5;for(let u=4;u<e.len-4;u+=step)for(const s of [-1,1]){const c=at(e,u),nx=-c.tz*s,nz=c.tx*s,x=c.x+nx*(base+it.d/2),z=c.z+nz*(base+it.d/2),sc=hyp(x-it.tx,z-it.tz);if(best&&sc>=best.sc)continue;const o={x,z,w:it.w,d:it.d,rot:rotToward(-nx,-nz)};if(!free(o,.6,.4))continue;best={sc,o};}});
+  edges.forEach(e=>{if(e.bridge)return;const step=1.5;for(let u=4;u<e.len-4;u+=step)for(const s of [-1,1]){const c=at(e,u),nx=-c.tz*s,nz=c.tx*s;if(it.cam&&nx+nz>-.5)continue;const x=c.x+nx*(base+it.d/2),z=c.z+nz*(base+it.d/2),sc=hyp(x-it.tx,z-it.tz);if(best&&sc>=best.sc)continue;const o={x,z,w:it.w,d:it.d,rot:rotToward(-nx,-nz)};if(!free(o,.6,.4))continue;best={sc,o};}});
   if(best){putObb(best.o);named[it.id]={x:best.o.x,z:best.o.z,rot:best.o.rot};}});
  const lots=[];
  const dims=(cls=2,px=0,pz=0)=>{const k=R();let kind;const dt=opts.dt;if(dt&&cls>=2&&hyp(px-dt.x,pz-dt.z)<dt.r){const q=v=>Math.round(v*2)/2;kind=k<.45?'office':k<.75?'apt':'shop';return {k,cls,kind,w:q(kind==='shop'?5+R()*2:5.5+R()*3),d:q(kind==='shop'?4.2+R()*1.4:5+R()*2.2)};}if(cls>=3)kind=k<.15?'house':k<.5?'shop':k<.75?'apt':'office';else if(cls===2)kind=k<.52?'house':k<.76?'shop':k<.92?'apt':'office';else kind=k<.82?'house':k<.95?'apt':'shop';const q=v=>Math.round(v*2)/2;return {k,cls,kind,w:q(kind==='house'?4.6+R():4.5+R()*2.5),d:q(kind==='house'?3.8+R()*.8:4+R()*1.4)};};

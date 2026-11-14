@@ -1,0 +1,125 @@
+/* fttr-shop.css (v32): gaya panel toko (katalog, produk, tas, checkout) dari Game Store, dibatasi di dalam #panel agar tidak mengubah tampilan kota */
+#panel{--ink:#111;--ink2:#3b3a37;--cream:#fffdf3;--sky:#c3effd;--mint:#45e08f;--sun:#ffca1f;--lav:#b5c4ff;--pop:#ff5f1f;--muted:#7a766f;--line:rgba(14,17,22,.16);--soft:rgba(14,17,22,.05);--red:#b3261e;--fg:var(--ink);--bg:var(--cream);--ac:var(--ink);--g1:#fff;--g2:var(--line);--g3:var(--muted);--ui:'Inter','Inter Fallback',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;--fun:'Gaegu','Patrick Hand','Comic Sans MS','Segoe Print',cursive}
+#panel,#panel *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+#panel{font-family:var(--ui);font-size:14px;line-height:1.5;color:var(--ink)}
+#panel.screen{position:fixed;inset:0;z-index:9500}
+#panel[hidden],#panel [hidden]{display:none!important}
+#panel button,#panel .btn{font-family:var(--ui);font-size:14px;font-weight:600;letter-spacing:0;text-transform:lowercase;color:var(--ink);background:#fff;border:1.5px solid var(--ink);border-radius:999px;padding:12px 22px;min-height:46px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;touch-action:manipulation;transition:transform .12s,box-shadow .12s,background .15s}
+#panel button:hover,#panel .btn:hover{background:var(--soft)}
+#panel button:active,#panel .btn:active{transform:translateY(1px)}
+#panel button:disabled{opacity:.4;cursor:not-allowed}
+#panel .pri,#panel .accent{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+#panel .pri:hover,#panel .accent:hover{background:var(--ink);opacity:.86}
+#panel .link{background:none;border:0;text-decoration:underline;text-underline-offset:4px;color:var(--muted);min-height:36px;padding:4px 8px}
+#panel{background:rgba(17,17,17,.55);touch-action:auto}
+#panel .sheet{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,100%);height:min(740px,100%);background:var(--cream);color:var(--ink);border:0;border-radius:24px;box-shadow:0 24px 60px rgba(14,17,22,.3);display:flex;flex-direction:column;overflow:hidden}
+@media (max-width:600px){#panel .sheet{top:auto;bottom:0;transform:translateX(-50%);height:92%;border-radius:24px 24px 0 0}}
+#panel .sheet-bar{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1.5px solid var(--line);background:var(--cream)}
+#panel .sb-logo{width:30px;height:30px;object-fit:contain;flex:none}
+#panel .sheet-bar span{flex:1;text-align:left;font-family:var(--fun);font-weight:700;font-size:26px;line-height:1;text-transform:lowercase;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#panel .x{padding:6px 14px;min-width:44px;min-height:40px;font-size:13px}
+#panel .sheet-body{flex:1;overflow:auto;padding:16px;-webkit-overflow-scrolling:touch;touch-action:pan-y;background:var(--sky)}
+#panel .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+#panel .card{background:var(--cream);border:1.5px solid var(--line);border-radius:22px;padding:0;text-align:left;display:block;overflow:hidden;position:relative;color:var(--ink);text-transform:none;min-height:0;transition:transform .15s,border-color .15s}
+#panel .card:hover{background:var(--cream);transform:translateY(-2px);border-color:var(--ink)}
+#panel .card img{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:#fff}
+#panel .card .t{padding:10px 12px 2px;font-family:var(--fun);font-size:21px;font-weight:700;line-height:1.1;text-transform:lowercase}
+#panel .card .p{padding:0 12px 12px;font-size:14px;font-weight:600;color:var(--ink)}
+#panel .badge{position:absolute;top:8px;left:8px;background:var(--sun);color:var(--ink);border:1.5px solid var(--ink);border-radius:999px;font-size:10px;padding:2px 10px;font-weight:700;letter-spacing:.06em;text-transform:lowercase}
+#panel .card.sold{opacity:.55}
+#panel .slot{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px}
+#panel .slot img{height:300px;border:0;border-radius:20px;flex:none;background:#fff}
+#panel h2,#panel h3{margin:0 0 8px;font-family:var(--fun);font-weight:700;text-transform:lowercase;letter-spacing:0;line-height:1.05}
+#panel h2{font-size:clamp(30px,8vw,38px)}
+#panel h3{font-size:24px}
+#panel .price{color:var(--ink);font-size:19px;font-weight:600;margin:2px 0 10px}
+#panel .lbl{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);margin:22px 0 8px}
+#panel .chips{display:flex;flex-wrap:wrap;gap:10px}
+#panel .chip{padding:10px 14px;min-height:44px;min-width:52px;background:#fff;border:1.5px solid var(--line);border-radius:12px;font-size:14px;font-weight:600;text-transform:none}
+#panel .chip:hover{border-color:var(--ink);background:#fff}
+#panel .chip.on{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+#panel .chip:disabled{text-decoration:line-through;opacity:.4}
+#panel .specs{font-size:13.5px;line-height:1.6;color:var(--ink2);margin-top:14px;background:rgba(255,255,255,.7);border-radius:18px;padding:14px 16px}
+#panel .qty{display:flex;align-items:center;gap:12px}
+#panel .qty b{min-width:28px;text-align:center;font-size:19px}
+#panel .qty button{min-width:46px;padding:0}
+#panel .row{display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:14px}
+#panel .row.tot{border-top:2px dashed var(--line);margin-top:8px;padding-top:12px;font-size:18px;font-weight:700}
+#panel .line{display:flex;gap:12px;align-items:center;padding:12px;margin-bottom:8px;background:#fff;border-radius:16px}
+#panel .line img{width:64px;height:64px;object-fit:cover;border-radius:12px;background:#fff}
+#panel .line .m{flex:1;font-size:13px;font-weight:600}
+#panel .line small{color:var(--muted);display:block;font-weight:500}
+#panel .msg{padding:16px;border:1.5px dashed var(--line);text-align:center;font-size:13px;color:var(--ink2);border-radius:16px;background:rgba(255,255,255,.6)}
+#panel .msg.err{border-color:var(--red);color:var(--red)}
+#panel .foot{position:sticky;bottom:-16px;background:var(--cream);padding:14px 16px 6px;margin:14px -16px -16px;border-top:1.5px solid var(--line);display:grid;gap:8px;box-shadow:0 -10px 24px rgba(14,17,22,.08)}
+#panel .foot .pri,#panel .foot .accent,#panel .foot .btn{min-height:52px;font-size:16px}
+#panel input,#panel select,#panel textarea{width:100%;font-family:var(--ui);font-size:16px;color:var(--ink);background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:13px 14px;min-height:48px;margin-bottom:8px}
+#panel input:focus,#panel select:focus,#panel textarea:focus{outline:none;border-color:var(--ink)}
+#panel label.f{font-size:13px;font-weight:600;color:var(--ink);display:block;margin:8px 0 5px;letter-spacing:0}
+#panel .note{font-size:13px;color:var(--ink2);background:#fff;border-radius:14px;border-left:5px solid var(--sun);padding:12px 14px;margin:10px 0;line-height:1.55}
+#panel .err-t{color:var(--red);font-size:12px;min-height:16px;margin:2px 0 6px}
+#panel .qr{background:#fff;padding:10px;border-radius:16px;text-align:center}
+#panel .qr img{max-width:100%;max-height:340px;border-radius:10px}
+#panel .acc{border:1.5px solid var(--line);padding:14px 16px;margin:10px 0;border-radius:16px;background:#fff}
+#panel .acc b{font-size:19px;letter-spacing:.04em;word-break:break-all}
+#panel .tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+#panel .tabs .on{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+#panel .receipt{background:#fff;color:var(--ink);padding:20px;font-size:13px;border-radius:16px;position:relative;line-height:1.55}
+#panel .receipt h3{text-align:center;font-size:28px}
+#panel .receipt .id{font-size:24px;font-weight:700;text-align:center;letter-spacing:.08em;margin:10px 0;word-break:break-all}
+#panel .receipt .row{padding:3px 0;font-size:13px}
+#panel .receipt .row.tot{border-color:var(--ink);font-size:15px}
+@media (prefers-reduced-motion:reduce){#panel *{animation:none!important}}
+#panel .lbl{font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
+#panel .chips.colors{gap:10px}
+#panel .chips.colors .chip{border-radius:999px;padding:10px 22px;font-size:14px;border:1.5px solid transparent;box-shadow:0 1px 0 rgba(14,17,22,.08)}
+#panel .chips.colors .chip.on{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+#panel .chips.sizes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+#panel .chips.sizes .chip{min-width:0;padding:12px 6px;font-size:15px;border-radius:12px;background:transparent;border:1.5px solid var(--line)}
+#panel .chips.sizes .chip.on{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+#panel .chip:disabled{text-decoration:line-through;opacity:1;color:rgba(14,17,22,.35);border-color:var(--soft);cursor:not-allowed}
+#panel .stokinfo{margin-top:12px;font-size:15px;font-weight:700;min-height:1.2em}
+#panel .stokinfo.tipis,#panel .stokinfo.habis{color:var(--red)}
+#panel .addons{display:grid;grid-template-columns:1fr;gap:10px}
+#panel .chip.addon{display:flex;justify-content:space-between;align-items:center;gap:12px;text-align:left;border-radius:12px;padding:12px 14px;background:transparent;border:1.5px solid var(--line)}
+#panel .chip.addon b{font-weight:700;white-space:nowrap;opacity:.75}
+#panel .chip.addon.on b{opacity:1}
+#panel .chip.addon.on{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+#panel .guide{display:inline-block;margin-top:22px;background:none;border:0;border-radius:0;padding:0;min-height:0;text-decoration:underline;font-size:14px;text-transform:none}
+#panel .guide:hover{background:none;opacity:.6}
+#panel .specs{background:rgba(255,255,255,.6);border-radius:18px;padding:16px 18px;margin-top:22px}
+#panel .specs-t{font-size:13.5px;line-height:1.7;color:var(--ink2)}
+#panel .specs-t b,#panel .specs-t strong{font-weight:700;color:var(--ink)}
+#panel .specs-t ul,#panel .specs-t ol{margin:6px 0;padding-left:20px}
+html.snap-open,html.snap-open body{touch-action:auto}
+#panel .pay-loader{position:fixed;inset:0;z-index:9999;background:rgba(17,17,17,.55);display:none;align-items:center;justify-content:center;padding:24px;touch-action:none}
+#panel .pay-loader.show{display:flex}
+#panel .pay-loader-box{background:var(--cream);color:var(--ink);border-radius:24px;box-shadow:0 24px 60px rgba(14,17,22,.35);padding:26px 24px;text-align:center;width:min(320px,100%)}
+#panel .pay-spin{width:34px;height:34px;margin:0 auto 12px;border:3px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:sp .8s linear infinite}
+#panel .pay-loader-t{font-weight:700;font-size:15px}
+#panel .pay-loader-s{margin-top:6px;font-size:12px;color:var(--muted)}
+#panel .pay-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+#panel .pay-opt{flex-direction:column;gap:2px;padding:14px 10px;min-height:68px;border-radius:18px;text-transform:none}
+#panel .pay-opt b{font-size:16px;letter-spacing:.04em}
+#panel .pay-opt small{font-size:12px;font-weight:500;color:var(--muted)}
+#panel .pay-opt.on{background:var(--ink);color:var(--cream)}
+#panel .pay-opt.on small{color:rgba(255,253,243,.75)}
+#panel .pay-single{background:#fff;border-radius:16px;padding:14px 16px;border:1.5px solid var(--line);align-items:center}
+#panel .pay-hint{font-size:12px;color:var(--ink2);margin:0 0 8px;line-height:1.5}
+#panel .pay-hint.err{color:var(--red)}
+#panel .pm{margin:12px 0 0;padding:11px 14px;background:#fff;border-left:5px solid var(--sun);border-radius:14px;font-size:13px;font-weight:600;line-height:1.5}
+#panel .pm.ok{border-left-color:var(--mint)}
+#panel .pm.err{border-left-color:var(--red);color:var(--red)}
+#panel .rbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+#panel .rbtns>*{flex:1 1 140px}
+#panel .rbtns .full{flex-basis:100%}
+#panel .payfill{display:flex;flex-direction:column;min-height:100%}
+#panel .payfill>.foot{margin-top:auto}
+#panel .st-lunas{color:#0a7a43}
+#panel .st-dp{color:#8a5a00}
+#panel .st-ditolak{color:var(--red)}
+#panel .ph-note.ok{border-left-color:var(--mint)}
+#panel .ph-note.err{border-left-color:var(--red);color:var(--red)}
+#panel .ph-detail .ph-note{margin-top:10px}
+#panel .ph-btn2:hover,#panel .ph-go:hover{background:var(--ink)}
+#panel .ph-btn2.ghost:hover{background:transparent}

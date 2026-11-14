@@ -131,3 +131,10 @@ Note: citizen needs are local-browser gameplay state in this prototype. Online e
 - Semua rumah, rumah desa, dan unit apartemen bisa dibeli. Kosong = harga normal, berpenghuni = harga +30% (penghuni lama pindah), apartemen = harga per unit. Kartu rumah punya tombol MASUK dan BELI; rumah juga bisa dibeli dari papan INFO RUMAH di dalam rumah atau dari app Housing.
 - Di dalam rumah milikmu: tempat tidur (istirahat), kulkas (makan), TV. Di rumah orang lain: lihat-lihat saja.
 - Interior kantor kerja punya meja layanan yang membuka misi pekerjaan; toko punya rak (beli air/sandwich) dan kasir; kantor punya meja kerja (lembur +₡40); stadion punya loket tiket.
+
+## V32
+- Perbaikan bug: pemain tidak lagi muncul terjebak di dalam rumah. Titik awal lama (-6,5) ternyata jatuh di dalam bangunan setelah tata kota berubah; sekarang dicari titik aman terdekat (safeSpawn).
+- Toko FUCK THE RULES: interior baru bergaya Game Store dan ruang toko di AI Office (lantai keramik abu, dinding dengan jendela celah, papan logo, rak gantung kaos, meja kasir hitam-putih, rak lipatan kaos, kardus, tulisan TOKO di lantai).
+- Belanja sungguhan: kaos digantung dari katalog toko utama. Ketuk gantungan = detail produk (warna, ukuran, tas), tombol TAS / meja KASIR = keranjang dan checkout (Midtrans), papan KATALOG = daftar produk. Memakai fttr-shop.js dan fttr-pay.js (salinan shop.js dan pay.js Game Store) yang dimuat saat pertama masuk toko.
+- Tampak depan: toko FTTR di kota dipaksa menghadap kamera (pintu ke selatan atau timur) dan diberi papan logo di atap + papan logo tegak di sisi bangunan (memakai logo.png).
+- PENTING: agar belanja dari kota.fucktherules.my.id berjalan, tambahkan https://city.fucktherules.my.id ke daftar origin yang diizinkan (ALLOWED_ORIGINS) pada payment worker toko utama, dan ke Authorized domains Firebase bila memakai login.
