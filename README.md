@@ -138,3 +138,9 @@ Note: citizen needs are local-browser gameplay state in this prototype. Online e
 - Belanja sungguhan: kaos digantung dari katalog toko utama. Ketuk gantungan = detail produk (warna, ukuran, tas), tombol TAS / meja KASIR = keranjang dan checkout (Midtrans), papan KATALOG = daftar produk. Memakai fttr-shop.js dan fttr-pay.js (salinan shop.js dan pay.js Game Store) yang dimuat saat pertama masuk toko.
 - Tampak depan: toko FTTR di kota dipaksa menghadap kamera (pintu ke selatan atau timur) dan diberi papan logo di atap + papan logo tegak di sisi bangunan (memakai logo.png).
 - PENTING: agar belanja dari kota.fucktherules.my.id berjalan, tambahkan https://city.fucktherules.my.id ke daftar origin yang diizinkan (ALLOWED_ORIGINS) pada payment worker toko utama, dan ke Authorized domains Firebase bila memakai login.
+
+## V33
+- Bundaran: mobil dan warga kini berputar mengikuti cincin bundaran searah jarum jam (lajur kiri), tidak lagi memotong lurus lewat pulau tengah.
+- Sawah/ladang desa tidak lagi menumpuk ke jalan dan bundaran kota: petak ladang dilarang masuk wilayah kota dan harus berjarak dari jalan.
+- Jalur kereta tidak lagi berhenti di bukit di tengah kota. Dari koridor kota, rel membelok ke utara di sisi kanan atas, keluar dari kota lewat pedesaan (melewati ST. PADANG), lalu menyeberangi laut ke pulau KOTA LAIN · UTARA. Total jalur Kota Lain Barat ⇄ Desa ⇄ Central City ⇄ ST. Padang ⇄ Kota Lain Utara (sekitar 740 satuan, dua jembatan laut). Kereta berhenti di tiap stasiun lalu berbalik di Kota Lain.
+- Koridor rel utara dikosongkan dari rumah/toko kota, rumah desa, ladang, dan pohon.

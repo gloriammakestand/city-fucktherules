@@ -16,7 +16,7 @@ export function createStore(C){
     R=C.shell('store',{name:'FUCK THE RULES STORE',f1:'#cfccc4',f2:'#c5c2ba',wall:'#d4d4d0',spawn:[0,4.6]});const g=R.g,B=C.box;
     // jendela celah di dinding belakang + papan logo
     [-5.2,-.4,4.6].forEach(x=>B(g,2.4,.3,.06,'#9fc4cf',x,2.05,-5.82,{shadow:false}));
-    const logoImg=new Image();logoImg.src='logo.png?v=32';
+    const logoImg=new Image();logoImg.src='logo.png?v=33';
     const board=cv(768,240,(x,c)=>{const draw=()=>{x.fillStyle='#171914';x.fillRect(0,0,768,240);x.strokeStyle='#d7ff3f';x.lineWidth=8;x.strokeRect(10,10,748,220);x.fillStyle='#d7ff3f';x.font='900 74px Inter,Arial,sans-serif';x.textAlign='left';x.textBaseline='middle';x.fillText('FUCK THE RULES',200,92);x.fillStyle='#f2efdf';x.font='700 34px Inter,Arial,sans-serif';x.fillText('STREETWEAR STORE · FOOTBALL CULTURE',200,172);if(logoImg.complete&&logoImg.naturalWidth){const h=190,w=logoImg.naturalWidth/logoImg.naturalHeight*h;x.drawImage(logoImg,40+(130-w)/2,25,w,h);}};draw();logoImg.onload=()=>{draw();bt.needsUpdate=true;};});
     const bt=board;plane(g,4.2,1.31,board,0,2.15,-5.78);
     // teks TOKO di lantai, seperti ruang toko di AI Office
@@ -73,7 +73,7 @@ export function createStore(C){
   function ensure(){
     if(shop)return Promise.resolve(shop);
     if(loading)return loading;
-    loading=import('./fttr-shop.js?v=32').then(m=>{shop=m;
+    loading=import('./fttr-shop.js?v=33').then(m=>{shop=m;
       m.bindUI({onChange:open=>{if(bag)bag.style.visibility=open?'hidden':'visible';},onCart:n=>{bagN=n;updateBag();},toast:t=>C.toast(t),beep(){}});
       return m.initShop(()=>layout()).then(()=>{layout();return m;});
     }).catch(e=>{console.error('toko gagal dimuat',e);failed=true;C.toast('Katalog toko belum bisa dimuat. Periksa koneksi lalu masuk lagi.');loading=null;return null;});

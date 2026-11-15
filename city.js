@@ -1,10 +1,10 @@
-import {createJobs} from './city-jobs.js?v=32';
-import {createFarm} from './city-farm.js?v=32';
-import {warp as WARPF,warpRot as WARPR} from './city-warp.js?v=32';
-import {createWorld} from './city-world.js?v=32';
-import {createHousing} from './city-housing.js?v=32';
-import {createStore} from './city-store.js?v=32';
-import {buildLayout,RIVER_HW,LAKE,SITES,RAIL} from './city-layout.js?v=32';
+import {createJobs} from './city-jobs.js?v=33';
+import {createFarm} from './city-farm.js?v=33';
+import {warp as WARPF,warpRot as WARPR} from './city-warp.js?v=33';
+import {createWorld} from './city-world.js?v=33';
+import {createHousing} from './city-housing.js?v=33';
+import {createStore} from './city-store.js?v=33';
+import {buildLayout,RIVER_HW,LAKE,SITES,RAIL} from './city-layout.js?v=33';
 const $ = s => document.querySelector(s);
 const canvas = $('#world');
 const moneyEl = $('#moneyVal');
@@ -34,7 +34,7 @@ function textTexture(text, bg='#171914', fg='#d7ff3f', width=512, height=128) {
 function sign(parent,text,x,y,z,w=3.5,h=.7,bg='#171914',fg='#d7ff3f') { const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),textTexture(text,bg,fg));m.position.set(x,y,z);parent.add(m);return m; }
 const EAST_X=206,NORTH_Z=-190;
 /* V21: jaringan jalan organik dari city-layout.js (ruang dunia, tanpa warp). */
-const LAYC=buildLayout({seed:21,rmin:17,rvar:11,del:0,laneGap:7.6,laneMin:9,maxLots:1500,dt:{x:20,z:5,r:50},xl:[-104, -62, -23, 14, 48, 76, 108, 154, 208, 250],zl:[-58, -21, -5.5, 2, 47.5],segs:[[-104,-58,-104,47.5,2],[-62,-58,-62,47.5,2],[-23,-58,-23,47.5,2],[14,-58,14,47.5,2],[48,-58,48,47.5,3],[76,-58,76,47.5,2],[108,-58,108,47.5,2],[154,-58,154,47.5,3],[208,-58,208,47.5,2],[250,-58,250,47.5,2],[-104,-58,250,-58,2],[-104,-21,250,-21,2],[-104,-5.5,84,-5.5,3],[108,2,250,2,2],[-104,47.5,250,47.5,3]]});
+const LAYC=buildLayout({seed:21,rmin:17,rvar:11,del:0,laneGap:7.6,laneMin:9,maxLots:1500,hard:[[85.5,97.5,-66.5,-11]],dt:{x:20,z:5,r:50},xl:[-104, -62, -23, 14, 48, 76, 108, 154, 208, 250],zl:[-58, -21, -5.5, 2, 47.5],segs:[[-104,-58,-104,47.5,2],[-62,-58,-62,47.5,2],[-23,-58,-23,47.5,2],[14,-58,14,47.5,2],[48,-58,48,47.5,3],[76,-58,76,47.5,2],[108,-58,108,47.5,2],[154,-58,154,47.5,3],[208,-58,208,47.5,2],[250,-58,250,47.5,2],[-104,-58,250,-58,2],[-104,-21,250,-21,2],[-104,-5.5,84,-5.5,3],[108,2,250,2,2],[-104,47.5,250,47.5,3]]});
 const dSeg=(px,pz,ax,az,bx,bz)=>{const dx=bx-ax,dz=bz-az,t=Math.max(0,Math.min(1,((px-ax)*dx+(pz-az)*dz)/(dx*dx+dz*dz||1)));return Math.hypot(px-(ax+dx*t),pz-(az+dz*t));};
 const RBS=LAYC.rbs;
 const roadDist=(x,z,skip)=>LAYC.roadDist(x,z,skip);
@@ -68,7 +68,7 @@ function facadeTex(w,h,o){
 function pitchTex(){if(TEXC.has('pitch'))return TEXC.get('pitch');const c=document.createElement('canvas');c.width=320;c.height=200;const x=c.getContext('2d');for(let i=0;i<10;i++){x.fillStyle=i%2?'#3f8a4c':'#4a9a57';x.fillRect(i*32,0,32,200);}x.strokeStyle='#f2efdf';x.lineWidth=3;x.strokeRect(8,8,304,184);x.beginPath();x.moveTo(160,8);x.lineTo(160,192);x.stroke();x.beginPath();x.arc(160,100,28,0,7);x.stroke();x.strokeRect(8,60,44,80);x.strokeRect(268,60,44,80);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;TEXC.set('pitch',t);return t;}
 function gable(g,w,d,rh,color,y){const s=new THREE.Shape();s.moveTo(-d/2-.15,0);s.lineTo(d/2+.15,0);s.lineTo(0,rh);s.closePath();const geo=new THREE.ExtrudeGeometry(s,{depth:w+.3,bevelEnabled:false});geo.rotateY(Math.PI/2);geo.translate(-(w+.3)/2,0,0);const m=new THREE.Mesh(geo,material('roof-'+color,color,.85));m.position.y=y;m.castShadow=true;g.add(m);}
 function inst(geo,color,list,shadow){const m=new THREE.InstancedMesh(geo,new THREE.MeshStandardMaterial({color,roughness:.9}),Math.max(1,list.length)),d=new THREE.Object3D();list.forEach((p,i)=>{d.position.set(p[0],p[1],p[2]);d.scale.set(p[3]??1,p[4]??1,p[5]??1);d.rotation.set(0,p[6]||0,0);d.updateMatrix();m.setMatrixAt(i,d.matrix);});m.castShadow=!!shadow;m.receiveShadow=true;m.frustumCulled=false;cityGroup.add(m);return m;}
-function logoBoard(w,h,sq){const img=new Image();img.src='logo.png?v=32';const W=sq?256:768,Hh=sq?256:Math.round(768*h/w),cn=document.createElement('canvas');cn.width=W;cn.height=Hh;const x=cn.getContext('2d'),tex=new THREE.CanvasTexture(cn);
+function logoBoard(w,h,sq){const img=new Image();img.src='logo.png?v=33';const W=sq?256:768,Hh=sq?256:Math.round(768*h/w),cn=document.createElement('canvas');cn.width=W;cn.height=Hh;const x=cn.getContext('2d'),tex=new THREE.CanvasTexture(cn);
  const draw=()=>{x.fillStyle='#171914';x.fillRect(0,0,W,Hh);x.strokeStyle='#d7ff3f';x.lineWidth=Math.round(W/90);x.strokeRect(8,8,W-16,Hh-16);const ok=img.complete&&img.naturalWidth;
   if(sq){if(ok){const hh=Hh*.62,ww=img.naturalWidth/img.naturalHeight*hh;x.drawImage(img,(W-ww)/2,Hh*.1,ww,hh);}x.fillStyle='#d7ff3f';x.font='900 '+Math.round(W/9)+'px Inter,Arial,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('FTTR',W/2,Hh*.86);}
   else{if(ok){const hh=Hh*.78,ww=img.naturalWidth/img.naturalHeight*hh;x.drawImage(img,Hh*.12,Hh*.11,ww,hh);}x.fillStyle='#d7ff3f';x.font='900 '+Math.round(Hh*.34)+'px Inter,Arial,sans-serif';x.textAlign='left';x.textBaseline='middle';x.fillText('FUCK THE RULES',Hh*.12+(ok?img.naturalWidth/img.naturalHeight*Hh*.78:0)+Hh*.12,Hh*.4);x.fillStyle='#f2efdf';x.font='700 '+Math.round(Hh*.16)+'px Inter,Arial,sans-serif';x.fillText('STREETWEAR STORE',Hh*.12+(ok?img.naturalWidth/img.naturalHeight*Hh*.78:0)+Hh*.12,Hh*.72);}
@@ -343,6 +343,7 @@ function makeRoute(rnd,minLen){const E=LAYC.edges;for(let tries=0;tries<30;tries
   while(len<minLen&&guard++<12){const nx=LAYC.ADJ[node].map(i=>E[i]).filter(f=>f!==prev&&f.len>3);if(!nx.length)break;
    const last=pts[pts.length-1],bef=pts[Math.max(0,pts.length-3)],hx=last[0]-bef[0],hz=last[1]-bef[1];let best=null,bs=-9;
    nx.forEach(f=>{const fw=f.a===node,fp=fw?f.pts:f.pts.slice().reverse(),dx=fp[Math.min(2,fp.length-1)].x-fp[0].x,dz=fp[Math.min(2,fp.length-1)].z-fp[0].z,sc=(hx*dx+hz*dz)/(Math.hypot(hx,hz)*Math.hypot(dx,dz)||1)+rnd()*.5;if(sc>bs){bs=sc;best={f,fp};}});
+   {const rb=RBS.find(b=>b.node===node);if(rb){const a0=Math.atan2(last[1]-rb.z,last[0]-rb.x),a1=Math.atan2(best.fp[0].z-rb.z,best.fp[0].x-rb.x);let d=a1-a0;while(d<0)d+=Math.PI*2;if(d>.2&&d<Math.PI*2-.2){const n=Math.max(2,Math.ceil(d/(Math.PI/10)));for(let k=1;k<n;k++){const a=a0+d*k/n;pts.push([rb.x+Math.cos(a)*rb.r,rb.z+Math.sin(a)*rb.r]);}len+=d*rb.r-Math.hypot(best.fp[0].x-last[0],best.fp[0].z-last[1]);}}}
    best.fp.slice(1).forEach(p=>pts.push([p.x,p.z]));len+=best.f.len;node=best.f.a===node?best.f.b:best.f.a;prev=best.f;}
   if(len<Math.min(minLen,40))continue;
   const cum=[0];for(let i=1;i<pts.length;i++)cum.push(cum[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));return {xs:pts.map(p=>p[0]),zs:pts.map(p=>p[1]),cum,len:cum[cum.length-1]};}

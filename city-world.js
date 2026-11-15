@@ -9,11 +9,11 @@ export function createWorld(C){
  const reserved=[];            // persegi yang tidak boleh diisi bangunan acak: [x1,x2,z1,z2]
 
  /* ---------- rute kereta lintas kota (v27): Kota Lain (seberang laut) -> Desa -> Central City -> terowongan ---------- */
- const RT={ZC:-14.8,AMP:2,LEN:8.5,XW:-125,ZV:-122,ZK:-150,XK:-221,XP:93.5,XE:102.8};
+ const RT={ZC:-14.8,AMP:2,LEN:8.5,XW:-125,ZV:-122,ZK:-150,XK:-221,XT:84,XN:77.5,ZNE:-314};
  const crm=(P,step)=>{const o=[],n=P.length;for(let i=0;i<n-1;i++){const a=P[Math.max(0,i-1)],b=P[i],c=P[i+1],d=P[Math.min(n-1,i+2)],m=Math.max(2,Math.ceil(Math.hypot(c[0]-b[0],c[1]-b[1])/step));for(let k=0;k<m;k++){const t=k/m,t2=t*t,t3=t2*t,f=(p,q,r,s)=>.5*(2*q+(-p+r)*t+(2*p-5*q+4*r-s)*t2+(-p+3*q-3*r+s)*t3);o.push([f(a[0],b[0],c[0],d[0]),f(a[1],b[1],c[1],d[1])]);}}o.push(P[n-1]);return o;};
  const cityZ=(x,sx)=>RT.ZC+RT.AMP*Math.sin((x-sx)/RT.LEN)*(Math.abs(x-sx)<2?Math.abs(x-sx)/2:1);
- const routePts=sx=>{const A=[[RT.XK,RT.ZK],[-196,RT.ZK],[-168,RT.ZK],[-148,RT.ZK],[-137,RT.ZK+1],[-130,-143],[RT.XW,-132],[RT.XW,-110],[RT.XW,-80],[RT.XW,-50],[RT.XW,-30],[-122,-19.5],[-116,cityZ(-116,sx)],[-110,cityZ(-110,sx)],[-104,cityZ(-104,sx)]];const out=crm(A,1.2);for(let x=-102.8;x<=RT.XE+.01;x+=1.2)out.push([x,cityZ(x,sx)]);return out;};
- routePts(0).forEach((p,i)=>{if(p[0]<-112&&p[0]>-148&&i%6===0)reserved.push([p[0]-5.5,p[0]+5.5,p[1]-5.5,p[1]+5.5]);});
+ const routePts=sx=>{const A=[[RT.XK,RT.ZK],[-196,RT.ZK],[-168,RT.ZK],[-148,RT.ZK],[-137,RT.ZK+1],[-130,-143],[RT.XW,-132],[RT.XW,-110],[RT.XW,-80],[RT.XW,-50],[RT.XW,-30],[-122,-19.5],[-116,cityZ(-116,sx)],[-110,cityZ(-110,sx)],[-104,cityZ(-104,sx)]];const out=crm(A,1.2);for(let x=-102.8;x<=RT.XT-4+.01;x+=1.2)out.push([x,cityZ(x,sx)]);const NN=[[RT.XT-4,cityZ(RT.XT-4,sx)],[RT.XT,cityZ(RT.XT,sx)],[88.5,-19],[91.5,-27],[91.5,-60],[89.5,-69],[84,-76],[79,-83],[RT.XN,-92],[RT.XN,-130],[RT.XN,-180],[RT.XN,-226],[RT.XN,-240],[RT.XN,-258],[RT.XN,-290],[RT.XN,RT.ZNE]];out.push(...crm(NN,1.2));return out;};
+ routePts(0).forEach((p,i)=>{if(p[0]<-112&&p[0]>-148&&i%6===0)reserved.push([p[0]-5.5,p[0]+5.5,p[1]-5.5,p[1]+5.5]);if(p[0]>86&&p[1]<-16&&p[1]>-246&&i%5===0)reserved.push([p[0]-5.5,p[0]+5.5,p[1]-5.5,p[1]+5.5]);});
  const anim={boats:[],ferries:[],wheel:null,gond:[],tex:null};
  const M={};
  const mat=(k,color,extra)=>M[k]||(M[k]=new T.MeshStandardMaterial({color,roughness:.85,...(extra||{})}));
@@ -255,7 +255,7 @@ export function createWorld(C){
   V('DESA HILIR',-34,-196+4,30,[[-54,-190],[-96,-168]],{rad:15,cnt:9,fld:5})
  ];
  [[152,-168,16,9],[-62,-206,13,7.5],[196,-92,12,7]].forEach(p=>reserved.push([p[0]-p[2]-6,p[0]+p[2]+6,p[1]-p[3]-6,p[1]+p[3]+6]));
- const FIELDS=[],inFarm=(x,z)=>x>-76&&x<74&&z>-198&&z<-64;
+ const FIELDS=[],inFarm=(x,z)=>x>-76&&x<74&&z>-198&&z<-64,inCity=(x,z,m)=>x>-116-m&&x<262+m&&z>-66-m&&z<58+m;
  const resvAt=(x,z,m=0)=>reserved.some(r=>x>r[0]-m&&x<r[1]+m&&z>r[2]-m&&z<r[3]+m);
  const TR=[],ANIM_AN=[],VH=[];
  function hamTp(h){const to=h.to.map(p=>p.slice());if(h.s!==3&&!h.nb){const b=C.boundary&&C.boundary(to[to.length-1][0],to[to.length-1][1]);if(b)to[to.length-1]=b;}return [[h.x,h.z]].concat(to);}
@@ -307,7 +307,7 @@ export function createWorld(C){
 
  function fields(h,r,placed){const cols=['#8fbf4a','#c9b84e','#6fae4a','#a67c52','#b6cf5a'];let k=0;
   for(let t=0;t<200&&k<(h.fld||7);t++){const a=r()*6.283,d=14+r()*((h.rad||17)+6),x=h.x+Math.cos(a)*d,z=h.z+Math.sin(a)*d,w=7+r()*6,dd=4+r()*4;
-   if(!inPoly(SANDIN,x,z)||C.layout.riverDist(x,z)<9||C.layout.lakeIn(x,z,8)||resvAt(x,z,w*.5)||inFarm(x,z)||TR.some(q=>Math.hypot(q[0]-x,q[1]-z)<w*.5+2.5))continue;
+   if(!inPoly(SANDIN,x,z)||C.layout.riverDist(x,z)<9||C.layout.lakeIn(x,z,8)||resvAt(x,z,w*.5)||inFarm(x,z)||inCity(x,z,w*.6+2)||C.layout.roadGap(x,z)<w*.6+3||TR.some(q=>Math.hypot(q[0]-x,q[1]-z)<w*.5+2.5))continue;
    if(placed.some(q=>Math.hypot(q[0]-x,q[1]-z)<w*.6+3.5)||FIELDS.some(q=>Math.hypot(q[0]-x,q[1]-z)<w))continue;
    if(HAM.some(o=>o!==h&&Math.hypot(o.x-x,o.z-z)<(o.rad||17)+8))continue;
    const g=new T.Group();g.position.set(x,0,z);g.rotation.y=r()*3;G().add(g);
@@ -473,7 +473,7 @@ export function createWorld(C){
   {const sl=[];for(let s=0.6;s<L;s+=1.1){const q=sample(s);sl.push([q.x,.06,q.z,1,1,1,-q.ang]);}const im=new T.InstancedMesh(new T.BoxGeometry(.22,.06,1.9),mat('sleeper','#6b5239'),sl.length),dm=new T.Object3D();sl.forEach((p,i)=>{dm.position.set(p[0],p[1],p[2]);dm.rotation.set(0,p[6],0);dm.updateMatrix();im.setMatrixAt(i,dm.matrix);});im.instanceMatrix.needsUpdate=true;im.receiveShadow=true;im.userData.warped=true;G().add(im);}
   /* perlintasan sebidang: aspal menutup balas & bantalan rel di tempat jalan memotong; rel baja tertanam rata dengan jalan (bukan rel melayang di atas jalan) */
   {const LY=C.layout,runs=[];let a0=-1;
-   pts.forEach((p,i)=>{const on=p.x>-114&&p.x<RT.XP-2&&(LY.roadGap?LY.roadGap(p.x,p.z):LY.roadDist(p.x,p.z)-3)<.2;if(on&&a0<0)a0=i;if(a0>=0&&(!on||i===pts.length-1)){runs.push([Math.max(0,a0-1),Math.min(pts.length-1,i)]);a0=-1;}});
+   pts.forEach((p,i)=>{const on=p.x>-114&&p.z>-66.5&&(LY.roadGap?LY.roadGap(p.x,p.z):LY.roadDist(p.x,p.z)-3)<.2;if(on&&a0<0)a0=i;if(a0>=0&&(!on||i===pts.length-1)){runs.push([Math.max(0,a0-1),Math.min(pts.length-1,i)]);a0=-1;}});
    runs.forEach(([i0,i1])=>{ribbon(0,1.3,.108,'#4a5262',i0,i1);ribbon(1.3,.05,.11,'#ebe5cf',i0,i1);ribbon(-1.3,.05,.11,'#ebe5cf',i0,i1);ribbon(.55,.07,.113,'#2b2e29',i0,i1);ribbon(-.55,.07,.113,'#2b2e29',i0,i1);});}
   /* jembatan laut + pulau "KOTA LAIN" */
   {const zk=RT.ZK,bx0=-210,bx1=-146,len=bx1-bx0,cxm=(bx0+bx1)/2;
@@ -486,12 +486,19 @@ export function createWorld(C){
   /* stasiun desa */
   {const xv=RT.XW,zv=RT.ZV;bx(G(),2,.25,11,'#cfcbbb',xv+2.2,.12,zv);bx(G(),1.7,.12,7,'#c4553f',xv+2.4,2.3,zv);[-3,3].forEach(dz=>bx(G(),.18,2.2,.18,'#6f747b',xv+3,1.2,zv+dz));
    const gv=new T.Group();gv.position.set(xv+3.4,0,zv);gv.rotation.y=Math.PI/2;G().add(gv);C.sign(gv,'ST. DESA',0,3.1,0,3.6,.7,'#2a5a3a','#ffffff');}
-  /* terowongan di ujung timur: kereta masuk ke bukit lalu berbalik */
-  {const zc=cityZ(RT.XP+5,sx),hx=RT.XP+5.5;bx(G(),11,3.4,10.6,'#8f8c80',hx,1.7,zc);bx(G(),9.6,1.5,9,'#68b447',hx+.1,4.1,zc);C.solids.push({x:hx,z:zc,w:11,d:10.6});}
+  /* stasiun Padang + jembatan laut & pulau "KOTA LAIN UTARA" (ujung jalur ke utara, keluar dari kota) */
+  {const xv=RT.XN,zv=-150;bx(G(),2,.25,11,'#cfcbbb',xv+2.2,.12,zv);bx(G(),1.7,.12,7,'#c4553f',xv+2.4,2.3,zv);[-3,3].forEach(dz=>bx(G(),.18,2.2,.18,'#6f747b',xv+3,1.2,zv+dz));
+   const gv=new T.Group();gv.position.set(xv+3.4,0,zv);gv.rotation.y=Math.PI/2;G().add(gv);C.sign(gv,'ST. PADANG',0,3.1,0,3.8,.7,'#2a5a3a','#ffffff');}
+  {const ig=new T.Group();ig.position.set(RT.XN,0,-300);ig.rotation.y=Math.PI/2;G().add(ig);
+   bx(ig,38,.5,3.6,'#9a9da3',-35,-.22,0);[-1,1].forEach(sd=>bx(ig,38,.3,.14,'#d94a3a',-35,.2,sd*1.65));
+   for(let x=-51;x<-17;x+=7)[-1,1].forEach(sd=>cy(ig,.45,.55,2.8,'#6f747b',x,-1.4,sd*1.1));
+   cy(ig,17,18,.6,'#ead59c',0,-.26,0,28);bx(ig,.4,.9,1.6,'#d94a3a',14.4,.5,0);bx(ig,16,.22,2.4,'#cfcbbb',0,.13,2.5);bx(ig,14,.12,2.6,'#c4553f',0,2.3,2.5);[-6.5,6.5].forEach(dx=>bx(ig,.2,2.2,.2,'#6f747b',dx,1.2,3.5));
+   const gk=new T.Group();gk.position.set(0,0,3.9);ig.add(gk);C.sign(gk,'KOTA LAIN · UTARA',0,3.1,0,6.6,.8,'#12304f','#ffffff');
+   [[-5,-9,5,7,5,'#7aa7d9'],[3,-10,6,10,5,'#e7c35c'],[11,-8,5,6,4,'#d97a6a'],[-9,9,6,5,5,'#8fc58a'],[2,11,5,9,5,'#b894d6'],[10,10,6,6,5,'#e8e1d0']].forEach(([dx,dz,w,h,d,c])=>{bx(ig,w,h,d,c,dx,h/2,dz);bx(ig,w+.4,.3,d+.4,'#4a4d46',dx,h+.15,dz);});}
   /* kereta 3 gerbong */
   const cols=['#d7ff3f','#171914','#d7ff3f'],carsT=[];
   cols.forEach((c,i)=>{const g=new T.Group();g.userData.noMerge=true;G().add(g);bx(g,2.6,1,.95,c,0,.8,0);bx(g,2.2,.3,.97,'#9fc4cf',0,1.05,0).castShadow=false;bx(g,2.4,.12,.8,'#2a2d28',0,1.35,0);carsT.push(g);});
-  const stops=[{s:sAt(-211.5,RT.ZK),end:1,dw:6},{s:sAt(RT.XW,RT.ZV)},{s:sAt(sx,cityZ(sx,sx))},{s:sAt(RT.XE,cityZ(RT.XE,sx)),end:1,dw:2.5}];
+  const stops=[{s:sAt(-211.5,RT.ZK),end:1,dw:6},{s:sAt(RT.XW,RT.ZV)},{s:sAt(sx,cityZ(sx,sx))},{s:sAt(RT.XN,-150)},{s:sAt(RT.XN,-305),end:1,dw:6}];
   Object.assign(railState,{L,sample,carsT,stops,done:stops.map(()=>0),cur:0,dw:4.5,s:stops[2].s-40,dir:1,speed:0,state:'run',t:0});
   const place=()=>{carsT.forEach((g,i)=>{const q=sample(railState.s-railState.dir*i*2.9);g.position.set(q.x,.1,q.z);g.rotation.y=-q.ang;});};place();railState.place=place;
  }

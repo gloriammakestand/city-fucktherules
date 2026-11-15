@@ -196,7 +196,7 @@ export function buildLayout(opts={}){
  /* ===== penempatan benda: OBB ===== */
  const placed=[],pg=new Map(),pk=(i,j)=>i*4096+j,PC=16;
  const putObb=o=>{placed.push(o);const r=hyp(o.w,o.d)/2,i0=Math.floor((o.x-r)/PC),i1=Math.floor((o.x+r)/PC),j0=Math.floor((o.z-r)/PC),j1=Math.floor((o.z+r)/PC);for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){const k=pk(i+200,j+200);(pg.get(k)||pg.set(k,[]).get(k)).push(o);}};
- const HARDO=[...STADIUM_RECTS,SITES.plaza.r,SITES.court.r,...SITES.ponds.map(pondRect),[RAIL.x1,RAIL.x2,RAIL.z-RAIL.hz-.1,RAIL.z+RAIL.hz+.1],[DOM.x1-30,DOM.x2+30,54.7,120]];
+ const HARDO=[...STADIUM_RECTS,SITES.plaza.r,SITES.court.r,...SITES.ponds.map(pondRect),[RAIL.x1,RAIL.x2,RAIL.z-RAIL.hz-.1,RAIL.z+RAIL.hz+.1],[DOM.x1-30,DOM.x2+30,54.7,120],...(opts.hard||[])];
  const free=(o,m=.5,rm=0)=>{const pts=obbPts(o,0);for(const [x,z] of pts){if(x<DOM.x1-2||x>DOM.x2+2||z<DOM.z1||z>54.7)return false;if(HARDO.some(r=>inRect(x,z,r,.4)))return false;if(riverDist(x,z)<RIVER_HW+1.8||lakeIn(x,z,3))return false;if(!roadClear(x,z,rm))return false;}
   const r=hyp(o.w,o.d)/2+m+3,i0=Math.floor((o.x-r)/PC),i1=Math.floor((o.x+r)/PC),j0=Math.floor((o.z-r)/PC),j1=Math.floor((o.z+r)/PC);
   for(let i=i0;i<=i1;i++)for(let j=j0;j<=j1;j++){const l=pg.get(pk(i+200,j+200));if(l)for(const q of l)if(obbOverlap(o,q,m))return false;}return true;};

@@ -1,6 +1,6 @@
 // shop.js — katalog, tas, checkout, kasir. Memakai firebase.js milik website utama (saveOrder, listenProduk, voucher, auth).
 // TIDAK ada katalog/harga/ID order buatan sendiri: semua dari Firestore project fvcktherules-store.
-import { mulaiBayar, isPaying, payApi, tampilLoadingBayar, sembunyiLoadingBayar, statusNorm, waitText } from './fttr-pay.js?v=32';
+import { mulaiBayar, isPaying, payApi, tampilLoadingBayar, sembunyiLoadingBayar, statusNorm, waitText } from './fttr-pay.js?v=33';
 export const MAIN_ORIGIN = 'https://fucktherules.my.id';
 const FB_URL = MAIN_ORIGIN + '/firebase.js?v=20261045';          // modul yang sama dengan website utama (satu sumber kebenaran; versi disamakan dgn script.js utama)
 const GAS_ORDER_BACKUP = 'https://script.google.com/macros/s/AKfycbyoVdbvq1JvCtzWFbJaZUdTO2I30DXn4N0p_XOidk98cPnj8m22j2Aa0q6k90KH4sOhUw/exec';
