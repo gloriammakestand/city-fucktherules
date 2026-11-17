@@ -151,3 +151,5 @@ Note: citizen needs are local-browser gameplay state in this prototype. Online e
 - Tombol ATAS di bar interior: tampilan lurus dari atas (seperti ATAS di AI Office), seluruh ruangan muat di layar. Di toko, label kategori tampil di atas tiap rak dan bisa diketuk. Ketuk lantai tetap menggerakkan karakter; tombol NORMAL atau IKUTI mengembalikan kamera.
 - Papan KATALOG pindah ke dinding kiri depan, meja AKSESORIS ditambahkan di sebelahnya (membuka kategori Aksesoris).
 
+## V35
+- Perbaikan error di V34 "Cannot read properties of undefined (reading 'Vector3')": objek kamera tampilan ATAS dulu dibuat sebelum THREE selesai dimuat, sekarang dibuat saat dipakai.
