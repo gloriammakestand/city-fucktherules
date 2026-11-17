@@ -341,3 +341,13 @@ body:has(#interiorHud:not([hidden])) .hint{display:none}
 body.on-mission .toast{top:calc(var(--sat) + 214px)}
 @media(min-width:600px){.mission{left:50%;right:auto;transform:translateX(-50%);width:min(380px,calc(100vw - 24px));top:calc(var(--sat) + 74px)}body.on-mission .toast{top:calc(var(--sat) + 190px)}}
 @media(min-width:900px){.mission{top:calc(var(--sat) + 78px)}}
+
+/* v36: tumpukan UI interior dirapikan (bar bawah > tombol TAS > tulisan kategori), dan mode grafiti menyembunyikan HUD kota */
+:root{--ihb:calc(var(--sab) + 124px)}
+@media(min-width:900px){:root{--ihb:calc(var(--sab) + 104px)}}
+@media(max-height:560px) and (orientation:landscape){:root{--ihb:calc(var(--sab) + 14px)}}
+.interior-hud{bottom:var(--ihb);gap:8px}
+.interior-hud #viewTop,.interior-hud #exitBuilding{padding:0 14px}
+body.in-room .hint,body.in-room #artPrompt{display:none!important}
+body.street-art .hud-top,body.street-art .hud-stats,body.street-art .hud-dock,body.street-art .joy,body.street-art .hint,body.street-art .place-card,body.street-art .mission,body.street-art .m-arrow,body.street-art .interior-hud{visibility:hidden}
+

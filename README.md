@@ -153,3 +153,8 @@ Note: citizen needs are local-browser gameplay state in this prototype. Online e
 
 ## V35
 - Perbaikan error di V34 "Cannot read properties of undefined (reading 'Vector3')": objek kamera tampilan ATAS dulu dibuat sebelum THREE selesai dimuat, sekarang dibuat saat dipakai.
+
+## V36
+- Tumpukan UI interior dirapikan: bar bawah (nama ruangan, ATAS, KELUAR), di atasnya tombol TAS · KASIR, lalu tulisan kategori saat mendekat rak. Tidak ada lagi yang saling menimpa. Teks petunjuk awal dan tombol zona grafiti disembunyikan saat di dalam ruangan. Di layar HP landscape tumpukan turun ke bawah agar muat.
+- Rak SOLD OUT (dinding kanan) tampak dari kamera kota: papan nama dan gambar kaos kini terlihat dari kedua sisi.
+- Grafiti: saat mode grafiti/stiker aktif, HUD kota (status, joystick, menu, kartu tempat) disembunyikan sehingga tidak menimpa panel gambar. Warna dan alat (PEN/HAPUS) yang dipilih kini ditandai. Simpan lokal tidak lagi gagal "penyimpanan penuh" setelah beberapa karya: karya lokal terlama dibuang otomatis sampai muat.

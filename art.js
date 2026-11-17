@@ -53,11 +53,11 @@ async function loadSurf(s){s.loaded=true;const a=api();let list=null;
 /* ---------- kamera street-level ---------- */
 function enter(s){if(street.on)return;cur=s;const cam=C.camera,vh=C.getViewH(),asp=innerWidth/innerHeight,zoom=Math.max(.6,Math.min(vh/s.vh,vh*asp/s.vw)),visH=vh/zoom;
   const pos=new T.Vector3(s.x+s.nx*14,s.cy-.2*visH,s.z+s.nz*14),o=cam.clone();o.position.copy(pos);o.lookAt(pos.x-s.nx,pos.y,pos.z-s.nz);o.updateMatrixWorld();
-  street.from={p:cam.position.clone(),q:cam.quaternion.clone(),z:cam.zoom};street.to={p:pos,q:o.quaternion.clone(),z:zoom};street.on=true;street.dir=1;street.p=0;C.getPlayer().visible=false;openUI(s);}
+  street.from={p:cam.position.clone(),q:cam.quaternion.clone(),z:cam.zoom};street.to={p:pos,q:o.quaternion.clone(),z:zoom};street.on=true;document.body.classList.add('street-art');street.dir=1;street.p=0;C.getPlayer().visible=false;openUI(s);}
 function leave(){if(!street.on||street.dir<0)return;if(cur){cur.live=null;pend=null;paint(cur);}street.dir=-1;if(ui)ui.hidden=true;}
 function tick(dt){if(!street.on)return;const cam=C.camera;street.p=Math.max(0,Math.min(1,street.p+street.dir*dt/.75));const e=street.p*street.p*(3-2*street.p);
   cam.position.lerpVectors(street.from.p,street.to.p,e);cam.quaternion.copy(street.from.q).slerp(street.to.q,e);cam.zoom=street.from.z+(street.to.z-street.from.z)*e;cam.updateProjectionMatrix();
-  if(street.dir<0&&street.p<=0){street.on=false;C.getPlayer().visible=true;C.setFollow(true);cur=null;}}
+  if(street.dir<0&&street.p<=0){street.on=false;document.body.classList.remove('street-art');C.getPlayer().visible=true;C.setFollow(true);cur=null;}}
 function update(dt){tick(dt);acc+=dt;if(acc<.3)return;acc=0;const p=C&&C.getPlayer();if(!p)return;let best=null,bd=1e9;
   for(const s of SURF.values()){const d=Math.hypot(p.position.x-s.x,p.position.z-s.z);if(!s.loaded&&d<45)loadSurf(s);const front=(p.position.x-s.x)*s.nx+(p.position.z-s.z)*s.nz;if(front>0&&d<3.6&&d<bd){bd=d;best=s;}}
   if(!prompt){prompt=document.createElement('button');prompt.id='artPrompt';prompt.hidden=true;prompt.onclick=()=>prompt._s&&enter(prompt._s);document.body.appendChild(prompt);}
@@ -69,7 +69,8 @@ function tap(e){if(!cur||street.dir<0)return;if(cur.kind!=='sticker'||!sel)retur
 async function post(s,payload){if(Date.now()-lastPost<4000){C.toast('Tunggu beberapa detik');return null;}lastPost=Date.now();const a=api(),name=C.profile.name,body={guest,name,surface:s.id,...payload};
   if(a){try{const r=await fetch(a+'/api/art',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}),j=await r.json();if(r.ok){addWork(s,{...j.work,src:a+j.work.url});paint(s);return j.work;}C.toast(j.error==='rate_limited'?'Terlalu cepat, coba lagi nanti':'Ditolak server: '+(j.error||r.status));return null;}catch{C.toast('Server tidak terjangkau. Karya disimpan di perangkat ini.');}}
   const w={id:'L'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),owner:name,kind:payload.kind,surface:s.id,u:payload.u,v:payload.v,w:payload.w,rot:payload.rot,slot:payload.slot,at:new Date().toISOString(),likes:0,img:payload.img};
-  const all=LS('fttr.city.art.local',[]);all.push(w);while(all.length>24)all.shift();if(!SV('fttr.city.art.local',all)){C.toast('Penyimpanan perangkat penuh');return null;}addWork(s,{...w,src:w.img});paint(s);return w;}
+  const all=LS('fttr.city.art.local',[]);all.push(w);while(all.length>24)all.shift();let okSave=SV('fttr.city.art.local',all);while(!okSave&&all.length>1){all.shift();okSave=SV('fttr.city.art.local',all);}   // kuota penuh: buang karya lokal terlama sampai muat
+  if(!okSave){C.toast('Penyimpanan perangkat penuh');return null;}addWork(s,{...w,src:w.img});paint(s);return w;}
 async function react(kind,w){const a=api();if(a&&!String(w.id).startsWith('L')){try{await fetch(a+'/api/art/'+kind,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:w.id,guest})});}catch{}}
   if(kind==='report'){const s=cur;s.works=s.works.filter(x=>x.id!==w.id);paint(s);const all=LS('fttr.city.art.local',[]).filter(x=>x.id!==w.id);SV('fttr.city.art.local',all);C.toast('Laporan dikirim. Karya disembunyikan untukmu.');}else{w.likes=(w.likes||0)+1;C.toast('Disukai ♥');}renderList();}
 
@@ -105,7 +106,7 @@ function renderList(){const l=$('#artList');if(!cur||l.hidden)return;const ws=[.
 /* ---------- editor graffiti ---------- */
 function grInit(){const cv=$('#grCv');gr={cv,ctx:cv.getContext('2d'),color:'#d7ff3f',tool:'pen',undo:[],slot:0,down:false,last:null,raf:0};
   cv.style.background='#8d8d85';$('#grCols').innerHTML=['#d7ff3f','#ffffff','#171914','#c4533f','#2a5fa8','#d9a441','#2f8f5b','#e86ab0'].map(c=>`<button class="art-col" data-c="${c}" style="background:${c}"></button>`).join('');
-  $('#grCols').onclick=e=>{const c=e.target.dataset.c;if(c){gr.color=c;gr.tool=gr.tool==='eraser'?'pen':gr.tool;}};
+  $('#grCols').onclick=e=>{const c=e.target.dataset.c;if(c){gr.color=c;gr.tool=gr.tool==='eraser'?'pen':gr.tool;markGr();}};
   $('#grSlots').innerHTML=[0,1,2].map(i=>`<button class="solid-btn" data-s="${i}">SLOT ${i+1}</button>`).join('');$('#grSlots').onclick=e=>{const s=e.target.dataset.s;if(s!==undefined)grafOpen(+s);};
   ui.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>grTool(b.dataset.g));
   const pt=e=>{const r=cv.getBoundingClientRect();return [(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height];};
@@ -113,12 +114,13 @@ function grInit(){const cv=$('#grCv');gr={cv,ctx:cv.getContext('2d'),color:'#d7f
   cv.addEventListener('pointermove',e=>{if(!gr.down)return;const p=pt(e);stroke(gr.last,p);gr.last=p;});
   const up=()=>{gr.down=false;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
   $('#grFile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(!f||!/^image\/(png|jpeg|webp)$/.test(f.type)||f.size>6e6){C.toast('Gunakan PNG/JPG/WebP maks 6 MB');return;}const im=new Image();im.onload=()=>{snap();const k=Math.min(320/im.naturalWidth,300/im.naturalHeight);gr.ctx.drawImage(im,(320-im.naturalWidth*k)/2,(300-im.naturalHeight*k)/2,im.naturalWidth*k,im.naturalHeight*k);live();};im.src=URL.createObjectURL(f);};
-  $('#grSave').onclick=grSave;}
+  $('#grSave').onclick=grSave;markGr();}
+function markGr(){if(!ui||!gr)return;ui.querySelectorAll('#grCols .art-col').forEach(b=>{b.style.outline=b.dataset.c===gr.color?'3px solid #171914':'none';b.style.outlineOffset='2px';});ui.querySelectorAll('[data-g="pen"],[data-g="eraser"]').forEach(b=>b.classList.toggle('acid',b.dataset.g===gr.tool));}
 function snap(){gr.undo.push(gr.ctx.getImageData(0,0,320,300));if(gr.undo.length>12)gr.undo.shift();}
 function stroke(a,b){const c=gr.ctx;c.save();c.lineCap=c.lineJoin='round';c.lineWidth=+$('#grSize').value;c.globalCompositeOperation=gr.tool==='eraser'?'destination-out':'source-over';c.strokeStyle=gr.color;c.beginPath();c.moveTo(a[0],a[1]);c.lineTo(b[0]+.01,b[1]);c.stroke();c.restore();live();}
 function live(){if(!cur||gr.raf)return;gr.raf=requestAnimationFrame(()=>{gr.raf=0;if(cur&&cur.live)paint(cur);});}
 function grTool(t){if(t==='undo'){const d=gr.undo.pop();if(d){gr.ctx.putImageData(d,0,0);live();}return;}if(t==='clear'){snap();gr.ctx.clearRect(0,0,320,300);live();return;}
-  if(t==='tag'){const txt=(prompt_('Tulis tag (maks 12 huruf)')||'').slice(0,12).toUpperCase();if(!txt)return;snap();tag(gr.ctx,txt,160,150,Math.min(90,300/txt.length*1.1),gr.color,'#171914',-.08);live();return;}gr.tool=t;}
+  if(t==='tag'){const txt=(prompt_('Tulis tag (maks 12 huruf)')||'').slice(0,12).toUpperCase();if(!txt)return;snap();tag(gr.ctx,txt,160,150,Math.min(90,300/txt.length*1.1),gr.color,'#171914',-.08);live();return;}gr.tool=t;markGr();}
 function prompt_(m){try{return window.prompt(m);}catch{return '';}}
 function grafOpen(slot){gr.slot=slot;gr.undo=[];const c=gr.ctx;c.clearRect(0,0,320,300);const w=cur.works.find(x=>x.kind==='graffiti'&&x.slot===slot),im=w&&IMG.get(w.id);if(im&&im.complete&&im.naturalWidth)c.drawImage(im,0,0,320,300);cur.live={slot,cv:gr.cv};paint(cur);}
 async function grSave(){const empty=!gr.ctx.getImageData(0,0,320,300).data.some((v,i)=>i%4===3&&v>0);if(empty){C.toast('Karya masih kosong');return;}const img=enc(gr.cv,true);if(img.length>300000){C.toast('Karya terlalu besar');return;}

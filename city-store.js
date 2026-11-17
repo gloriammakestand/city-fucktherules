@@ -42,12 +42,12 @@ export function createStore(C){
     rackG=new T.Group();g.add(rackG);layout();
     // tombol tas (muncul hanya di dalam toko)
     bag=document.createElement('button');bag.id='storeBag';bag.hidden=true;bag.textContent='🛍 TAS · KASIR';
-    bag.style.cssText='position:fixed;left:50%;bottom:104px;transform:translateX(-50%);z-index:60;background:#d7ff3f;color:#171914;border:2px solid #171914;border-radius:999px;padding:12px 20px;font:800 14px Inter,Arial,sans-serif;letter-spacing:.03em;box-shadow:0 6px 0 #171914;';
+    bag.style.cssText='position:fixed;left:50%;bottom:calc(var(--ihb,124px) + 66px);transform:translateX(-50%);z-index:60;background:#d7ff3f;color:#171914;border:2px solid #171914;border-radius:999px;padding:12px 20px;font:800 14px Inter,Arial,sans-serif;letter-spacing:.03em;box-shadow:0 6px 0 #171914;';
     bag.addEventListener('click',()=>open('cart'));document.body.appendChild(bag);
     // tulisan kategori saat mendekat rak (ketuk = buka katalog kategori itu)
     if(pill)pill.remove();if(labels)labels.remove();
     pill=document.createElement('button');pill.id='storeZone';pill.style.display='none';
-    pill.style.cssText='display:none;position:fixed;left:50%;bottom:196px;transform:translateX(-50%);z-index:61;background:#171914;color:#d7ff3f;border:2px solid #d7ff3f;border-radius:16px;padding:10px 20px;font:900 16px Inter,Arial,sans-serif;letter-spacing:.05em;text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.35);cursor:pointer;';
+    pill.style.cssText='display:none;position:fixed;left:50%;bottom:calc(var(--ihb,124px) + 126px);transform:translateX(-50%);z-index:61;background:#171914;color:#d7ff3f;border:2px solid #d7ff3f;border-radius:16px;padding:10px 20px;font:900 16px Inter,Arial,sans-serif;letter-spacing:.05em;text-align:center;box-shadow:0 6px 0 rgba(0,0,0,.35);cursor:pointer;';
     pill.addEventListener('click',()=>{if(zoneNow)zoneAct(zoneNow);});document.body.appendChild(pill);
     // label kategori untuk tampilan ATAS
     labels=document.createElement('div');labels.id='storeTopLabels';labels.style.cssText='display:none;position:fixed;left:0;top:0;right:0;bottom:0;z-index:55;pointer-events:none;';
@@ -93,7 +93,9 @@ export function createStore(C){
           B(gp,.5,.64,.1,col,0,1.28,0);[-1,1].forEach(s=>{const sl=B(gp,.22,.26,.1,col,s*.35,1.5,0);sl.rotation.z=-s*.5;});B(gp,.2,.06,.11,'#141511',0,1.6,0,{shadow:false});
           if(p.badge==='sold')B(gp,.3,.12,.03,'#c93a3a',0,1.05,.07,{shadow:false});
           const pic=new T.Mesh(new T.PlaneGeometry(.34,.34),new T.MeshBasicMaterial({transparent:true,opacity:1}));pic.position.set(0,1.3,.065);pic.visible=false;gp.add(pic);
-          if(nThumb++<40)getThumb(p,t=>{pic.material.map=t;pic.material.needsUpdate=true;pic.visible=true;});
+          // sisi belakang juga bergambar: kamera kota melihat rak dinding kanan dari belakang kaos
+          const pic2=new T.Mesh(new T.PlaneGeometry(.34,.34),pic.material);pic2.position.set(0,1.3,-.065);pic2.rotation.y=Math.PI;pic2.visible=false;gp.add(pic2);
+          if(nThumb++<40)getThumb(p,t=>{pic.material.map=t;pic.material.needsUpdate=true;pic.visible=true;pic2.visible=true;});
           // kotak sentuh mengikuti arah hadap rak (rak dinding: lebar & kedalaman ditukar, berdiri di depan kaos)
           own.push(g.dx?C.hit(R,.86,1.5,.6,x,1.1,z,'shop-hanger:'+p.id,{dz:1.5}):C.hit(R,.6,1.5,.86,x,1.1,z,'shop-hanger:'+p.id,{dz:0,dx:g.ry>0?1.5:-1.5}));
         });
@@ -101,7 +103,7 @@ export function createStore(C){
       // papan nama kategori di atas rak
       const span=(g.max-1)*SP,mx=g.x+g.dx*span/2,mz=g.z+g.dz*span/2;
       if(g.dz&&g.ry>0){B(rackG,.08,.5,2.7,'#171914',-7.82,2.3,mz,{shadow:false});C.sign(rackG,g.name,-7.76,2.3,mz,2.6,.4,'#d7ff3f','#171914').rotation.y=Math.PI/2;}
-      else if(g.dz){B(rackG,.08,.5,2.7,'#171914',7.5,2.3,mz,{shadow:false});C.sign(rackG,g.name,7.44,2.3,mz,2.6,.4,'#d7ff3f','#171914').rotation.y=-Math.PI/2;[-1.3,1.3].forEach(d=>B(rackG,.06,2.3,.06,'#2a2d28',7.5,1.15,mz+d,{shadow:false}));}
+      else if(g.dz){B(rackG,.08,.5,2.7,'#171914',7.5,2.3,mz,{shadow:false});C.sign(rackG,g.name,7.44,2.3,mz,2.6,.4,'#d7ff3f','#171914').rotation.y=-Math.PI/2;C.sign(rackG,g.name,7.56,2.3,mz,2.6,.4,'#d7ff3f','#171914').rotation.y=Math.PI/2;[-1.3,1.3].forEach(d=>B(rackG,.06,2.3,.06,'#2a2d28',7.5,1.15,mz+d,{shadow:false}));}
       else{B(rackG,2.7,.5,.08,'#171914',mx,2.3,-3.96,{shadow:false});C.sign(rackG,g.name,mx,2.3,-3.9,2.6,.4,'#d7ff3f','#171914');[-1.3,1.3].forEach(d=>B(rackG,.06,2.3,.06,'#2a2d28',mx+d,1.15,-3.96,{shadow:false}));}
     });
     if(C.inStore())C.refreshPickables();
