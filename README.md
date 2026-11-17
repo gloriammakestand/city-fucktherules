@@ -144,3 +144,10 @@ Note: citizen needs are local-browser gameplay state in this prototype. Online e
 - Sawah/ladang desa tidak lagi menumpuk ke jalan dan bundaran kota: petak ladang dilarang masuk wilayah kota dan harus berjarak dari jalan.
 - Jalur kereta tidak lagi berhenti di bukit di tengah kota. Dari koridor kota, rel membelok ke utara di sisi kanan atas, keluar dari kota lewat pedesaan (melewati ST. PADANG), lalu menyeberangi laut ke pulau KOTA LAIN · UTARA. Total jalur Kota Lain Barat ⇄ Desa ⇄ Central City ⇄ ST. Padang ⇄ Kota Lain Utara (sekitar 740 satuan, dua jembatan laut). Kereta berhenti di tiap stasiun lalu berbalik di Kota Lain.
 - Koridor rel utara dikosongkan dari rumah/toko kota, rumah desa, ladang, dan pohon.
+
+## V34
+- Toko FUCK THE RULES: rak sekarang dikelompokkan per kategori dengan tata letak sama seperti toko game (game-main). PRE ORDER di rak belakang tengah (2 baris), READY STOCK di dinding kiri, SOLD OUT di dinding kanan. Tiap rak punya papan nama kategori di atasnya.
+- Saat pemain mendekat rak muncul tulisan kategori (misal PRE ORDER). Baru kalau tulisan itu diketuk, katalog terbuka langsung di kategori tersebut. Hal yang sama berlaku untuk AKSESORIS, KATALOG (semua produk), dan KASIR.
+- Tombol ATAS di bar interior: tampilan lurus dari atas (seperti ATAS di AI Office), seluruh ruangan muat di layar. Di toko, label kategori tampil di atas tiap rak dan bisa diketuk. Ketuk lantai tetap menggerakkan karakter; tombol NORMAL atau IKUTI mengembalikan kamera.
+- Papan KATALOG pindah ke dinding kiri depan, meja AKSESORIS ditambahkan di sebelahnya (membuka kategori Aksesoris).
+
